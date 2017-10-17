@@ -16,7 +16,19 @@
 
 dcrab_save_environment () {
 
-        declare -p | grep "^$1" >> $DCRAB_REPORT_DIR/aux/env.txt
+	case $DCRAB_HOST_OS in
+		SUSE)
+		echo "Entra en SUSE"
+	        declare -p | grep "^$1" >> $DCRAB_REPORT_DIR/aux/env.txt
+		;;
+		CentOS)
+		echo "Entra en Centos"
+	        declare -p | grep "$1" >> $DCRAB_REPORT_DIR/aux/env.txt
+		;;
+		*)
+		declare -p | grep "$1" >> $DCRAB_REPORT_DIR/aux/env.txt
+		;;
+	esac
 }
 
 dcrab_generate_html (){
@@ -469,5 +481,6 @@ dcrab_init_variables () {
         export DCRAB_LOG_DIR=$DCRAB_REPORT_DIR/log
 	export DCRAB_USER_ID=`id -u $USER`
 	export DCRAB_HTML=$DCRAB_REPORT_DIR/dcrab_report.html
+	export DCRAB_HOST_OS=$(cat /etc/*release | head -1 | awk '{print $1}')
 }
 

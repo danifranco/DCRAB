@@ -84,13 +84,14 @@ dcrab_collect_mem_data () {
 
 	# Store the data of all the processes 
 	:> $DCRAB_MEM_FILE
-	for pid in ${proc_pids[@]}; do cat /proc/$pid/status 2> /dev/null 1 >> $DCRAB_MEM_FILE; done
-	
+	for pid in $(cat $DCRAB_JOB_PROCESSES_FILE | awk '{print $1}'); do echo "mem-pid: $pid"; cat /proc/$pid/status 2> /dev/null 1 >> $DCRAB_MEM_FILE; done
+
 	# Collect memory data of the file
-    	vmSize=$(grep VmSize $DCRAB_MEM_FILE | awk '{sum+=$2} END {print sum/1024/1024}') 
+    	vmSize=$(grep VmSize $DCRAB_MEM_FILE | awk '{sum+=$2} END {print sum/1024/1024}') ; echo "vmSize= $vmSize"
 	vmSize=$(printf "%.3f\n" "$vmSize") # 3 decimmals only
-	vmRSS=$(grep VmRSS $DCRAB_MEM_FILE | awk '{sum+=$2} END {print sum/1024/1024}')
+	vmRSS=$(grep VmRSS $DCRAB_MEM_FILE | awk '{sum+=$2} END {print sum/1024/1024}'); echo "vmRSS= $vmRSS"
 	vmRSS=$(printf "%.3f\n" "$vmRSS") # 3 decimmals only
+	echo "$vmSize , $vmRSS"	
 	if [ $(echo "$vmRSS > $max_RSS_size" | bc) -eq 1 ]; then
         	max_RSS_size=$vmRSS
 	fi
@@ -125,8 +126,6 @@ dcrab_determine_main_process () {
 	DCRAB_RANGE_PIDs=1
         updates=0
         declare -a upd_proc_name                
-	declare -a proc_pids
-	proc_number=0
         # CPU variables
         cpu_data="0,"
 	# MEM variables
@@ -141,7 +140,7 @@ dcrab_determine_main_process () {
 	echo "$node_hostname , $DCRAB_NODE_NUMBER"
 	if [ "$DCRAB_NODE_NUMBER" -eq 0 ]; then
 	        IFS=$'\n'
-		ps axo stat,euid,ruid,sess,ppid,pid,pcpu,comm,command | sed 's|\s\s*| |g' | grep " $DCRAB_USER_ID " | grep -v " $DCRAB_DCRAB_PID " > $DCRAB_USER_PROCESSES_FILE
+		ps axo stat,euid,ruid,sess,ppid,pid,pcpu,comm,command | sed 's|\s\s*| |g' | awk '{if ($2 == '"$DCRAB_USER_ID"'){print}}' | grep -v " $DCRAB_DCRAB_PID " > $DCRAB_USER_PROCESSES_FILE
 	        for line in $(cat $DCRAB_USER_PROCESSES_FILE)
 	        do
 			pid=$(echo "$line" | awk '{print $6}')
@@ -189,7 +188,7 @@ dcrab_determine_main_process () {
 	                # Wait if it is not the first loop
 	                [[ "$i" -gt 1 ]] && sleep 5
 			
-			for line in $(ps axo stat,euid,ruid,sess,ppid,pid,pcpu,command | sed 's|\s\s*| |g' | grep " $DCRAB_USER_ID " | grep "Ss")
+			for line in $(ps axo stat,euid,ruid,sess,ppid,pid,pcpu,command | sed 's|\s\s*| |g' | awk '{if ($2 == '"$DCRAB_USER_ID"'){print}}' | grep "Ss")
 		        do
 				DCRAB_CONTROL_PORT_OTHER_NODE=`echo ${line#*control-port} | awk '{print $1}'`
 				if [ "$DCRAB_CONTROL_PORT_OTHER_NODE" == "$DCRAB_CONTROL_PORT_MAIN_NODE" ]; then
@@ -205,7 +204,7 @@ dcrab_determine_main_process () {
 	fi
 
         # Initialize data file
-        for line in $(ps axo stat,euid,ruid,sess,ppid,pid,pcpu,comm,command | sed 's|\s\s*| |g' | grep " $DCRAB_USER_ID " | grep -v " $DCRAB_DCRAB_PID " | grep -E "$DCRAB_MAIN_PIDS")
+        for line in $(ps axo stat,euid,ruid,sess,ppid,pid,pcpu,comm,command | sed 's|\s\s*| |g' | awk '{if ($2 == '"$DCRAB_USER_ID"'){print}}' | grep -v " $DCRAB_DCRAB_PID " | grep -E "$DCRAB_MAIN_PIDS")
         do
 		# Get information of the process
                 pid=$(echo "$line" | awk '{print $6}')
@@ -226,13 +225,20 @@ dcrab_determine_main_process () {
 			upd_proc_name[$updates]=$commandName
 	                cpu_data="$cpu_data $cpu,"
 	
-			# MEM data
-			proc_pids[$proc_number]=$pid
-			proc_number=$((proc_number + 1))
-	        	        
 			updates=$((updates + 1))
 		fi
         done
+
+	# Initialize file if there is no process 	
+	if [ ! -f $DCRAB_JOB_PROCESSES_FILE ]; then
+		echo "$DCRAB_FIRST_MAIN_PROCESS_PID $DCRAB_FIRST_MAIN_PROCESS_NAME" > $DCRAB_JOB_PROCESSES_FILE
+
+		# CPU data
+                upd_proc_name[$updates]=$commandName
+                cpu_data="$cpu_data $cpu,"
+
+		updates=$((updates + 1))
+	fi	
 
         # Get time
         DCRAB_M1_TIMESTAMP=`date +"%s"`
@@ -260,7 +266,7 @@ dcrab_update_data () {
         mem_data="[$DCRAB_DIFF_TIMESTAMP,"
 
         # Collect the data
-	ps axo stat,euid,ruid,sess,ppid,pid,pcpu,comm,command | sed 's|\s\s*| |g' | grep " $DCRAB_USER_ID " | grep -v " $DCRAB_DCRAB_PID " > $DCRAB_USER_PROCESSES_FILE
+	ps axo stat,euid,ruid,sess,ppid,pid,pcpu,comm,command | sed 's|\s\s*| |g' | awk '{if ($2 == '"$DCRAB_USER_ID"'){print}}' | grep -v " $DCRAB_DCRAB_PID " > $DCRAB_USER_PROCESSES_FILE
         cat $DCRAB_USER_PROCESSES_FILE | grep -E "$DCRAB_MAIN_PIDS" > $DCRAB_JOB_PROCESSES_FILE.tmp
 
 	# To check if there is some processes that aren't in the process tree of the main node but belongs the job (this case occurs with mvapich)
@@ -355,10 +361,6 @@ dcrab_update_data () {
 
 	                # CPU data
 	                cpu_data=`echo $cpu_data | sed "s|^$DCRAB_DIFF_TIMESTAMP,|$DCRAB_DIFF_TIMESTAMP, $cpu,|"`
-
-	                # MEM data
-	                proc_pids[$proc_number]=$pid
-	                proc_number=$((proc_number + 1))
 
 	                updates=$((updates + 1))
 		fi
