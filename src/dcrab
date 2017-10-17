@@ -1,0 +1,54 @@
+#!/bin/bash
+
+
+# Check if binary path is defined
+if [ -z "$DCRAB_BIN" ]; then
+    echo "ERROR: DCRAB_BIN undefined"
+    exit
+fi
+
+# Check arguments
+case "$1" in
+	start)
+        	# Initialize dcrab report
+		source $DCRAB_BIN/scripts/dcrab_init.sh
+
+		# Launch collect process in each node
+		declare -a PID
+		i=0
+		for node in $NODES
+		    do
+			# Create node folders
+		        mkdir -p dcrab_report_$DCRAB_JOB_ID/data/$node
+			mkdir -p dcrab_report_$DCRAB_JOB_ID/aux/$node
+
+		        COMMAND="$DCRAB_BIN/scripts/dcrab_startDataCollection.sh $DCRAB_WORKDIR/dcrab_report_$DCRAB_JOB_ID/data/$node >> $DCRAB_WORKDIR/dcrab_report_$DCRAB_JOB_ID/dcrab.log & echo \$!"
+			# Hay que poner la key, sino pide password
+		        PID[$i]=`ssh -n $node PATH=$PATH $COMMAND | tail -n 1 `
+			
+                	echo "N: $node 0 P:"${PID[$i]} >> dcrab_report_$DCRAB_JOB_ID/dcrab.log
+			
+			# Next
+			i=$((i+1))
+		done
+
+		# Save environment
+		
+
+            	;;
+	finish)
+		source $DCRAB_BIN/scripts/dcrab_finalize.sh
+            	;;
+        *)
+		echo "DCRAB report help"
+		echo "Developed by DIPC Fundation, CC-staff"
+		echo ""
+                echo $"Usage: $0 {start|finish}"
+		echo ""
+		echo "Summary:"
+		echo "    * start 		| starts dcrap report"
+		echo "    * finish 		| finalize data collection and dcrap processes"
+		echo ""
+            	exit 1
+esac
+
