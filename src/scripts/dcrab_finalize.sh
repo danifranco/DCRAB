@@ -1,4 +1,17 @@
 #!/bin/bash
+# DCRAB SOFTWARE
+# Version: 1.0
+# Autor: CC-staff
+# Donostia International Physics Center
+#
+# ===============================================================================================================
+#
+# This script contains the functions to be done in the finalization of DCRAB. Used in DCRAB main script.
+#
+# Do NOT execute manually. DCRAB will use it automatically.
+#
+# ===============================================================================================================
+
 
 dcrab_stop_remote_processes () {
 	# Kill remote remora processes running in background

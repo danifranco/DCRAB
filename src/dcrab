@@ -1,4 +1,14 @@
 #!/bin/bash
+# DCRAB SOFTWARE
+# Version: 1.0
+# Autor: CC-staff
+# Donostia International Physics Center
+#
+# ===============================================================================================================
+#
+# DCRAB main script which will start or finish the monitorization
+#
+# ===============================================================================================================
 
 
 # Check if binary path is defined
@@ -30,7 +40,7 @@ case "$1" in
 		echo "--- DCRAB main-node: `hostname` log ---" >> $DCRAB_LOG_DIR/dcrab.log
 		
         	# Initialize dcrab report
-		dcrab_start_report >> $DCRAB_LOG_DIR/dcrab.log 2>&1 
+		dcrab_start_report_files >> $DCRAB_LOG_DIR/dcrab.log 2>&1 
 
 		export DCRAB_START_TIMESTAMP=`date +"%s"`
 
@@ -56,6 +66,7 @@ case "$1" in
 
 		echo "--- End DCRAB output (finish fase) ---"
             	;;
+
         *)
 		echo "DCRAB report help"
 		echo "Developed by DIPC Fundation, CC-staff"
