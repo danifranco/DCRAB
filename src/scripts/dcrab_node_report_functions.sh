@@ -173,6 +173,22 @@ init_variables () {
 	disk_text_baseline=$(grep -n -m 1 "id='plot_disk_$node_hostname_mod" $DCRAB_HTML | cut -f1 -d:)
 	disk_total_read_line=$((disk_text_baseline + 5))
 	disk_total_write_line=$((disk_text_baseline + 7))	
+
+	# NFS
+	nfs_mount_path="/home"
+	nfs_data_line=$(grep -n -m 1 "var nfs_data_$node_hostname_mod" $DCRAB_HTML | cut -f1 -d:)
+        nfs_data_line=$((nfs_data_line + 2))
+	nfs_text_baseline=$(grep -n -m 1 "id='plot_nfs_$node_hostname_mod" $DCRAB_HTML | cut -f1 -d:)
+        nfs_total_read_line=$((nfs_text_baseline + 5))
+        nfs_total_write_line=$((nfs_text_baseline + 7))
+        nfs_read=$(mountstats --nfs $nfs_mount_path | grep "applications read" | grep "via read(2)" | awk '{print $3}' )
+        nfs_write=$(mountstats --nfs $nfs_mount_path | grep "applications wrote" | grep "via write(2)" | awk '{print $3}' )
+	nfs_total_read=0
+	nfs_total_write=0
+	nfs_total_read_value="MB"
+        nfs_total_write_value="MB"
+        nfs_last_total_read_value="MB"
+        nfs_last_total_write_value="MB"
 }
 
 write_initial_values () {
@@ -381,6 +397,11 @@ write_data () {
 			sed -i "$disk_data_line"'s/.*/&'"$disk_data"'/' $DCRAB_HTML
 			sed -i "$disk_total_read_line"'s|\([0-9]*[.]*[0-9]*\) '"$disk_last_total_read_value"'</td></tr>|'"$disk_total_read_reduced $disk_total_read_value"'</td></tr>|' $DCRAB_HTML
 			sed -i "$disk_total_write_line"'s|\([0-9]*[.]*[0-9]*\) '"$disk_last_total_write_value"'</td></tr>|'"$disk_total_write_reduced $disk_total_write_value"'</td></tr>|' $DCRAB_HTML
+			
+                        # NFS
+                        sed -i "$nfs_data_line"'s/.*/&'"$nfs_data"'/' $DCRAB_HTML
+                        sed -i "$nfs_total_read_line"'s|\([0-9]*[.]*[0-9]*\) '"$nfs_last_total_read_value"'</td></tr>|'"$nfs_total_read_reduced $nfs_total_read_value"'</td></tr>|' $DCRAB_HTML
+                        sed -i "$nfs_total_write_line"'s|\([0-9]*[.]*[0-9]*\) '"$nfs_last_total_write_value"'</td></tr>|'"$nfs_total_write_reduced $nfs_total_write_value"'</td></tr>|' $DCRAB_HTML
 
                 	# Remove lock file
 		        rm -f "$DCRAB_LOCK_FILE"
@@ -438,11 +459,17 @@ dcrab_collect_mem_data () {
 			
 			echo "$vmRSS $vmSize" > $DCRAB_TOTAL_MEM_FILE
 
-			for file in $DCRAB_TOTAL_MEM_DIR/*
-			do
-				total_vmRSS=$(echo "$total_vmRSS + $(cat $file | awk '{print $1}')" | bc)
-				total_vmSize=$(echo "$total_vmSize + $(cat $file | awk '{print $2}')" | bc)
-			done
+			# For the PBS scheduler the total memory monitored is the amount of memory used in the main node only
+			# So we do not need the memory used in slave nodes. However, we will maintain these lines because in a
+			# future we could use when adding support for other schedulers 
+			#for file in $DCRAB_TOTAL_MEM_DIR/*
+			#do
+			#	total_vmRSS=$(echo "$total_vmRSS + $(cat $file | awk '{print $1}')" | bc)
+			#	total_vmSize=$(echo "$total_vmSize + $(cat $file | awk '{print $2}')" | bc)
+			#done
+			total_vmRSS=$(cat $DCRAB_TOTAL_MEM_FILE | awk '{print $1}')
+			total_vmSize=$(cat $DCRAB_TOTAL_MEM_FILE | awk '{print $2}')
+			
 		
 			if [ $(echo "$total_vmSize > $total_max_vmSize" | bc) -eq 1 ]; then
 		                total_max_vmSize=$total_vmSize
@@ -526,13 +553,15 @@ dcrab_collect_disk_data () {
 			pid=$(echo "$line" | awk '{print $1}')
 			
 			# Collect disk actual data
-                        new_rchar=$(cat /proc/$pid/io | grep rchar | awk '{print $2}')
-                        new_wchar=$(cat /proc/$pid/io | grep wchar | awk '{print $2}')
-			[[ "$new_rchar" == "" ]] && new_rchar=0
-	                [[ "$new_wchar" == "" ]] && new_wchar=0	
-
-			disk_total_read=$new_rchar
-			disk_total_write=$new_wchar
+			if [ -r /proc/$pid/io ]; then
+	                        new_rchar=$(cat /proc/$pid/io | grep rchar | awk '{print $2}')
+	                        new_wchar=$(cat /proc/$pid/io | grep wchar | awk '{print $2}')
+				[[ "$new_rchar" == "" ]] && new_rchar=0
+		                [[ "$new_wchar" == "" ]] && new_wchar=0	
+	
+				disk_total_read=$new_rchar
+				disk_total_write=$new_wchar
+			fi
 		done
 	
 		if [ ! -f $DCRAB_DISK_FILE ]; then
@@ -556,28 +585,30 @@ dcrab_collect_disk_data () {
                         last_wchar=$(cat $DCRAB_DISK_FILE | grep "^$pid " | awk '{print $3}')
 
 			# Collect disk actual data
-			new_rchar=$(cat /proc/$pid/io | grep rchar | awk '{print $2}')
-			new_wchar=$(cat /proc/$pid/io | grep wchar | awk '{print $2}')
-			[[ "$new_rchar" == "" ]] && new_rchar=0
-                        [[ "$new_wchar" == "" ]] && new_wchar=0
-
-			if [ "$last_rchar" == "" ]; then
-				echo "$pid $new_rchar $new_wchar" >> $DCRAB_DISK_FILE 
-			
-				disk_total_read=$(echo "$disk_total_read + $new_rchar" | bc)
-                                disk_partial_read=$(echo "$disk_partial_read + $new_rchar" | bc)
-
-                                disk_total_write=$(echo "$disk_total_write + $new_wchar" | bc )
-                                disk_partial_write=$(echo "$disk_partial_write + $new_wchar" | bc )				
-			else
-				lineNumber=$(cat $DCRAB_DISK_FILE | grep -n "^$pid " | awk '{print $1}' | cut -d':' -f1)
-				sed -i "$lineNumber"'s/'"$pid $last_rchar $last_wchar"'/'"$pid $new_rchar $new_wchar"'/' $DCRAB_HTML
-
-				disk_total_read=$(echo "$disk_total_read + $new_rchar - $last_rchar"  | bc)
-                                disk_partial_read=$(echo "$disk_partial_read + $new_rchar - $last_rchar" | bc)
-
-                                disk_total_write=$(echo "$disk_total_write + $new_wchar - $last_wchar" | bc)
-                                disk_partial_write=$(echo "$disk_partial_write + $new_wchar - $last_wchar" | bc)
+			if [ -r /proc/$pid/io ]; then
+				new_rchar=$(cat /proc/$pid/io | grep rchar | awk '{print $2}')
+				new_wchar=$(cat /proc/$pid/io | grep wchar | awk '{print $2}')
+				[[ "$new_rchar" == "" ]] && new_rchar=0
+	                        [[ "$new_wchar" == "" ]] && new_wchar=0
+	
+				if [ "$last_rchar" == "" ]; then
+					echo "$pid $new_rchar $new_wchar" >> $DCRAB_DISK_FILE 
+				
+					disk_total_read=$(echo "$disk_total_read + $new_rchar" | bc)
+	                                disk_partial_read=$(echo "$disk_partial_read + $new_rchar" | bc)
+	
+	                                disk_total_write=$(echo "$disk_total_write + $new_wchar" | bc )
+	                                disk_partial_write=$(echo "$disk_partial_write + $new_wchar" | bc )				
+				else
+					lineNumber=$(cat $DCRAB_DISK_FILE | grep -n "^$pid " | awk '{print $1}' | cut -d':' -f1)
+					sed -i "$lineNumber"'s/'"$pid $last_rchar $last_wchar"'/'"$pid $new_rchar $new_wchar"'/' $DCRAB_HTML
+	
+					disk_total_read=$(echo "$disk_total_read + $new_rchar - $last_rchar"  | bc)
+	                                disk_partial_read=$(echo "$disk_partial_read + $new_rchar - $last_rchar" | bc)
+	
+	                                disk_total_write=$(echo "$disk_total_write + $new_wchar - $last_wchar" | bc)
+	                                disk_partial_write=$(echo "$disk_partial_write + $new_wchar - $last_wchar" | bc)
+				fi
 			fi
 		done
 
@@ -621,6 +652,58 @@ dcrab_collect_disk_data () {
 	esac
 }
 
+dcrab_collect_nfs_data () {
+
+	nfs_new_read=$(mountstats --nfs $nfs_mount_path | grep "applications read" | grep "via read(2)" | awk '{print $3}' )
+	nfs_new_write=$(mountstats --nfs $nfs_mount_path | grep "applications wrote" | grep "via write(2)" | awk '{print $3}' )
+	nfs_total_read=$(( nfs_total_read + nfs_new_read - nfs_read ))
+	nfs_total_write=$(( nfs_total_write + nfs_new_write - nfs_write ))
+
+	# Construct data for the read text value
+        nfs_last_total_read_value=$nfs_total_read_value
+        case $nfs_total_read_value in
+        "MB")
+		nfs_total_read_reduced=$(echo "scale=4; ($nfs_total_read / 1024) / 1024" | bc)
+		if [ $(echo "$nfs_total_read_reduced >= 1024" | bc)  -eq 1 ]; then
+                                nfs_total_read_reduced=$(echo "scale=4; $nfs_total_read_reduced / 1024 " | bc )
+                                nfs_total_read_value="GB"
+                        fi
+                [[ "${nfs_total_read_reduced:0:1}" == "." ]] && nfs_total_read_reduced="0""$nfs_total_read_reduced"
+	;;
+	"GB")
+	        nfs_total_read_reduced=$(echo "scale=4; (($nfs_total_read /1024) /1024 ) /1024" | bc)
+	;;
+	esac
+	# Construct data for the write text value
+        nfs_last_total_write_value=$nfs_total_write_value
+        case $nfs_total_write_value in
+        "MB")
+        	nfs_total_write_reduced=$(echo "scale=4; ($nfs_total_write /1024) /1024" | bc)
+                if [ $(echo "$nfs_total_write_reduced >= 1024" | bc)  -eq 1 ]; then
+                	nfs_total_write_reduced=$(echo "scale=4; $nfs_total_write_reduced / 1024 " | bc )
+                        nfs_total_write_value="GB"
+                fi
+                [[ "${nfs_total_write_reduced:0:1}" == "." ]] && nfs_total_write_reduced="0""$nfs_total_write_reduced"
+        ;;
+        "GB")
+                nfs_total_write_reduced=$(echo "scale=4; (($nfs_total_write /1024) /1024 ) /1024" | bc)
+        ;;
+        esac
+
+	local aux1=$(echo "scale=4; ((($nfs_new_read - $nfs_read) / 1024 ) / 1024 ) / $DCRAB_DIFF_PARTIAL" | bc)
+	local aux2=$(echo "scale=4; ((($nfs_new_write - $nfs_write) / 1024 ) / 1024 ) / $DCRAB_DIFF_PARTIAL" | bc)
+
+	# Construct NFS data
+	nfs_data="$nfs_data""$aux1, $aux2],"
+		
+	nfs_read=$nfs_new_read
+	nfs_write=$nfs_new_write
+}
+
+dcrab_collect_beegfs_data () {
+	echo " "
+}
+
 dcrab_determine_main_process () {
 
         # CPU
@@ -631,6 +714,8 @@ dcrab_determine_main_process () {
 	ib_data="[0,"
 	# DISK
 	disk_data="[0,"
+	# NFS
+	nfs_data="[0, 0, 0],"
 
 	# MAIN NODE
 	if [ "$DCRAB_NODE_NUMBER" -eq 0 ]; then
@@ -751,7 +836,7 @@ dcrab_determine_main_process () {
 	
 	# DISK data
 	dcrab_collect_disk_data 0
-	
+
 	write_data 	
 }
 
@@ -773,6 +858,8 @@ dcrab_update_data () {
 	ib_data="[$DCRAB_DIFF_TIMESTAMP,"
 	# DISK data
 	disk_data="[$DCRAB_DIFF_TIMESTAMP,"
+	# NFS data
+	nfs_data="[$DCRAB_DIFF_TIMESTAMP,"
 
         # Collect the data
 	ps axo stat,euid,ruid,sess,ppid,pid,pcpu,comm,command | sed 's|\s\s*| |g' | awk '{if ($2 == '"$DCRAB_USER_ID"'){print}}' | grep -v " $DCRAB_DCRAB_PID " > $DCRAB_USER_PROCESSES_FILE
@@ -790,7 +877,7 @@ dcrab_update_data () {
                 	kill -0 $DCRAB_LAST_CHILD_NEXT_VALID_PID >> /dev/null 2>&1
                         [[ $? -eq 0 ]] && found=1 || DCRAB_LAST_CHILD_NEXT_VALID_PID=$((DCRAB_LAST_CHILD_NEXT_VALID_PID + 1))
                 done
-		echo "DCRAB_MAIN_PROCESS_LAST_CHILD_PID= $DCRAB_MAIN_PROCESS_LAST_CHILD_PID , DCRAB_LAST_CHILD_NEXT_VALID_PID= $DCRAB_LAST_CHILD_NEXT_VALID_PID"
+
 	        for line in $(cat $DCRAB_JOB_CANDIDATE_PROCESSES_FILE)
 	        do
 			pid=$(echo "$line" | awk '{print $6}')
@@ -898,6 +985,9 @@ dcrab_update_data () {
 	
 	# DISK data
         dcrab_collect_disk_data 1
+	
+	# NFS data
+	dcrab_collect_nfs_data
 }
 
 

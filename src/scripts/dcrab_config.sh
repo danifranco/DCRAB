@@ -71,7 +71,7 @@ dcrab_generate_html (){
 
 		# MEM
                 printf "%s \n" "var mem1_$node = google.visualization.arrayToDataTable([" >> $DCRAB_HTML
-		printf "%s \n" "['Execution Time (s)', 'Node Memory', 'Requested Memory', 'Consumed Memory Peak (of VmRSS)', 'Consumed Memory (VmSize)', 'Resident Memory (VmRSS)']," >> $DCRAB_HTML
+		printf "%s \n" "['Execution Time (s)', 'Node Memory', 'Requested Memory', 'Consumed Memory Peak (of VmRSS)', 'Consumed Memory  (VmSize)', 'Resident Memory  (VmRSS)']," >> $DCRAB_HTML
                 printf "\n"  >> $DCRAB_HTML
                 printf "%s \n" "]);" >> $DCRAB_HTML
                 printf "%s \n" "var mem2_$node = google.visualization.arrayToDataTable([" >> $DCRAB_HTML
@@ -88,6 +88,12 @@ dcrab_generate_html (){
 	
 		# DISK
 		printf "%s \n" "var disk_data_$node = google.visualization.arrayToDataTable([" >> $DCRAB_HTML
+                printf "%s \n" "['Execution Time (s)', 'Read', 'Write']," >> $DCRAB_HTML
+                printf "\n"  >> $DCRAB_HTML
+                printf "%s \n" "]);" >> $DCRAB_HTML
+		
+		# NFS	
+                printf "%s \n" "var nfs_data_$node = google.visualization.arrayToDataTable([" >> $DCRAB_HTML
                 printf "%s \n" "['Execution Time (s)', 'Read', 'Write']," >> $DCRAB_HTML
                 printf "\n"  >> $DCRAB_HTML
                 printf "%s \n" "]);" >> $DCRAB_HTML
@@ -172,6 +178,21 @@ dcrab_generate_html (){
         printf "%s \n" "},  " >> $DCRAB_HTML
         printf "%s \n" "};  " >> $DCRAB_HTML
 
+	# NFS
+	printf "%s \n" "var nfs_options = {  " >> $DCRAB_HTML
+        printf "%s \n" "title : 'NFS I/O Stats (scicomp)', " >> $DCRAB_HTML
+        printf "%s \n" "vAxis: {title: 'MB/s'}, " >> $DCRAB_HTML
+        printf "%s \n" "hAxis: {title: 'Time (s)'}, " >> $DCRAB_HTML
+        printf "%s \n" "width: $plot_width,  " >> $DCRAB_HTML
+        printf "%s \n" "height: $plot_height,  " >> $DCRAB_HTML
+        printf "%s \n" "axes: {  " >> $DCRAB_HTML
+        printf "%s \n" "x: {  " >> $DCRAB_HTML
+        printf "%s \n" "0: {side: 'top'}  " >> $DCRAB_HTML
+        printf "%s \n" "}  " >> $DCRAB_HTML
+        printf "%s \n" "},  " >> $DCRAB_HTML
+        printf "%s \n" "};  " >> $DCRAB_HTML
+	
+	
 	if [ "$DCRAB_NNODES" -gt 1 ]; then
 		printf "%s \n" "var total_mem_options = {" >> $DCRAB_HTML
 	        printf "%s \n" " title: 'Requested memory usage'," >> $DCRAB_HTML
@@ -206,6 +227,10 @@ dcrab_generate_html (){
 		# DISK
                 printf "%s \n" "var disk_chart_$node = new google.visualization.AreaChart(document.getElementById('plot_disk_$node'));"  >> $DCRAB_HTML
                 printf "%s \n" "disk_chart_$node.draw(disk_data_$node, disk_options);  " >> $DCRAB_HTML
+	
+		# NFS
+                printf "%s \n" "var nfs_chart_$node = new google.visualization.AreaChart(document.getElementById('plot_nfs_$node'));"  >> $DCRAB_HTML
+                printf "%s \n" "nfs_chart_$node.draw(nfs_data_$node, nfs_options);  " >> $DCRAB_HTML
         done
 
 	if [ "$DCRAB_NNODES" -gt 1 ]; then
@@ -376,7 +401,7 @@ dcrab_generate_html (){
 	if [ "$DCRAB_NNODES" -gt 1 ]; then
 	        printf "%s \n" "<div class=\"inline\" style=\"margin-right: 50px;\">" >> $DCRAB_HTML
 	        printf "%s \n" "<table><tr><td>" >> $DCRAB_HTML
-	        printf "%s \n" "<div style=\"width: 1019px;\" class=\"header\">TOTAL MEMORY (PEAK)</div>" >> $DCRAB_HTML
+	        printf "%s \n" "<div style=\"width: 1019px;\" class=\"header\">TOTAL MEMORY USED FOR THE SCHEDULER</div>" >> $DCRAB_HTML
 	        printf "%s \n" "</td></tr>" >> $DCRAB_HTML
 	        printf "%s \n" "<tr><td>" >> $DCRAB_HTML
 	        printf "%s \n" "<div style=\"padding-top: 75px;padding-bottom: 75px;padding-left: 15px;padding-right: 15px;\" class=\"plot inline\" id='plot_total_mem'></div>" >> $DCRAB_HTML
@@ -430,7 +455,7 @@ dcrab_generate_html (){
 
         #IB plots
         printf "%s \n" "<div class=\"overflowDivs\">" >> $DCRAB_HTML
-        printf "%s \n" "<div class=\"text rcorners inline warningText\" style=\"height: 200px; vertical-align: top; margin-top: 230px; color: #ff8000\" >" >> $DCRAB_HTML
+        printf "%s \n" "<div class=\"text rcorners inline warningText\" >" >> $DCRAB_HTML
         printf "%s \n" "<center><b>" >> $DCRAB_HTML
         printf "%s \n" "-- WARNING --<br>" >> $DCRAB_HTML
         printf "%s \n" "Infiniband charts are generated<br>" >> $DCRAB_HTML
@@ -486,6 +511,48 @@ dcrab_generate_html (){
         done
         printf "%s \n" "</div>" >> $DCRAB_HTML
         printf "%s \n" "<br><br><br>" >> $DCRAB_HTML
+
+	# NFS plots
+        printf "%s \n" "<div class=\"overflowDivs\">" >> $DCRAB_HTML
+        printf "%s \n" "<div class=\"text rcorners inline warningText\" >" >> $DCRAB_HTML
+        printf "%s \n" "<center><b>" >> $DCRAB_HTML
+        printf "%s \n" "-- WARNING --<br>" >> $DCRAB_HTML
+        printf "%s \n" "NFS charts are generated<br>" >> $DCRAB_HTML
+        printf "%s \n" "with general statistics of NFS of<br>" >> $DCRAB_HTML
+        printf "%s \n" "the node during the execution. This <br>" >> $DCRAB_HTML
+        printf "%s \n" "means that is not considering only<br>" >> $DCRAB_HTML
+        printf "%s \n" "your job NFS usage but the whole node.<br>" >> $DCRAB_HTML
+        printf "%s \n" "So keep in mind when analizing the<br>" >> $DCRAB_HTML
+        printf "%s \n" "chart because maybe can be another<br>" >> $DCRAB_HTML
+        printf "%s \n" "job using scicomp mount point <br>" >> $DCRAB_HTML
+        printf "%s \n" "</b></center>" >> $DCRAB_HTML
+        printf "%s \n" "</div>" >> $DCRAB_HTML
+        i=1
+        while [ $i -le $DCRAB_NNODES ]; do
+                printf "%s \n" "<div class=\"inline\">" >> $DCRAB_HTML
+                printf "%s \n" "<table><tr><td>" >> $DCRAB_HTML
+                printf "%s \n" "<div style=\"width: 1100px;\" class=\"header\">$(echo $DCRAB_NODES | cut -d' ' -f $i)</div>" >> $DCRAB_HTML
+                printf "%s \n" "</td></tr>" >> $DCRAB_HTML
+                printf "%s \n" "<tr><td>" >> $DCRAB_HTML
+                printf "%s \n" "<div class=\"plot inline\" id='plot_nfs_$(echo $DCRAB_NODES_MOD | cut -d' ' -f$i)'></div>" >> $DCRAB_HTML
+                printf "%s \n" "<div style=\"border: 0px; margin-left: 75px;\" class=\"plot inline\">" >> $DCRAB_HTML
+                printf "%s \n" "<div class=\"text\">" >> $DCRAB_HTML
+                printf "%s \n" "<table id=\"textmem2\">" >> $DCRAB_HTML
+                printf "%s \n" "<tr style=\"border: 0px;\"><td><b><u>Total Read</u></b>:</td></tr>" >> $DCRAB_HTML
+                printf "%s \n" "<tr style=\"border: 0px;\"><td>0 MB</td></tr>" >> $DCRAB_HTML
+                printf "%s \n" "<tr style=\"border: 0px;\"><td><b><u>Total Write</u></b>:</td></tr>" >> $DCRAB_HTML
+                printf "%s \n" "<tr style=\"border: 0px;\"><td>0 MB</td></tr>" >> $DCRAB_HTML
+                printf "%s \n" "</table>" >> $DCRAB_HTML
+                printf "%s \n" "</div>" >> $DCRAB_HTML
+                printf "%s \n" "</div>" >> $DCRAB_HTML
+                printf "%s \n" "</td></tr>" >> $DCRAB_HTML
+                printf "%s \n" "</table>" >> $DCRAB_HTML
+                printf "%s \n" "</div>" >> $DCRAB_HTML
+                i=$((i+1))
+        done
+        printf "%s \n" "</div>" >> $DCRAB_HTML
+        printf "%s \n" "<br><br><br>" >> $DCRAB_HTML
+
 
 	
 	# Foot
