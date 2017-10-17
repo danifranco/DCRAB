@@ -8,23 +8,51 @@ if [ -z "$DCRAB_BIN" ]; then
 fi
 
 # Configuration functions
-source $DCRAB_BIN/scripts/dcrab_config.sh 
+source $DCRAB_BIN/scripts/dcrab_config.sh
 
 # Check arguments
 case "$1" in
 	start)
+		echo "--- Start DCRAB output (start fase) ---"
+
+		# Check which scheduler use the system
+		dcrab_check_scheduler
+
+		dcrab_init_variables
+
+ 		# Move to working directory
+                cd $DCRAB_WORKDIR
+	
+		# Create report and log directories 
+		mkdir -p $DCRAB_REPORT_DIR/log
+
+                # Initialize log report of the main node
+		echo "--- DCRAB main-node: `hostname` log ---" >> $DCRAB_LOG_DIR/dcrab.log
+		
         	# Initialize dcrab report
-		dcrab_start_report
+		dcrab_start_report >> $DCRAB_LOG_DIR/dcrab.log 2>&1 
 
 		# Launch processes in each node to collect data
-		dcrab_start_data_collection
-
-		# Save environment
-		dcrab_save_environment "DCRAB_"
+		dcrab_start_data_collection  >> $DCRAB_LOG_DIR/dcrab.log 2>&1
+	
+		echo "--- End DCRAB output (start fase)---"
             	;;
 	finish)
+		echo "--- Start DCRAB output (finish fase) ---"
+		
+		# Check which scheduler use the system
+                dcrab_check_scheduler
+
+		export DCRAB_REPORT_DIR=dcrab_report_$DCRAB_JOB_ID
+		export DCRAB_LOG_DIR=$DCRAB_REPORT_DIR/log
+
+   		# Move to working directory
+                cd $DCRAB_WORKDIR
+
 		# Finalize DCRAB
-		dcrab_finalize
+		dcrab_finalize  >> $DCRAB_LOG_DIR/dcrab.log 2>&1
+
+		echo "--- End DCRAB output (finish fase) ---"
             	;;
         *)
 		echo "DCRAB report help"
@@ -33,8 +61,8 @@ case "$1" in
                 echo $"Usage: $0 {start|finish}"
 		echo ""
 		echo "Summary:"
-		echo "    * start 		| starts dcrap report"
-		echo "    * finish 		| finalize data collection and dcrap processes"
+		echo "    * start 		| starts DCRAB report"
+		echo "    * finish 		| finalize data collection and DCRAB processes"
 		echo ""
             	exit 1
 esac
