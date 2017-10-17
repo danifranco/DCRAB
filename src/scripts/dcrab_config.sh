@@ -85,6 +85,13 @@ dcrab_generate_html (){
                 printf "%s \n" "['Execution Time (s)', 'Transmitted Packets', 'Received Packets', 'Transmitted Bytes (KB)', 'Received Bytes (KB)']," >> $DCRAB_HTML
 		printf "\n"  >> $DCRAB_HTML
                 printf "%s \n" "]);" >> $DCRAB_HTML
+
+		# TIME
+		printf "%s \n" "var time_data = google.visualization.arrayToDataTable([" >> $DCRAB_HTML
+                printf "%s \n" "['Consumed Time', 'Percentage']," >> $DCRAB_HTML
+                printf "%s \n" "['Elapsed Time', 0]," >> $DCRAB_HTML
+                printf "%s \n" "['Remaining Time', 100]," >> $DCRAB_HTML
+                printf "%s \n" "]);" >> $DCRAB_HTML
 	done
 	
 	if [ "$DCRAB_NNODES" -gt 1 ]; then
@@ -94,6 +101,15 @@ dcrab_generate_html (){
                 printf "%s \n" "['Not utilized memory', 100]," >> $DCRAB_HTML
                 printf "%s \n" "]);" >> $DCRAB_HTML
 	fi
+
+	# TIME 
+	printf "%s \n" "var time_options = {" >> $DCRAB_HTML
+        printf "%s \n" "width: 310," >> $DCRAB_HTML
+        printf "%s \n" "height: 200," >> $DCRAB_HTML
+	printf "%s \n" "chartArea: {  width: \"90%\", height: \"90%\" }," >> $DCRAB_HTML
+        printf "%s \n" "colors: ['#3366CC', '#109618']," >> $DCRAB_HTML
+        printf "%s \n" "is3D: true" >> $DCRAB_HTML
+        printf "%s \n" "};" >> $DCRAB_HTML
 
 	# CPU
         printf "%s \n" "var cpu_options = {" >> $DCRAB_HTML
@@ -148,6 +164,10 @@ dcrab_generate_html (){
 
         for node in $DCRAB_NODES_MOD
         do
+		# TIME
+		printf "%s \n" "var time_chart = new google.visualization.PieChart(document.getElementById('plot_time'));"  >> $DCRAB_HTML
+                printf "%s \n" "time_chart.draw(time_data, time_options);  " >> $DCRAB_HTML
+		
 		# CPU
 	        printf "%s \n" "var cpu_chart_$node = new google.visualization.LineChart(document.getElementById('plot_cpu_$node'));"  >> $DCRAB_HTML
         	printf "%s \n" "cpu_chart_$node.draw(cpu_data_$node, cpu_options);  " >> $DCRAB_HTML
@@ -191,7 +211,7 @@ dcrab_generate_html (){
         printf "%s \n" "" >> $DCRAB_HTML
         printf "%s \n" ".text {" >> $DCRAB_HTML
         printf "%s \n" "font-family: Consolas,monospace;" >> $DCRAB_HTML
-        printf "%s \n" "font-size: 14px;" >> $DCRAB_HTML
+        printf "%s \n" "font-size: 18px;" >> $DCRAB_HTML
         printf "%s \n" "}" >> $DCRAB_HTML
         printf "%s \n" "" >> $DCRAB_HTML
         printf "%s \n" ".vl {" >> $DCRAB_HTML
@@ -235,12 +255,6 @@ dcrab_generate_html (){
 	printf "%s \n" "vertical-align:middle;" >> $DCRAB_HTML
         printf "%s \n" "}" >> $DCRAB_HTML
         printf "%s \n" "" >> $DCRAB_HTML
-        printf "%s \n" ".space {" >> $DCRAB_HTML
-        printf "%s%s \n" "width: $space_width" "px;" >> $DCRAB_HTML
-        printf "%s \n" "border: 0px;" >> $DCRAB_HTML
-        printf "%s \n" "background-color: none;" >> $DCRAB_HTML
-        printf "%s \n" "}" >> $DCRAB_HTML
-        printf "%s \n" "" >> $DCRAB_HTML
         printf "%s \n" "#foot {" >> $DCRAB_HTML
         printf "%s \n" "background-color: rgba(255,255,255,0.3);" >> $DCRAB_HTML
         printf "%s \n" "margin-top: 180px;" >> $DCRAB_HTML
@@ -263,26 +277,53 @@ dcrab_generate_html (){
         printf "%s \n" "color: #fff;" >> $DCRAB_HTML
         printf "%s \n" "text-transform: uppercase;" >> $DCRAB_HTML
         printf "%s \n" "}" >> $DCRAB_HTML
+        printf "%s \n" ".rcorners {" >> $DCRAB_HTML
+        printf "%s \n" "border: 1px solid rgba(254, 254, 254, 0.3);" >> $DCRAB_HTML
+        printf "%s \n" "background-color: rgba(255,255,255,0.3);" >> $DCRAB_HTML
+        printf "%s \n" "border-radius: 25px;" >> $DCRAB_HTML
+        printf "%s \n" "margin : 40px;" >> $DCRAB_HTML
+        printf "%s \n" "padding-left: 15px;" >> $DCRAB_HTML
+        printf "%s \n" "}" >> $DCRAB_HTML
+        printf "%s \n" "" >> $DCRAB_HTML
+        printf "%s \n" ".textbox {" >> $DCRAB_HTML
+        printf "%s \n" "width:49%;" >> $DCRAB_HTML
+        printf "%s \n" "height: 300px;" >> $DCRAB_HTML
+        printf "%s \n" "}" >> $DCRAB_HTML
 	printf "%s \n" "</style>" >> $DCRAB_HTML
 	################# END Style #################
 
-	# Job summary
+	################# BODY #################
         printf "%s \n" "<body>" >> $DCRAB_HTML
         printf "%s \n" "<center><h1>DCRAB REPORT - JOB $DCRAB_JOB_ID </h1></center>" >> $DCRAB_HTML
-        printf "%s \n" "<div style=\"padding-left: 15px;\" class=\"text\">" >> $DCRAB_HTML
-        printf "%s \n" "<p>" >> $DCRAB_HTML
-        printf "%s \n" "<br><br>" >> $DCRAB_HTML
-        printf "%s \n" "<b><u>Name of the job</u></b>: $DCRAB_JOBNAME <br>" >> $DCRAB_HTML
+
+	# Job summary
+        printf "%s \n" "<div style=\"float: left;\" class=\"inline textbox\">" >> $DCRAB_HTML
+        printf "%s \n" "<div style=\"margin-left: 70px; height: 75%;\" class=\"text rcorners\">" >> $DCRAB_HTML
+        printf "%s \n" "<p style=\"padding :38px;\">" >> $DCRAB_HTML
+        printf "%s \n" "<b><u>Name of the job</u></b>: $DCRAB_JOBNAME<br>" >> $DCRAB_HTML
         printf "%s \n" "<b><u>JOBID</u></b>: $DCRAB_JOB_ID <br>" >> $DCRAB_HTML
         printf "%s \n" "<b><u>User</u></b>: $USER <br>" >> $DCRAB_HTML
         printf "%s \n" "<b><u>Working directory</u></b>: $DCRAB_WORKDIR <br>" >> $DCRAB_HTML
-        printf "%s \n" "<b><u>Node list</u></b>: <br>" >> $DCRAB_HTML
-        printf "%s \n" "$DCRAB_NODES <br>" >> $DCRAB_HTML
-	printf "%s \n" "<br><br><br><br>" >> $DCRAB_HTML
+        printf "%s \n" "<b><u>Node list</u></b>: $DCRAB_NODES" >> $DCRAB_HTML
         printf "%s \n" "</p>" >> $DCRAB_HTML
         printf "%s \n" "</div>" >> $DCRAB_HTML
+        printf "%s \n" "</div>" >> $DCRAB_HTML
+        printf "%s \n" "" >> $DCRAB_HTML
+        printf "%s \n" "<div class=\"inline textbox\">" >> $DCRAB_HTML
+        printf "%s \n" "<div class=\"text rcorners\" style=\"height: 75%;\">" >> $DCRAB_HTML
+        printf "%s \n" "<div id='plot_time' style=\"padding: 15px; float: left;\" ></div>" >> $DCRAB_HTML
+        printf "%s \n" "<div style=\"float: left; padding-top: 55px; padding-left: 55px;\">" >> $DCRAB_HTML
+        printf "%s \n" "<center>" >> $DCRAB_HTML
+        printf "%s \n" "<b><u>Elapsed Time (DD:HH:MM:SS)</u></b><br>" >> $DCRAB_HTML
+        printf "%s \n" "00:00:00:00 <br><br>" >> $DCRAB_HTML
+        printf "%s \n" "<b><u>Cput requested</u></b><br>" >> $DCRAB_HTML
+        printf "%s \n" "00:00:00:00 <br>" >> $DCRAB_HTML
+        printf "%s \n" "</center>" >> $DCRAB_HTML
+        printf "%s \n" "</div>" >> $DCRAB_HTML
+        printf "%s \n" "</div>" >> $DCRAB_HTML
+        printf "%s \n" "</div>" >> $DCRAB_HTML
 
-	################# CPU plots #################
+	# CPU plots 
         printf "%s \n" "<div class=\"overflowDivs\">" >> $DCRAB_HTML
 	i=1
 	while [ $i -le $DCRAB_NNODES ]; do 
@@ -299,9 +340,8 @@ dcrab_generate_html (){
         done
         printf "%s \n" "</div>" >> $DCRAB_HTML
 	printf "%s \n" "<br><br><br>" >> $DCRAB_HTML
-	################# END CPU plots ##############
 
-	################# MEM plots #################
+	# MEM plots 
         printf "%s \n" "<div class=\"overflowDivs\">" >> $DCRAB_HTML
 	if [ "$DCRAB_NNODES" -gt 1 ]; then
 	        printf "%s \n" "<div class=\"inline\" style=\"margin-right: 50px;\">" >> $DCRAB_HTML
@@ -357,9 +397,8 @@ dcrab_generate_html (){
         done
         printf "%s \n" "</div>" >> $DCRAB_HTML
 	printf "%s \n" "<br><br><br>" >> $DCRAB_HTML
-	################# END MEM plots ##############
 
-        ################# IB plots #################
+        #IB plots
         printf "%s \n" "<div class=\"overflowDivs\">" >> $DCRAB_HTML
         i=1
         while [ $i -le $DCRAB_NNODES ]; do
@@ -376,8 +415,8 @@ dcrab_generate_html (){
         done
         printf "%s \n" "</div>" >> $DCRAB_HTML
 	printf "%s \n" "<br><br><br>" >> $DCRAB_HTML
-        ################# END IB plots ##############
 
+	# Foot
         printf "%s \n" "<div id='foot'>" >> $DCRAB_HTML
         printf "%s \n" "<div class=\"inline\">&nbsp;&nbsp;&nbsp;</div>" >> $DCRAB_HTML
         printf "%s \n" "<div class=\"inline\">" >> $DCRAB_HTML
@@ -440,6 +479,8 @@ dcrab_generate_html (){
         printf "%s \n" "<div class=\"vl\"></div>" >> $DCRAB_HTML
         printf "%s \n" "</div>" >> $DCRAB_HTML
         printf "%s \n" "</body> " >> $DCRAB_HTML
+	################# END BODY #################
+	
         printf "%s \n" "</html> " >> $DCRAB_HTML
 	
 	# Change permissions to the main html report
@@ -458,6 +499,8 @@ dcrab_check_scheduler () {
                 DCRAB_NNODES=`scontrol show hostname $SLURM_NODELIST | wc -l`
 		DCRAB_JOBFILE=`ps $PPID | awk '{printf $6}'`
 		DCRAB_REQ_MEM=0
+		DCRAB_REQ_CPUT=0
+		DCRAB_REQ_PPN=0
         elif [ -n "$PBS_NODEFILE" ]; then
                 DCRAB_SCHEDULER=pbs
                 DCRAB_JOB_ID=$PBS_JOBID
@@ -469,7 +512,9 @@ dcrab_check_scheduler () {
 		done
                 DCRAB_NNODES=`cat $PBS_NODEFILE | sort | uniq | wc -l`
 		DCRAB_JOBFILE=`ps $PPID | awk '{printf $6}'`
-		DCRAB_REQ_MEM=`cat $DCRAB_JOBFILE | grep "\-l mem=" | cut -d= -f2 | sed 's/[^0-9]*//g'`
+		DCRAB_REQ_MEM=`cat $DCRAB_JOBFILE | grep "\-l mem=" | cut -d'=' -f2 | sed 's/[^0-9]*//g'`
+		DCRAB_REQ_CPUT=$(cat $DCRAB_JOBFILE | grep "\-l cput" | cut -d'=' -f2)
+		DCRAB_REQ_PPN=$(cat $DCRAB_JOBFILE | grep ":ppn" | cut -d'=' -f3)
         else
                 DCRAB_SCHEDULER="none"
                 DCRAB_JOB_ID=`date +%s`
@@ -479,6 +524,8 @@ dcrab_check_scheduler () {
                 DCRAB_NNODES=1
 		DCRAB_JOBFILE="none"
 		DCRAB_REQ_MEM=0
+		DCRAB_REQ_CPUT=0
+		DCRAB_REQ_PPN=0
         fi
 }
 
