@@ -25,12 +25,9 @@
 exec >> $4 ; exec 2>&1
 echo "--- DCRAB `hostname` log ---" 
 
-# Save hostname of the node
-node_hostname=`hostname`
-node_hostname_mod=`echo $node_hostname | sed 's|-||g'`
-
 # Sets environment
 source "$1"
+
 # Move to the working directory
 cd $DCRAB_WORKDIR
 
@@ -38,10 +35,11 @@ cd $DCRAB_WORKDIR
 source $DCRAB_BIN/scripts/dcrab_node_report_functions.sh
 
 # Necessary variables
+DCRAB_NODE_NUMBER=$2
 node_hostname=`hostname`
 node_hostname_mod=`echo $node_hostname | sed 's|-||g'`
-DCRAB_PROCESS_FILE=$DCRAB_REPORT_DIR/data/dcrab_process_$node_hostname.txt
-DCRAB_MEM_FILE=$DCRAB_REPORT_DIR/data/dcrab_mem_$node_hostname.txt
+DCRAB_PROCESS_FILE=$DCRAB_REPORT_DIR/data/$node_hostname/dcrab_process_$node_hostname.txt
+DCRAB_MEM_FILE=$DCRAB_REPORT_DIR/data/$node_hostname/dcrab_mem_$node_hostname.txt
 
 # Save the line to inject CPU data
 addRow_data_line=`grep -n -m 1 "\/\* $node_hostname_mod addRow space \*\/" $DCRAB_HTML | cut -f1 -d:`
@@ -71,7 +69,7 @@ while [ 1 ]; do
 	# Sleep to the next data collection
 	sleep $DCRAB_COLLECT_TIME
 	
-	echo "$node_hostname - loop $loopNumber" 
+	echo "H: $node_hostname - loop $loopNumber" 
 
 	# Update and collect data
 	dcrab_update_data 
