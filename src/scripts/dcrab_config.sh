@@ -53,20 +53,21 @@ dcrab_generate_html (){
 	# Data of each nodes
         for node in $DCRAB_NODES_MOD
         do
-		# CPU 
+		# Init plot variables
                 printf "%s \n" "var cpu_data_$node = new google.visualization.DataTable(); " >> $DCRAB_HTML
 		printf "%s \n" "cpu_data_$node.addColumn('number', 'Execution Time (s)');" >> $DCRAB_HTML
+		printf "%s \n" "var ib_data_$node = new google.visualization.DataTable(); " >> $DCRAB_HTML
 		
+		# Space to insert data 
 		printf "%s \n" "/* $node addColumn space */" >> $DCRAB_HTML
 		printf "\n" >> $DCRAB_HTML
-
-		# Variables to store data declaration (where the nodes will write collected data)
 		printf "%s \n" "/* $node addRow space */" >> $DCRAB_HTML
 		
 		# CPU
 		printf "%s \n" "var cpu_$node = [" >> $DCRAB_HTML
 		printf "\n"  >> $DCRAB_HTML
 		printf "%s \n" "];" >> $DCRAB_HTML
+		printf "%s \n" "cpu_data_$node.addRows(cpu_$node);" >> $DCRAB_HTML
 
 		# MEM
                 printf "%s \n" "var mem1_$node = google.visualization.arrayToDataTable([" >> $DCRAB_HTML
@@ -78,8 +79,12 @@ dcrab_generate_html (){
                 printf "%s \n" "['Used memory', 0]," >> $DCRAB_HTML
                 printf "%s \n" "['Not utilized memory', 100]," >> $DCRAB_HTML
                 printf "%s \n" "]);" >> $DCRAB_HTML
-		
-	        printf "%s \n" "cpu_data_$node.addRows(cpu_$node);" >> $DCRAB_HTML
+	
+		# IB
+		printf "%s \n" "var ib_data_$node = google.visualization.arrayToDataTable([" >> $DCRAB_HTML
+                printf "%s \n" "['Execution Time (s)', 'Transmitted Packets', 'Received Packets', 'Transmitted Bytes (KB)', 'Received Bytes (KB)']," >> $DCRAB_HTML
+		printf "\n"  >> $DCRAB_HTML
+                printf "%s \n" "]);" >> $DCRAB_HTML
 	done
 	
 	if [ "$DCRAB_NNODES" -gt 1 ]; then
@@ -95,26 +100,8 @@ dcrab_generate_html (){
         printf "%s \n" "title: 'CPU Utilization'," >> $DCRAB_HTML
         printf "%s \n" "width: '$plot_width'," >> $DCRAB_HTML
         printf "%s \n" "height: '$plot_height'," >> $DCRAB_HTML
-        printf "%s \n" "hAxis: {" >> $DCRAB_HTML
-        printf "%s \n" "title: 'Execution Time (s)'," >> $DCRAB_HTML
-        printf "%s \n" "titleTextStyle: {" >> $DCRAB_HTML
-        printf "%s \n" "color: '#757575'," >> $DCRAB_HTML
-        printf "%s \n" "fontSize: 16," >> $DCRAB_HTML
-        printf "%s \n" "fontName: 'Arial'," >> $DCRAB_HTML
-        printf "%s \n" "bold: false," >> $DCRAB_HTML
-        printf "%s \n" "italic: true" >> $DCRAB_HTML
-        printf "%s \n" "}" >> $DCRAB_HTML
-        printf "%s \n" "}," >> $DCRAB_HTML
-        printf "%s \n" "vAxis: {" >> $DCRAB_HTML
-        printf "%s \n" "title: 'CPU used (%)'," >> $DCRAB_HTML
-        printf "%s \n" "titleTextStyle: {" >> $DCRAB_HTML
-        printf "%s \n" "color: '#757575'," >> $DCRAB_HTML
-        printf "%s \n" "fontSize: 16," >> $DCRAB_HTML
-        printf "%s \n" "fontName: 'Arial'," >> $DCRAB_HTML
-        printf "%s \n" "bold: false," >> $DCRAB_HTML
-        printf "%s \n" "italic: true" >> $DCRAB_HTML
-        printf "%s \n" "}" >> $DCRAB_HTML
-        printf "%s \n" "}," >> $DCRAB_HTML
+        printf "%s \n" "hAxis: {title: 'Execution Time (s)'}," >> $DCRAB_HTML
+        printf "%s \n" "vAxis: {title: 'CPU used (%)'}," >> $DCRAB_HTML
         printf "%s \n" "chartArea: {  width: \"70%\", height: \"80%\" }," >> $DCRAB_HTML
         printf "%s \n" "};" >> $DCRAB_HTML
 
@@ -131,13 +118,22 @@ dcrab_generate_html (){
         printf "%s \n" "}  " >> $DCRAB_HTML
         printf "%s \n" "},  " >> $DCRAB_HTML
         printf "%s \n" "};  " >> $DCRAB_HTML
-
         printf "%s \n" "var mem2_options = {" >> $DCRAB_HTML
         printf "%s \n" "title: 'Requested memory usage'," >> $DCRAB_HTML
         printf "%s \n" "width: $((plot_width / 2))," >> $DCRAB_HTML
         printf "%s \n" "height: $((plot_height / 2))," >> $DCRAB_HTML
         printf "%s \n" "colors: ['#3366CC', '#109618']," >> $DCRAB_HTML
         printf "%s \n" "is3D: true" >> $DCRAB_HTML
+        printf "%s \n" "};" >> $DCRAB_HTML
+
+	# IB
+	printf "%s \n" "var ib_options = {" >> $DCRAB_HTML
+        printf "%s \n" "title: 'Infiniband Stats'," >> $DCRAB_HTML
+        printf "%s \n" "width: '$plot_width'," >> $DCRAB_HTML
+        printf "%s \n" "height: '$plot_height'," >> $DCRAB_HTML
+        printf "%s \n" "hAxis: {title: 'Execution Time (s)'}," >> $DCRAB_HTML
+        printf "%s \n" "vAxis: {title: 'Values'}," >> $DCRAB_HTML
+        printf "%s \n" "chartArea: {  width: \"70%\", height: \"80%\" }," >> $DCRAB_HTML
         printf "%s \n" "};" >> $DCRAB_HTML
 
 	if [ "$DCRAB_NNODES" -gt 1 ]; then
@@ -162,6 +158,10 @@ dcrab_generate_html (){
 
         	printf "%s \n" "mem1_chart_$node.draw(mem1_$node, mem1_options);  " >> $DCRAB_HTML
         	printf "%s \n" "mem2_chart_$node.draw(mem2_$node, mem2_options);  " >> $DCRAB_HTML
+		
+		# IB
+                printf "%s \n" "var ib_chart_$node = new google.visualization.LineChart(document.getElementById('plot_ib_$node'));"  >> $DCRAB_HTML
+                printf "%s \n" "ib_chart_$node.draw(ib_data_$node, ib_options);  " >> $DCRAB_HTML
         done
 
 	if [ "$DCRAB_NNODES" -gt 1 ]; then
@@ -298,16 +298,15 @@ dcrab_generate_html (){
 		i=$((i+1))
         done
         printf "%s \n" "</div>" >> $DCRAB_HTML
-	################# END CPU plots ##############
-
 	printf "%s \n" "<br><br><br>" >> $DCRAB_HTML
+	################# END CPU plots ##############
 
 	################# MEM plots #################
         printf "%s \n" "<div class=\"overflowDivs\">" >> $DCRAB_HTML
 	if [ "$DCRAB_NNODES" -gt 1 ]; then
 	        printf "%s \n" "<div class=\"inline\" style=\"margin-right: 50px;\">" >> $DCRAB_HTML
 	        printf "%s \n" "<table><tr><td>" >> $DCRAB_HTML
-	        printf "%s \n" "<div style=\"width: 1009px;\" class=\"header\">TOTAL MEMORY (PEAK)</div>" >> $DCRAB_HTML
+	        printf "%s \n" "<div style=\"width: 1019px;\" class=\"header\">TOTAL MEMORY (PEAK)</div>" >> $DCRAB_HTML
 	        printf "%s \n" "</td></tr>" >> $DCRAB_HTML
 	        printf "%s \n" "<tr><td>" >> $DCRAB_HTML
 	        printf "%s \n" "<div style=\"padding-top: 75px;padding-bottom: 75px;padding-left: 15px;padding-right: 15px;\" class=\"plot inline\" id='plot_total_mem'></div>" >> $DCRAB_HTML
@@ -357,7 +356,27 @@ dcrab_generate_html (){
 		i=$((i+1))
         done
         printf "%s \n" "</div>" >> $DCRAB_HTML
-	################# END CPU plots ##############
+	printf "%s \n" "<br><br><br>" >> $DCRAB_HTML
+	################# END MEM plots ##############
+
+        ################# IB plots #################
+        printf "%s \n" "<div class=\"overflowDivs\">" >> $DCRAB_HTML
+        i=1
+        while [ $i -le $DCRAB_NNODES ]; do
+                printf "%s \n" "<div class=\"inline\">" >> $DCRAB_HTML
+                printf "%s \n" "<table><tr><td>" >> $DCRAB_HTML
+                printf "%s \n" "<div class=\"header\">$(echo $DCRAB_NODES | cut -d' ' -f $i)</div>" >> $DCRAB_HTML
+                printf "%s \n" "</td></tr>" >> $DCRAB_HTML
+                printf "%s \n" "<tr><td>" >> $DCRAB_HTML
+                printf "%s \n" "<div class=\"plot\" id='plot_ib_$(echo $DCRAB_NODES_MOD | cut -d' ' -f$i)'></div>" >> $DCRAB_HTML
+                printf "%s \n" "</td></tr>" >> $DCRAB_HTML
+                printf "%s \n" "</table>" >> $DCRAB_HTML
+                printf "%s \n" "</div>" >> $DCRAB_HTML
+                i=$((i+1))
+        done
+        printf "%s \n" "</div>" >> $DCRAB_HTML
+	printf "%s \n" "<br><br><br>" >> $DCRAB_HTML
+        ################# END IB plots ##############
 
         printf "%s \n" "<div id='foot'>" >> $DCRAB_HTML
         printf "%s \n" "<div class=\"inline\">&nbsp;&nbsp;&nbsp;</div>" >> $DCRAB_HTML
@@ -422,6 +441,9 @@ dcrab_generate_html (){
         printf "%s \n" "</div>" >> $DCRAB_HTML
         printf "%s \n" "</body> " >> $DCRAB_HTML
         printf "%s \n" "</html> " >> $DCRAB_HTML
+	
+	# Change permissions to the main html report
+	chmod 755 $DCRAB_HTML
 }
 
 dcrab_check_scheduler () {
@@ -464,9 +486,6 @@ dcrab_start_report_files () {
 	# Sets the delay to collect data 
         DCRAB_COLLECT_TIME=10
 
-	#tmp
-	#DCRAB_NODES="atlas-104 atlas-105 atlas-106"
-	
 	# Remove '-' character of the names to create javascript variables
 	DCRAB_NODES_MOD=`echo $DCRAB_NODES | sed 's|-||g'`
 
@@ -476,6 +495,9 @@ dcrab_start_report_files () {
 	# Create folder to save required files
 	mkdir -p $DCRAB_REPORT_DIR/aux
 	mkdir $DCRAB_REPORT_DIR/aux/mem
+	
+	# Change permissions
+	chmod -R 755 $DCRAB_REPORT_DIR 
 
 	# Generate the first steps of the report
 	dcrab_generate_html 
@@ -527,5 +549,6 @@ dcrab_init_variables () {
 	export DCRAB_USER_ID=`id -u $USER`
 	export DCRAB_HTML=$DCRAB_REPORT_DIR/dcrab_report.html
 	export DCRAB_HOST_OS=$(cat /etc/*release | head -1 | awk '{print $1}')
+	export DCRAB_LOCK_FILE=$DCRAB_REPORT_DIR/aux/.dcrab.lockfile
 }
 

@@ -1,0 +1,290 @@
+<html> 
+<head><title>DCRAB REPORT</title> 
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>  
+<script type="text/javascript">  
+google.charts.load('current', {'packages':['corechart']});  
+google.charts.setOnLoadCallback(plot_all);  
+function plot_all() {  
+var cpu_data_atlas159 = new google.visualization.DataTable();  
+cpu_data_atlas159.addColumn('number', 'Execution Time (s)'); 
+var ib_data_atlas159 = new google.visualization.DataTable();  
+/* atlas159 addColumn space */ 
+cpu_data_atlas159.addColumn('number', 'vasp'); cpu_data_atlas159.addColumn('number', 'vasp'); cpu_data_atlas159.addColumn('number', 'vasp'); cpu_data_atlas159.addColumn('number', 'vasp'); cpu_data_atlas159.addColumn('number', 'lmod'); 
+/* atlas159 addRow space */ 
+var cpu_atlas159 = [ 
+[0, , , , , 53.8 ],[10, , , , ,  0],[21, 96.7, 96.7, 97.2, 95.5,  0],[31, 97.7, 97.7, 98.1, 96.9,  0],[41, 98.2, 98.2, 98.5, 97.7,  0],[52, 98.6, 98.6, 98.8, 98.1,  0],[62, 98.8, 98.8, 98.9, 98.4,  0],[72, 98.9, 98.9, 99.0, 98.6,  0],[83, 99.0, 99.0, 99.1, 98.7,  0],[93, 99.1, 99.1, 99.2, 98.9,  0],[103, 99.2, 99.2, 99.3, 98.9,  0],[114, 99.2, 99.2, 99.3, 99.0,  0],[124, 99.3, 99.3, 99.3, 99.1,  0],[135, 99.3, 99.3, 99.4, 99.1,  0],[145, 99.3, 99.3, 99.4, 99.2,  0],[155, 99.4, 99.4, 99.4, 99.2,  0],[166, 99.4, 99.4, 99.4, 99.3,  0],[176, 99.4, 99.4, 99.5, 99.3,  0],[186, 99.4, 99.4, 99.5, 99.3,  0],[197, 99.5, 99.5, 99.5, 99.3,  0],[207, 99.5, 99.5, 99.5, 99.4,  0],[217, 99.5, 99.5, 99.5, 99.4,  0],[228, 99.5, 99.5, 99.5, 99.4,  0],[239, 98.4, 98.4, 98.4, 98.2,  0],[249, 98.4, 98.4, 98.4, 98.3,  0],[259, 98.5, 98.5, 98.5, 98.4,  0],[270, 98.5, 98.5, 98.5, 98.4,  0],[280,  ,  ,  ,  ,  0],
+]; 
+cpu_data_atlas159.addRows(cpu_atlas159); 
+var mem1_atlas159 = google.visualization.arrayToDataTable([ 
+['Execution Time (s)', 'Node Memory', 'Requested Memory', 'Consumed Memory Peak (of VmRSS)', 'Consumed Memory (VmSize)', 'Resident Memory (VmRSS)'], 
+[0,252, 10, 0.004, 0.029, 0.004 ],[10,252, 10, 0.004, 0.000, 0.000 ],[21,252, 10, 6.346, 8.220, 6.346 ],[31,252, 10, 6.835, 8.225, 6.835 ],[41,252, 10, 6.835, 8.225, 6.835 ],[52,252, 10, 6.835, 8.225, 6.835 ],[62,252, 10, 6.835, 8.225, 6.835 ],[72,252, 10, 6.835, 8.225, 6.835 ],[83,252, 10, 6.835, 8.225, 6.835 ],[93,252, 10, 6.835, 8.225, 6.835 ],[103,252, 10, 6.835, 8.225, 6.835 ],[114,252, 10, 6.835, 8.225, 6.835 ],[124,252, 10, 6.835, 8.225, 6.835 ],[135,252, 10, 6.835, 8.225, 6.835 ],[145,252, 10, 6.835, 8.225, 6.835 ],[155,252, 10, 6.835, 8.225, 6.835 ],[166,252, 10, 6.835, 8.225, 6.835 ],[176,252, 10, 6.835, 8.225, 6.835 ],[186,252, 10, 6.835, 8.225, 6.835 ],[197,252, 10, 6.835, 8.225, 6.835 ],[207,252, 10, 6.835, 8.249, 6.835 ],[217,252, 10, 6.908, 8.331, 6.908 ],[228,252, 10, 6.910, 8.331, 6.910 ],[239,252, 10, 8.640, 10.963, 8.640 ],[249,252, 10, 9.051, 10.963, 9.051 ],[259,252, 10, 9.336, 10.963, 9.336 ],[270,252, 10, 9.661, 10.963, 9.661 ],[280,252, 10, 9.661, 0.000, 0.000 ],
+]); 
+var mem2_atlas159 = google.visualization.arrayToDataTable([ 
+['Mem class', 'Percentage'], 
+['Used memory', 96.610], 
+['Not utilized memory', 3.390], 
+]); 
+var ib_data_atlas159 = google.visualization.arrayToDataTable([ 
+['Execution Time (s)', 'Transmitted Packets', 'Received Packets', 'Transmitted Bytes (KB)', 'Received Bytes (KB)'], 
+[0, 223, 214, 11, 10 ],[10, 9068, 9948, 254, 2444 ],[21, 747, 720, 43, 37 ],[31, 1452, 1144, 370, 67 ],[41, 750, 726, 41, 37 ],[52, 751, 732, 41, 37 ],[62, 748, 729, 41, 37 ],[72, 750, 728, 41, 38 ],[83, 753, 734, 41, 38 ],[93, 795, 766, 46, 39 ],[103, 1087, 854, 340, 39 ],[114, 2030, 1705, 509, 186 ],[124, 20235, 33106, 2074, 29452 ],[135, 751, 733, 42, 38 ],[145, 757, 735, 42, 39 ],[155, 761, 743, 43, 39 ],[166, 807, 784, 47, 40 ],[176, 757, 732, 43, 39 ],[186, 1084, 828, 341, 40 ],[197, 757, 739, 43, 40 ],[207, 757, 728, 43, 40 ],[217, 761, 737, 43, 40 ],[228, 760, 738, 44, 40 ],[239, 1098, 1156, 54, 217 ],[249, 757, 727, 44, 40 ],[259, 755, 734, 44, 40 ],[270, 2700, 1982, 1042, 192 ],[280, 19912, 32952, 1843, 29450 ],
+]); 
+var cpu_options = { 
+title: 'CPU Utilization', 
+width: '800', 
+height: '600', 
+hAxis: {title: 'Execution Time (s)'}, 
+vAxis: {title: 'CPU used (%)'}, 
+chartArea: {  width: "70%", height: "80%" }, 
+}; 
+var mem1_options = {   
+title : 'Memory Utilization',  
+vAxis: {title: 'GB'},  
+hAxis: {title: 'Time (s)'},  
+width: 800,   
+height: 600,   
+axes: {   
+x: {   
+0: {side: 'top'}   
+}   
+},   
+};   
+var mem2_options = { 
+title: 'Requested memory usage', 
+width: 400, 
+height: 300, 
+colors: ['#3366CC', '#109618'], 
+is3D: true 
+}; 
+var ib_options = { 
+title: 'Infiniband Stats', 
+width: '800', 
+height: '600', 
+hAxis: {title: 'Execution Time (s)'}, 
+vAxis: {title: 'Values'}, 
+chartArea: {  width: "70%", height: "80%" }, 
+}; 
+var cpu_chart_atlas159 = new google.visualization.LineChart(document.getElementById('plot_cpu_atlas159')); 
+cpu_chart_atlas159.draw(cpu_data_atlas159, cpu_options);   
+var mem1_chart_atlas159 = new google.visualization.AreaChart(document.getElementById('plot1_mem_atlas159')); 
+var mem2_chart_atlas159 = new google.visualization.PieChart(document.getElementById('plot2_mem_atlas159')); 
+mem1_chart_atlas159.draw(mem1_atlas159, mem1_options);   
+mem2_chart_atlas159.draw(mem2_atlas159, mem2_options);   
+var ib_chart_atlas159 = new google.visualization.LineChart(document.getElementById('plot_ib_atlas159')); 
+ib_chart_atlas159.draw(ib_data_atlas159, ib_options);   
+} 
+</script> 
+<style> 
+body { 
+background: #25c481; /* Old browsers */ 
+background: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/Pgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgdmlld0JveD0iMCAwIDEgMSIgcHJlc2VydmVBc3BlY3RSYXRpbz0ibm9uZSI+CiAgPGxpbmVhckdyYWRpZW50IGlkPSJncmFkLXVjZ2ctZ2VuZXJhdGVkIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMCUiPgogICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzI1YzQ4MSIgc3RvcC1vcGFjaXR5PSIxIi8+CiAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMyNWI3YzQiIHN0b3Atb3BhY2l0eT0iMSIvPgogIDwvbGluZWFyR3JhZGllbnQ+CiAgPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0idXJsKCNncmFkLXVjZ2ctZ2VuZXJhdGVkKSIgLz4KPC9zdmc+); 
+background: -moz-linear-gradient(left,  #25c481 0%, #25b7c4 100%); /* FF3.6-15 */ 
+background: -webkit-linear-gradient(left,  #25c481 0%,#25b7c4 100%); /* Chrome10-25,Safari5.1-6 */ 
+background: linear-gradient(to right,  #25c481 0%,#25b7c4 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */ 
+filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#25c481', endColorstr='#25b7c4',GradientType=1 ); /* IE6-8 */ 
+margin: 0px; 
+} 
+ 
+.inline { 
+display:inline-block; 
+} 
+ 
+.text { 
+font-family: Consolas,monospace; 
+font-size: 14px; 
+} 
+ 
+.vl { 
+display: inline;  
+border-left: 2px solid black; 
+height: 10px; 
+padding-right:5em; 
+margin-left:5em; 
+} 
+ 
+table { 
+border-collapse: collapse; 
+margin: 15px; 
+margin-top: 2px; 
+margin-bottom: 2px; 
+} 
+ 
+tr { 
+border: 1px solid rgba(254, 254, 254, 0.3); 
+} 
+ 
+.overflowDivs { 
+overflow:auto; 
+white-space: nowrap; 
+} 
+ 
+.header { 
+width: 800px; 
+border: 1px solid rgba(254, 254, 254, 0.3); 
+float: left; 
+text-align: center; 
+font-family: 'Roboto', sans-serif; 
+font-size: 16px; 
+color: #fff; 
+text-transform: uppercase; 
+vertical-align: middle; 
+background-color: rgba(255,255,255,0.3); 
+} 
+ 
+.plot{ 
+vertical-align:middle; 
+} 
+ 
+.space { 
+width: px; 
+border: 0px; 
+background-color: none; 
+} 
+ 
+#foot { 
+background-color: rgba(255,255,255,0.3); 
+margin-top: 180px; 
+display: table; 
+width:100%; 
+} 
+ 
+#textmem2 { 
+border-spacing: 5px; 
+border-collapse: separate; 
+margin: 0 auto; 
+border: 1px solid rgba(254, 254, 254, 0.3);  
+} 
+ 
+#detailedText { 
+vertical-align: top; 
+padding-top: 230px; 
+font-family: 'Roboto', sans-serif; 
+font-size: 56px; 
+color: #fff; 
+text-transform: uppercase; 
+} 
+</style> 
+<body> 
+<center><h1>DCRAB REPORT - JOB 424252.maui01 </h1></center> 
+<div style="padding-left: 15px;" class="text"> 
+<p> 
+<br><br> 
+<b><u>Name of the job</u></b>: danipruebaCRAB <br> 
+<b><u>JOBID</u></b>: 424252.maui01 <br> 
+<b><u>User</u></b>: dfranco <br> 
+<b><u>Working directory</u></b>: /scratch/dfranco/pruebaDCRAB/candidate <br> 
+<b><u>Node list</u></b>: <br> 
+ atlas-159 <br> 
+<br><br><br><br> 
+</p> 
+</div> 
+<div class="overflowDivs"> 
+<div class="inline"> 
+<table><tr><td> 
+<div class="header">atlas-159</div> 
+</td></tr> 
+<tr><td> 
+<div class="plot" id='plot_cpu_atlas159'></div> 
+</td></tr> 
+</table> 
+</div> 
+</div> 
+<br><br><br> 
+<div class="overflowDivs"> 
+<div class="inline"> 
+<table><tr><td> 
+<div style="width: 1207px;" class="header">atlas-159</div> 
+</td></tr> 
+<tr><td> 
+<div class="plot inline" id='plot1_mem_atlas159'></div> 
+<div style="border: 0px;" class="plot inline"> 
+<div class="text"> 
+<table id="textmem2"> 
+<tr style="border: 0px;"><td><b><u>Node memory</u></b>:&nbsp;&nbsp;&nbsp;&nbsp;</td><td>252 GB</td></tr> 
+<tr style="border: 0px;"><td><b><u>Requested memory</u></b>:&nbsp;&nbsp;&nbsp;&nbsp;</td><td>10 GB</td></tr> 
+<tr style="border: 0px;"><td><b><u>VmRSS (peak)</u></b>:&nbsp;&nbsp;&nbsp;&nbsp;</td><td>9.661 GB</td></tr> 
+<tr style="border: 0px;"><td><b><u>VmSize (peak)</u></b>:&nbsp;&nbsp;&nbsp;&nbsp;</td><td>10.963 GB</td></tr> 
+</table> 
+</div> 
+<br><br><br> 
+<div class="plot inline" id='plot2_mem_atlas159'></div> 
+</div> 
+</td></tr> 
+</table> 
+</div> 
+</div> 
+<br><br><br> 
+<div class="overflowDivs"> 
+<div class="inline"> 
+<table><tr><td> 
+<div class="header">atlas-159</div> 
+</td></tr> 
+<tr><td> 
+<div class="plot" id='plot_ib_atlas159'></div> 
+</td></tr> 
+</table> 
+</div> 
+</div> 
+<br><br><br> 
+<div id='foot'> 
+<div class="inline">&nbsp;&nbsp;&nbsp;</div> 
+<div class="inline"> 
+<a href="http://dipc.ehu.es/" target="_blank"> 
+<svg version="1.1" x="0px" y="0px" width="90px" height="45px" viewBox="0 0 90 45" enable-background="new 0 0 90 45" xml:space="preserve" style="margin-top: 10px;"><image width="90" height="45" x="0" y="0" 
+xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHgAAABFCAMAAAC2XtKTAAAABGdBTUEAALGPC/xhBQAAACBjSFJN 
+AAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAACvlBMVEUAAAAAAAAAAAAAAAAA 
+AAAAAAAAAAAAAAAAAAAAkt0ClN4ClN0ClN0Ak+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA 
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlN0Cld0ClN4AkdoAAAAAAAAAAAAAAAAAAAAA 
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA 
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA 
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAClN4ClN0AAAAAAAAAAAAAAAAAAAAAAAAAkdoC 
+ld0Ck90ClN0Ak+QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA 
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA 
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA 
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA 
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA 
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA 
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD 
+ld7///8fboK2AAAA53RSTlMAudnOlm9AGAE20d/OMjLf0TYvydjMtJFoORNu/vHPThE88/A4OPDz 
+PDTu/e3Gh0MLEPQXrVwNuPy7Xwf4rlGbiyIz98dYtkfk1F564WP2+XbiYOxivy6Yr97y/ntlqPXb 
+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"/> 
+</a> 
+</div> 
+<div style="font-size: 12px; display: table-cell; vertical-align: middle;" class="text inline"> 
+Copyright &copy; 2017 DIPC (Donostia International Physics Center) 
+<div class="vl"></div> 
+<a href="http://dipc.ehu.es/cc/computing_resources/index.html" target="_blank"  style="text-decoration: none; color: black;"><b>Wiki</b></a> 
+<div class="vl"></div> 
+<a href="http://dipc.ehu.es/" target="_blank"  style="text-decoration: none; color: black;"><b>DIPC Home Page</b></a> 
+<div class="vl"></div> 
+</div> 
+</body>  
+</html>  
