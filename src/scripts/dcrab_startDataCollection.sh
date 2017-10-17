@@ -44,8 +44,10 @@ DCRAB_NUMBERS_OF_LOOPS_CONTROL=$(( DCRAB_WAIT_TIME_CONTROL / DCRAB_SLEEP_TIME_CO
 DCRAB_USER_PROCESSES_FILE=$DCRAB_REPORT_DIR/data/$node_hostname/dcrab_user_processes_$node_hostname.txt
 DCRAB_JOB_PROCESSES_FILE=$DCRAB_REPORT_DIR/data/$node_hostname/dcrab_job_processes_$node_hostname.txt
 DCRAB_MEM_FILE=$DCRAB_REPORT_DIR/data/$node_hostname/dcrab_mem_$node_hostname.txt
+DCRAB_TOTAL_MEM_FILE=$DCRAB_REPORT_DIR/aux/mem/$node_hostname.txt
+DCRAB_TOTAL_MEM_DIR=$DCRAB_REPORT_DIR/aux/mem/
 
-# Save the line to inject CPU data
+# Determine the lines to insert data
 addRow_data_line=`grep -n -m 1 "\/\* $node_hostname_mod addRow space \*\/" $DCRAB_HTML | cut -f1 -d:`
 addColumn_data_line=`grep -n -m 1 "\/\* $node_hostname_mod addColumn space \*\/" $DCRAB_HTML | cut -f1 -d:`
 
@@ -55,12 +57,24 @@ cpu_addColumn_inject_line=$((addColumn_data_line + 1))
 cpu_threshold="5.0"
 
 # MEM
+node_total_mem=`free -g | grep "Mem" | awk ' {printf $2}'`
 mem_addRow_inject_line=$((addRow_data_line + 6))
 memUsed_addRow_inject_line=$((addRow_data_line + 10))
 memUnUsed_addRow_inject_line=$((addRow_data_line + 11))
-node_total_mem=`free -g | grep "Mem" | awk ' {printf $2}'`
-mem_piePlot_color_line=$(grep -n -m 1 "var mem2_options =" | cut -f1 -d:)
-mem_piePlot_color_line=$((mem_piePlot_color_line + 4))
+if [ "$DCRAB_NODE_NUMBER" -eq 0 ]; then
+	mem_total_plot_line=$(grep -n -m 1 "var total_mem" $DCRAB_HTML | cut -f1 -d:)
+	memUsed_total_plot_line=$((mem_total_plot_line + 2))
+	memUnUsed_total_plot_line=$((mem_total_plot_line + 3))
+
+	mem_total_plot_text_line=$(grep -n -m 1 "id='plot_total_mem'" $DCRAB_HTML | cut -f1 -d:)
+	mem_total_plot_requested_text_line=$((mem_total_plot_text_line + 4))
+	mem_total_plot_VmRSS_text_line=$((mem_total_plot_text_line + 5))
+	mem_total_plot_VmSize_text_line=$((mem_total_plot_text_line + 6))
+	
+	mem_total_options_color_line=$(grep -n -m 1 "var total_mem_options" $DCRAB_HTML | cut -f1 -d:)
+	mem_total_options_color_line=$((mem_total_options_color_line + 4))
+	
+fi
 mem_piePlot1_div_line=$(grep -n -m 1 "id='plot1_mem_$node_hostname_mod" $DCRAB_HTML | cut -f1 -d:)
 mem_piePlot1_nodeMemory_line=$((mem_piePlot1_div_line + 4))
 mem_piePlot1_requestedMemory_line=$((mem_piePlot1_div_line + 5))
