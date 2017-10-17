@@ -26,9 +26,6 @@ dcrab_generate_html (){
 	space_width=30
 	addedBorder=6
 
-	# Copy necessary files to generate html
-	cp $DCRAB_BIN/aux/htmlResources/* $DCRAB_REPORT_DIR/aux/htmlResources
-	
         # Generate the first steps of the report
         printf "%s \n" "<html>" >> $DCRAB_HTML
         printf "%s \n" "<head><title>DCRAB REPORT</title>" >> $DCRAB_HTML
@@ -141,29 +138,48 @@ dcrab_generate_html (){
 
 	printf "%s \n" "}" >> $DCRAB_HTML
         ################# END plot function #################
-
         printf "%s \n" "</script>" >> $DCRAB_HTML
 
 	################# Style #################
         printf "%s \n" "<style>" >> $DCRAB_HTML
         printf "%s \n" "body {" >> $DCRAB_HTML
+        printf "%s \n" "background: #25c481; /* Old browsers */" >> $DCRAB_HTML
+        printf "%s \n" "background: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/Pgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgdmlld0JveD0iMCAwIDEgMSIgcHJlc2VydmVBc3BlY3RSYXRpbz0ibm9uZSI+CiAgPGxpbmVhckdyYWRpZW50IGlkPSJncmFkLXVjZ2ctZ2VuZXJhdGVkIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMCUiPgogICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzI1YzQ4MSIgc3RvcC1vcGFjaXR5PSIxIi8+CiAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMyNWI3YzQiIHN0b3Atb3BhY2l0eT0iMSIvPgogIDwvbGluZWFyR3JhZGllbnQ+CiAgPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0idXJsKCNncmFkLXVjZ2ctZ2VuZXJhdGVkKSIgLz4KPC9zdmc+);" >> $DCRAB_HTML
+        printf "%s \n" "background: -moz-linear-gradient(left,  #25c481 0%, #25b7c4 100%); /* FF3.6-15 */" >> $DCRAB_HTML
+        printf "%s \n" "background: -webkit-linear-gradient(left,  #25c481 0%,#25b7c4 100%); /* Chrome10-25,Safari5.1-6 */" >> $DCRAB_HTML
+        printf "%s \n" "background: linear-gradient(to right,  #25c481 0%,#25b7c4 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */" >> $DCRAB_HTML
+        printf "%s \n" "filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#25c481', endColorstr='#25b7c4',GradientType=1 ); /* IE6-8 */" >> $DCRAB_HTML
         printf "%s \n" "margin: 0px;" >> $DCRAB_HTML
         printf "%s \n" "}" >> $DCRAB_HTML
-        printf "%s \n" "p {" >> $DCRAB_HTML
-        printf "%s \n" "font-family: monospace;" >> $DCRAB_HTML
+        printf "%s \n" "" >> $DCRAB_HTML
+        printf "%s \n" ".text {" >> $DCRAB_HTML
+        printf "%s \n" "font-family: Consolas,monospace;" >> $DCRAB_HTML
+        printf "%s \n" "font-size: 14px;" >> $DCRAB_HTML
         printf "%s \n" "}" >> $DCRAB_HTML
+        printf "%s \n" "" >> $DCRAB_HTML
+        printf "%s \n" ".vl {" >> $DCRAB_HTML
+        printf "%s \n" "display: inline; " >> $DCRAB_HTML
+        printf "%s \n" "border-left: 2px solid black;" >> $DCRAB_HTML
+        printf "%s \n" "height: 10px;" >> $DCRAB_HTML
+        printf "%s \n" "padding-right:5em;" >> $DCRAB_HTML
+        printf "%s \n" "margin-left:5em;" >> $DCRAB_HTML
+        printf "%s \n" "}" >> $DCRAB_HTML
+        printf "%s \n" "" >> $DCRAB_HTML
         printf "%s \n" "table {" >> $DCRAB_HTML
         printf "%s \n" "border-collapse: collapse;" >> $DCRAB_HTML
         printf "%s \n" "margin: 15px;" >> $DCRAB_HTML
         printf "%s \n" "margin-top: 2px;" >> $DCRAB_HTML
         printf "%s \n" "margin-bottom: 2px;" >> $DCRAB_HTML
         printf "%s \n" "}" >> $DCRAB_HTML
+        printf "%s \n" "" >> $DCRAB_HTML
         printf "%s \n" "tr {" >> $DCRAB_HTML
         printf "%s \n" "border: 1px solid rgba(254, 254, 254, 0.3);" >> $DCRAB_HTML
         printf "%s \n" "}" >> $DCRAB_HTML
+        printf "%s \n" "" >> $DCRAB_HTML
         printf "%s \n" ".overflowDivs {" >> $DCRAB_HTML
         printf "%s \n" "overflow:auto;" >> $DCRAB_HTML
         printf "%s \n" "}" >> $DCRAB_HTML
+        printf "%s \n" "" >> $DCRAB_HTML
         printf "%s \n" ".header2 {" >> $DCRAB_HTML
         printf "%s \n" "width: $(( (plot_width * 2) - (plot_width / 2) + (space_width + addedBorder) ))px;" >> $DCRAB_HTML
         printf "%s \n" "border: 1px solid rgba(254, 254, 254, 0.3);" >> $DCRAB_HTML
@@ -199,18 +215,20 @@ dcrab_generate_html (){
         printf "%s \n" "border: 0px;" >> $DCRAB_HTML
         printf "%s \n" "background-color: none;" >> $DCRAB_HTML
         printf "%s \n" "}" >> $DCRAB_HTML
+        printf "%s \n" "" >> $DCRAB_HTML
         printf "%s \n" "#foot {" >> $DCRAB_HTML
         printf "%s \n" "background-color: rgba(255,255,255,0.3);" >> $DCRAB_HTML
-        printf "%s \n" "padding: 1px 80px;" >> $DCRAB_HTML
         printf "%s \n" "margin-top: 180px;" >> $DCRAB_HTML
+        printf "%s \n" "display: table;" >> $DCRAB_HTML
+        printf "%s \n" "width:100%;" >> $DCRAB_HTML
         printf "%s \n" "}" >> $DCRAB_HTML
 	printf "%s \n" "</style>" >> $DCRAB_HTML
 	################# END Style #################
 
 	# Job summary
-        printf "%s \n" "<body background=\"./aux/htmlResources/background.png\">" >> $DCRAB_HTML
+        printf "%s \n" "<body>" >> $DCRAB_HTML
         printf "%s \n" "<center><h1>DCRAB REPORT - JOB $DCRAB_JOB_ID </h1></center>" >> $DCRAB_HTML
-        printf "%s \n" "<div style=\"padding-left: 15px;\">" >> $DCRAB_HTML
+        printf "%s \n" "<div style=\"padding-left: 15px;\" class=\"text\">" >> $DCRAB_HTML
         printf "%s \n" "<p>" >> $DCRAB_HTML
         printf "%s \n" "<br><br>" >> $DCRAB_HTML
         printf "%s \n" "<b><u>Name of the job</u></b>: $DCRAB_JOBNAME <br>" >> $DCRAB_HTML
@@ -281,12 +299,67 @@ dcrab_generate_html (){
         printf "%s \n" "</div>" >> $DCRAB_HTML
 	################# END CPU plots ##############
 
-	printf "%s \n" "<div id='foot'>" >> $DCRAB_HTML
-	printf "%s \n" "<p>" >> $DCRAB_HTML
-	printf "%s \n" "<pre class=\"tab\">" >> $DCRAB_HTML
-	printf "%s \n" "<a href=\"http://dipc.ehu.es/\" target=\"_blank\"><img src=\"./aux/htmlResources/dipc_logo.png\" alt=\"DIPC logo\" width=\"90\" height=\"40\" align=\"middle\"></a>                      Copyright &copy; 2017 DIPC (Donostia International Physics Center)             <div class=\"vl\" style=\"display: inline; border-left: 2px solid black; height: 10px;\"></div>            <a href=\"http://dipc.ehu.es/cc/computing_resources/index.html\" target=\"_blank\"  style=\"text-decoration: none; color: black\"><b>Wiki</b></a>            <div class=\"vl\" style=\"display: inline; border-left: 2px solid black; height: 10px;\"></div>            <a href=\"http://dipc.ehu.es/\" target=\"_blank\"  style=\"text-decoration: none; color: black\"><b>DIPC Home Page</b></a>             <div class=\"vl\" style=\"display: inline; border-left: 2px solid black; height: 10px;\"></div> </pre>" >> $DCRAB_HTML
-	printf "%s \n" "</p>" >> $DCRAB_HTML
-	printf "%s \n" "</div>" >> $DCRAB_HTML
+        printf "%s \n" "<div id='foot'>" >> $DCRAB_HTML
+        printf "%s \n" "<div style=\"display: inline;\">&nbsp;&nbsp;&nbsp;</div>" >> $DCRAB_HTML
+        printf "%s \n" "<div style=\"display: inline;\">" >> $DCRAB_HTML
+        printf "%s \n" "<a href=\"http://dipc.ehu.es/\" target=\"_blank\">" >> $DCRAB_HTML
+        printf "%s \n" "<svg version=\"1.1\" x=\"0px\" y=\"0px\" width=\"90px\" height=\"45px\" viewBox=\"0 0 90 45\" enable-background=\"new 0 0 90 45\" xml:space=\"preserve\" style=\"margin-top: 10px;\"><image width=\"90\" height=\"45\" x=\"0\" y=\"0\"" >> $DCRAB_HTML
+        printf "%s \n" "xlink:href=\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHgAAABFCAMAAAC2XtKTAAAABGdBTUEAALGPC/xhBQAAACBjSFJN" >> $DCRAB_HTML
+        printf "%s \n" "AAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAACvlBMVEUAAAAAAAAAAAAAAAAA" >> $DCRAB_HTML
+        printf "%s \n" "AAAAAAAAAAAAAAAAAAAAkt0ClN4ClN0ClN0Ak+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" >> $DCRAB_HTML
+        printf "%s \n" "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlN0Cld0ClN4AkdoAAAAAAAAAAAAAAAAAAAAA" >> $DCRAB_HTML
+        printf "%s \n" "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" >> $DCRAB_HTML
+        printf "%s \n" "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" >> $DCRAB_HTML
+        printf "%s \n" "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAClN4ClN0AAAAAAAAAAAAAAAAAAAAAAAAAkdoC" >> $DCRAB_HTML
+        printf "%s \n" "ld0Ck90ClN0Ak+QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" >> $DCRAB_HTML
+        printf "%s \n" "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" >> $DCRAB_HTML
+        printf "%s \n" "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" >> $DCRAB_HTML
+        printf "%s \n" "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" >> $DCRAB_HTML
+        printf "%s \n" "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" >> $DCRAB_HTML
+        printf "%s \n" "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" >> $DCRAB_HTML
+        printf "%s \n" "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD" >> $DCRAB_HTML
+        printf "%s \n" "ld7///8fboK2AAAA53RSTlMAudnOlm9AGAE20d/OMjLf0TYvydjMtJFoORNu/vHPThE88/A4OPDz" >> $DCRAB_HTML
+        printf "%s \n" "PDTu/e3Gh0MLEPQXrVwNuPy7Xwf4rlGbiyIz98dYtkfk1F564WP2+XbiYOxivy6Yr97y/ntlqPXb" >> $DCRAB_HTML
+        printf "%s \n" "OhVqcmkTEm3Xw6cEnZMFHamx5QlbwCEcjCyebI2BGycmGQyVVNYequsIKcKOP9px+n6lZBUoK9wW" >> $DCRAB_HTML
+        printf "%s \n" "f0YCnOhF8iB4N/t5hiMOyGqIZ4l86n01aVNJTzDFMUS1BqEDg0zjLc2j4KRZ7+k+VySFwVrLptNC" >> $DCRAB_HTML
+        printf "%s \n" "cpSA1TusVp9IVZdN0pK9ilAPa8oM3lJWAAAAAWJLR0TpUdNHlAAAAAlwSFlzAAALEwAACxMBAJqc" >> $DCRAB_HTML
+        printf "%s \n" "GAAAAAd0SU1FB+ELBwcDCNtyplsAAAVgSURBVGje7djrW1RFGADwl10RuslmIGjLxQq5LHKnFljU" >> $DCRAB_HTML
+        printf "%s \n" "AgkQRFnStiKgGwi7LggEZIi6EJlQbIiUUEKSEJKEhDfUwgpKpAxL7SJZWtOf0VluO3POnN1zOE/f" >> $DCRAB_HTML
+        printf "%s \n" "eD/xvPPO/M5lds4M4CCTOyxyXOzkDJS46+57rHHvfQBL5C7WUNwPsPQBV7dl7h7LV4CwcHZa/OAi" >> $DCRAB_HTML
+        printf "%s \n" "B7nMAVwQE0pPL3dvH27Zyof+tcbDjwD4rkLW8PMHCAi0/KUKWh0cEmqfDfN29/JUWnq4TMOWCHfw" >> $DCRAB_HTML
+        printf "%s \n" "iJgvbInAyKhHbbMRHo+Fz1ZjMELq6JjY+cMIaeLWOPOzsTHRamstATNd1wZIgJm7Xvc4n/vE2ni8" >> $DCRAB_HTML
+        printf "%s \n" "kgUjlLBeCoxQ4pN0d30CWceBUZKjJBglp9BcxyRkD0bxGyTBKDWN627YiOzDKH2TJBhtzmC7m9KR" >> $DCRAB_HTML
+        printf "%s \n" "EBhpMyXBSOZNuplaJAxGySGSYPTUFtwNSUZCYRQXIQlGW7H1IOJpRIV1tLRyZoKtfOZZa4iANdgE" >> $DCRAB_HTML
+        printf "%s \n" "e05Jq9BBVvDzimxOPid3qtMLL75kjZdfocB5+esit3HnTsHcQpKbw2nMVhQGZzFNeqc1hiB243b6" >> $DCRAB_HTML
+        printf "%s \n" "4seBmTAWRRWHs7rPPjJw3s4eOciwxkk/O57eeweruWS5YJiJ0rJXWf3l5TM3XMJq2OGtJ0asqGS9" >> $DCRAB_HTML
+        printf "%s \n" "imAxMMBrO8nuqten88GsJ1FVxB5Sv4uUvaot2d1Y7LEFw96tJLHMZMlWe5HuLj33ZkpriBpNrcWR" >> $DCRAB_HTML
+        printf "%s \n" "lVjjjQBbMNS9SfTf52tJ1mqIZM1btMe4v54oamBS/n5YYpWvTRjefoe4uUZLroEYsn4/9f1Blhmv" >> $DCRAB_HTML
+        printf "%s \n" "KggTCcO7xMtqYp5qWAGeMR+gu9BMlCUdFAu3vIf3V7wPcJD4GtY388BwCL/k7FaxcNsHOPNhC0Ar" >> $DCRAB_HTML
+        printf "%s \n" "vjQpD/G5cLgdq1OliYUhDdtUoWzmS5OmwhLth3nhDnzhVn4kGj6CL9ydzCbqY/wR6jp44RVy/Fkd" >> $DCRAB_HTML
+        printf "%s \n" "FQ13bcafGLMcH8XHk+fxwt2f4IWVouEifHYpewAq8fESunlhHze88JhouBz/uKt6AT7Fx3ML44Wr" >> $DCRAB_HTML
+        printf "%s \n" "ZfgVHxcNL+3DWtVRAJ/h71hWzQv345sj5QnR8AD+YY7/HKAHh7X9vHAPPvvTB0XDxKdIuwRgEL8S" >> $DCRAB_HTML
+        printf "%s \n" "VQ+fG1uMd+w7KRZuPoX3l1UAnN6HZ4pjeeAz+CtCigixcArxKTpbymz0FMStnKG7Qwa8Cp07LxJu" >> $DCRAB_HTML
+        printf "%s \n" "Pkv0v8Ckzp8jUoYhKtxLHOdUzNwSBx8nPk7ZX1hyJ/BZg+J7ae6gK3F1Xw6LhDOJ94ku7rUkt5CH" >> $DCRAB_HTML
+        printf "%s \n" "tW2DXLf2IlGCvjKKgw98TfY/NpU1fkNm5bUstruRtbGPHwExcMWFUbL/t99NN4zEk3ldI75w+lyK" >> $DCRAB_HTML
+        printf "%s \n" "VJHtKNFHBByRFs0+LhiMM0MnshpUkZemhoaxgIHL45zjqyYGBMK7fb+v+sHM7t/XOntTGRp228b6" >> $DCRAB_HTML
+        printf "%s \n" "ywMBYzAeyD2AIHTFJBA++eOomdK/au4gYrpCaU4PHKefFnMmQCBMP7SdarG+x4kcWgX9mKq6CpLg" >> $DCRAB_HTML
+        printf "%s \n" "0TJ84l5VUUrocE2sJJi1q4v9SShcOLc5mh9cYyJ/qx2FwuC4YZAEGyrYi9NwnBC4CZsY84CVNZSN" >> $DCRAB_HTML
+        printf "%s \n" "RkuTXbjTvQ6kwKM/m4ASde6dtuFr+UaQAq+OAnoY86/ZgP12XifLRcLahmHgjesGPx64/cYv7L2J" >> $DCRAB_HTML
+        printf "%s \n" "KFj76282/mvM/Kx+v9HOhc05NydDObXCYc0fVRNDYCdCJ2/mmGdhndrsmVpwq6yrjVLp3660Bh0O" >> $DCRAB_HTML
+        printf "%s \n" "UmtGdX/+NVBhT52Ktq6yWwWpnma1DkYybueO3eF5Rnlpf1sjM4wCd6ekTB4pNwlSp8P5zlju7YwR" >> $DCRAB_HTML
+        printf "%s \n" "ET0sYXtf/T/GArwAL8AL8AK8APPG6QRXa/zTL2Gk/wAZVizK4pjBSAAAACV0RVh0ZGF0ZTpjcmVh" >> $DCRAB_HTML
+        printf "%s \n" "dGUAMjAxNy0xMS0wN1QwNzowMzowOC0wNzowML75CnwAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMTct" >> $DCRAB_HTML
+        printf "%s \n" "MTEtMDdUMDc6MDM6MDgtMDc6MDDPpLLAAAAAAElFTkSuQmCC\"/>" >> $DCRAB_HTML
+        printf "%s \n" "</a>" >> $DCRAB_HTML
+        printf "%s \n" "</div>" >> $DCRAB_HTML
+        printf "%s \n" "<div style=\"display: inline; font-size: 12px; display: table-cell; vertical-align: middle;\" class=\"text\">" >> $DCRAB_HTML
+        printf "%s \n" "Copyright &copy; 2017 DIPC (Donostia International Physics Center)" >> $DCRAB_HTML
+        printf "%s \n" "<div class=\"vl\"></div>" >> $DCRAB_HTML
+        printf "%s \n" "<a href=\"http://dipc.ehu.es/cc/computing_resources/index.html\" target=\"_blank\"  style=\"text-decoration: none; color: black;\"><b>Wiki</b></a>" >> $DCRAB_HTML
+        printf "%s \n" "<div class=\"vl\"></div>" >> $DCRAB_HTML
+        printf "%s \n" "<a href=\"http://dipc.ehu.es/\" target=\"_blank\"  style=\"text-decoration: none; color: black;\"><b>DIPC Home Page</b></a>" >> $DCRAB_HTML
+        printf "%s \n" "<div class=\"vl\"></div>" >> $DCRAB_HTML
+        printf "%s \n" "</div>" >> $DCRAB_HTML
         printf "%s \n" "</body> " >> $DCRAB_HTML
         printf "%s \n" "</html> " >> $DCRAB_HTML
 }
