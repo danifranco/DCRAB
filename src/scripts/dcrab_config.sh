@@ -85,6 +85,12 @@ dcrab_generate_html (){
                 printf "%s \n" "['Execution Time (s)', 'Transmitted Packets', 'Received Packets', 'Transmitted Bytes (KB)', 'Received Bytes (KB)']," >> $DCRAB_HTML
 		printf "\n"  >> $DCRAB_HTML
                 printf "%s \n" "]);" >> $DCRAB_HTML
+	
+		# DISK
+		printf "%s \n" "var disk_data_$node = google.visualization.arrayToDataTable([" >> $DCRAB_HTML
+                printf "%s \n" "['Execution Time (s)', 'Read', 'Write']," >> $DCRAB_HTML
+                printf "\n"  >> $DCRAB_HTML
+                printf "%s \n" "]);" >> $DCRAB_HTML
 	done
 
 	# TIME
@@ -151,6 +157,21 @@ dcrab_generate_html (){
         printf "%s \n" "vAxis: {title: 'Values'}," >> $DCRAB_HTML
         printf "%s \n" "chartArea: {  width: \"70%\", height: \"80%\" }," >> $DCRAB_HTML
         printf "%s \n" "};" >> $DCRAB_HTML
+	
+	# DISK
+        printf "%s \n" "var disk_options = {  " >> $DCRAB_HTML
+        printf "%s \n" "title : 'Disk I/O Stats', " >> $DCRAB_HTML
+        printf "%s \n" "vAxis: {title: 'MB/s'}, " >> $DCRAB_HTML
+        printf "%s \n" "hAxis: {title: 'Time (s)'}, " >> $DCRAB_HTML
+        printf "%s \n" "width: $plot_width,  " >> $DCRAB_HTML
+        printf "%s \n" "height: $plot_height,  " >> $DCRAB_HTML
+        printf "%s \n" "axes: {  " >> $DCRAB_HTML
+        printf "%s \n" "x: {  " >> $DCRAB_HTML
+        printf "%s \n" "0: {side: 'top'}  " >> $DCRAB_HTML
+        printf "%s \n" "}  " >> $DCRAB_HTML
+        printf "%s \n" "},  " >> $DCRAB_HTML
+        printf "%s \n" "};  " >> $DCRAB_HTML
+
 
 	if [ "$DCRAB_NNODES" -gt 1 ]; then
 		printf "%s \n" "var total_mem_options = {" >> $DCRAB_HTML
@@ -182,6 +203,10 @@ dcrab_generate_html (){
 		# IB
                 printf "%s \n" "var ib_chart_$node = new google.visualization.LineChart(document.getElementById('plot_ib_$node'));"  >> $DCRAB_HTML
                 printf "%s \n" "ib_chart_$node.draw(ib_data_$node, ib_options);  " >> $DCRAB_HTML
+	
+		# DISK
+                printf "%s \n" "var disk_chart_$node = new google.visualization.AreaChart(document.getElementById('plot_disk_$node'));"  >> $DCRAB_HTML
+                printf "%s \n" "disk_chart_$node.draw(disk_data_$node, disk_options);  " >> $DCRAB_HTML
         done
 
 	if [ "$DCRAB_NNODES" -gt 1 ]; then
@@ -416,6 +441,35 @@ dcrab_generate_html (){
         printf "%s \n" "</div>" >> $DCRAB_HTML
 	printf "%s \n" "<br><br><br>" >> $DCRAB_HTML
 
+	# Disk plots
+	printf "%s \n" "<div class=\"overflowDivs\">" >> $DCRAB_HTML
+	i=1
+        while [ $i -le $DCRAB_NNODES ]; do
+                printf "%s \n" "<div class=\"inline\">" >> $DCRAB_HTML
+                printf "%s \n" "<table><tr><td>" >> $DCRAB_HTML
+                printf "%s \n" "<div style=\"width: 1100px;\" class=\"header\">$(echo $DCRAB_NODES | cut -d' ' -f $i)</div>" >> $DCRAB_HTML
+                printf "%s \n" "</td></tr>" >> $DCRAB_HTML
+                printf "%s \n" "<tr><td>" >> $DCRAB_HTML
+                printf "%s \n" "<div class=\"plot inline\" id='plot_disk_$(echo $DCRAB_NODES_MOD | cut -d' ' -f$i)'></div>" >> $DCRAB_HTML
+                printf "%s \n" "<div style=\"border: 0px; margin-left: 75px;\" class=\"plot inline\">" >> $DCRAB_HTML
+                printf "%s \n" "<div class=\"text\">" >> $DCRAB_HTML
+                printf "%s \n" "<table id=\"textmem2\">" >> $DCRAB_HTML
+                printf "%s \n" "<tr style=\"border: 0px;\"><td><b><u>Total Read</u></b>:</td></tr>" >> $DCRAB_HTML
+                printf "%s \n" "<tr style=\"border: 0px;\"><td>0 MB</td></tr>" >> $DCRAB_HTML
+                printf "%s \n" "<tr style=\"border: 0px;\"><td><b><u>Total Write</u></b>:</td></tr>" >> $DCRAB_HTML
+                printf "%s \n" "<tr style=\"border: 0px;\"><td>0 MB</td></tr>" >> $DCRAB_HTML
+                printf "%s \n" "</table>" >> $DCRAB_HTML
+                printf "%s \n" "</div>" >> $DCRAB_HTML
+                printf "%s \n" "</div>" >> $DCRAB_HTML
+                printf "%s \n" "</td></tr>" >> $DCRAB_HTML
+                printf "%s \n" "</table>" >> $DCRAB_HTML
+                printf "%s \n" "</div>" >> $DCRAB_HTML
+                i=$((i+1))
+        done
+        printf "%s \n" "</div>" >> $DCRAB_HTML
+        printf "%s \n" "<br><br><br>" >> $DCRAB_HTML
+
+	
 	# Foot
         printf "%s \n" "<div id='foot'>" >> $DCRAB_HTML
         printf "%s \n" "<div class=\"inline\">&nbsp;&nbsp;&nbsp;</div>" >> $DCRAB_HTML
@@ -473,7 +527,7 @@ dcrab_generate_html (){
         printf "%s \n" "<div style=\"font-size: 12px; display: table-cell; vertical-align: middle;\" class=\"text inline\">" >> $DCRAB_HTML
         printf "%s \n" "Copyright &copy; 2017 DIPC (Donostia International Physics Center)" >> $DCRAB_HTML
         printf "%s \n" "<div class=\"vl\"></div>" >> $DCRAB_HTML
-        printf "%s \n" "<a href=\"http://dipc.ehu.es/cc/computing_resources/index.html\" target=\"_blank\"  style=\"text-decoration: none; color: black;\"><b>Wiki</b></a>" >> $DCRAB_HTML
+        printf "%s \n" "<a href=\"http://dipc.ehu.es/cc/computing_resources/index.html\" target=\"_blank\"  style=\"text-decoration: none; color: black;\"><b>Technical Documentation</b></a>" >> $DCRAB_HTML
         printf "%s \n" "<div class=\"vl\"></div>" >> $DCRAB_HTML
         printf "%s \n" "<a href=\"http://dipc.ehu.es/\" target=\"_blank\"  style=\"text-decoration: none; color: black;\"><b>DIPC Home Page</b></a>" >> $DCRAB_HTML
         printf "%s \n" "<div class=\"vl\"></div>" >> $DCRAB_HTML
@@ -504,6 +558,7 @@ dcrab_check_scheduler () {
         elif [ -n "$PBS_NODEFILE" ]; then
                 DCRAB_SCHEDULER=pbs
                 DCRAB_JOB_ID=$PBS_JOBID
+		DCRAB_JOB_ID=${DCRAB_JOB_ID%.*}
                 DCRAB_WORKDIR=$PBS_O_WORKDIR
                 DCRAB_JOBNAME=$PBS_JOBNAME
 		# Sort reverse because PBS scheduler starts the execution in descending order
@@ -574,7 +629,7 @@ dcrab_start_data_collection () {
                 # Create node folders
                 mkdir -p $DCRAB_REPORT_DIR/data/$node
 		
-                COMMAND="$DCRAB_BIN/scripts/dcrab_startDataCollection.sh $DCRAB_WORKDIR/$DCRAB_REPORT_DIR/aux/env.txt $i $DCRAB_WORKDIR/$DCRAB_LOG_DIR/dcrab_$node.log & echo \$!"
+                COMMAND="$DCRAB_BIN/scripts/dcrab_startDataCollection.sh $DCRAB_WORKDIR/$DCRAB_REPORT_DIR/aux/env.txt $i $DCRAB_WORKDIR/$DCRAB_LOG_DIR/$node.log & echo \$!"
 
                 # Hay que poner la key, sino pide password
                 DCRAB_PIDs[$i]=`ssh -n $node PATH=$PATH $COMMAND | tail -n 1 `

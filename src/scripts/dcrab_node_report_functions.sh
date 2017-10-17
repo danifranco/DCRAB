@@ -21,27 +21,46 @@ init_variables () {
 	node_hostname=`hostname`
 	node_hostname_mod=`echo $node_hostname | sed 's|-||g'`
 
-	# Time 
+	# TIME 
 	DCRAB_WAIT_TIME_CONTROL=180 # 3 minutes
 	DCRAB_SLEEP_TIME_CONTROL=5
 	DCRAB_DIFF_TIMESTAMP=0
 	DCRAB_NUMBERS_OF_LOOPS_CONTROL=$(( DCRAB_WAIT_TIME_CONTROL / DCRAB_SLEEP_TIME_CONTROL ))
+	DCRAB_LOOP_BEFORE_CRASH=20
 
 	# Files and directories	
-	DCRAB_USER_PROCESSES_FILE=$DCRAB_REPORT_DIR/data/$node_hostname/dcrab_user_processes_$node_hostname.txt
-	DCRAB_JOB_PROCESSES_FILE=$DCRAB_REPORT_DIR/data/$node_hostname/dcrab_job_processes_$node_hostname.txt
-	DCRAB_MEM_FILE=$DCRAB_REPORT_DIR/data/$node_hostname/dcrab_mem_$node_hostname.txt
+	DCRAB_USER_PROCESSES_FILE=$DCRAB_REPORT_DIR/data/$node_hostname/user_processes
+	DCRAB_JOB_PROCESSES_FILE=$DCRAB_REPORT_DIR/data/$node_hostname/job_processes
+	DCRAB_JOB_CANDIDATE_PROCESSES_FILE=$DCRAB_REPORT_DIR/data/$node_hostname/job_candidate_processes
+	DCRAB_MEM_FILE=$DCRAB_REPORT_DIR/data/$node_hostname/mem
 	DCRAB_TOTAL_MEM_FILE=$DCRAB_REPORT_DIR/aux/mem/$node_hostname.txt
 	DCRAB_TOTAL_MEM_DIR=$DCRAB_REPORT_DIR/aux/mem/
 	if [ -d "/sys/class/infiniband/mlx5_0/ports/1/counters_ext/" ]; then
 		DCRAB_IB_BASE_DIR=/sys/class/infiniband/mlx5_0/ports/1/counters_ext
+		DCRAB_IB_XMIT_PACK=$DCRAB_IB_BASE_DIR/port_xmit_packets_64
+	        DCRAB_IB_XMIT_DATA=$DCRAB_IB_BASE_DIR/port_xmit_data_64
+	        DCRAB_IB_RCV_PACK=$DCRAB_IB_BASE_DIR/port_rcv_packets_64
+	        DCRAB_IB_RCV_DATA=$DCRAB_IB_BASE_DIR/port_rcv_data_64
+	elif [ -d "/sys/class/infiniband/mlx5_0/ports/1/counters/" ]; then
+		DCRAB_IB_BASE_DIR=/sys/class/infiniband/mlx5_0/ports/1/counters
+		DCRAB_IB_XMIT_PACK=$DCRAB_IB_BASE_DIR/port_xmit_packets
+	        DCRAB_IB_XMIT_DATA=$DCRAB_IB_BASE_DIR/port_xmit_data
+	        DCRAB_IB_RCV_PACK=$DCRAB_IB_BASE_DIR/port_rcv_packets
+	        DCRAB_IB_RCV_DATA=$DCRAB_IB_BASE_DIR/port_rcv_data
+	elif [ -d "/sys/class/infiniband/mlx4_0/ports/1/counters/" ]; then
+		DCRAB_IB_BASE_DIR=/sys/class/infiniband/mlx4_0/ports/1/counters
+                DCRAB_IB_XMIT_PACK=$DCRAB_IB_BASE_DIR/port_xmit_packets
+                DCRAB_IB_XMIT_DATA=$DCRAB_IB_BASE_DIR/port_xmit_data
+                DCRAB_IB_RCV_PACK=$DCRAB_IB_BASE_DIR/port_rcv_packets
+                DCRAB_IB_RCV_DATA=$DCRAB_IB_BASE_DIR/port_rcv_data
 	else
 		DCRAB_IB_BASE_DIR=/sys/class/infiniband/mlx4_0/ports/1/counters_ext
+		DCRAB_IB_XMIT_PACK=$DCRAB_IB_BASE_DIR/port_xmit_packets_64
+                DCRAB_IB_XMIT_DATA=$DCRAB_IB_BASE_DIR/port_xmit_data_64
+                DCRAB_IB_RCV_PACK=$DCRAB_IB_BASE_DIR/port_rcv_packets_64
+                DCRAB_IB_RCV_DATA=$DCRAB_IB_BASE_DIR/port_rcv_data_64
 	fi
-	DCRAB_IB_XMIT_PACK=$DCRAB_IB_BASE_DIR/port_xmit_packets_64
-	DCRAB_IB_XMIT_DATA=$DCRAB_IB_BASE_DIR/port_xmit_data_64
-	DCRAB_IB_RCV_PACK=$DCRAB_IB_BASE_DIR/port_rcv_packets_64
-	DCRAB_IB_RCV_DATA=$DCRAB_IB_BASE_DIR/port_rcv_data_64
+	DCRAB_DISK_FILE=$DCRAB_REPORT_DIR/data/$node_hostname/disk
 
 	# PIDs
         DCRAB_MAIN_PIDS=0
@@ -53,10 +72,6 @@ init_variables () {
 	# MPI
         DCRAB_CONTROL_PORT_MAIN_NODE="none1"
         DCRAB_CONTROL_PORT_OTHER_NODE="none2"
-
-	# Updates
-        updates=0
-	declare -a upd_proc_name
 	
 	# Data insert lines
 	addRow_data_line=`grep -n -m 1 "\/\* $node_hostname_mod addRow space \*\/" $DCRAB_HTML | cut -f1 -d:`
@@ -67,7 +82,9 @@ init_variables () {
 	cpu_addRow_inject_line=$((addRow_data_line + 2))
 	cpu_addColumn_inject_line=$((addColumn_data_line + 1))
 	cpu_threshold="5.0"
-	
+	updates=0
+        declare -a upd_proc_name
+
 	# MEM
 	mem_data=""
 	node_total_mem=`free -g | grep "Mem" | awk ' {printf $2}'`
@@ -115,7 +132,7 @@ init_variables () {
         ib_rcv_pck_value=$(cat $DCRAB_IB_RCV_PACK)
         ib_rcv_data_value=$(cat $DCRAB_IB_RCV_DATA)
 	
-	# Time
+	# TIME
 	time_data_line=$(grep -n -m 1 "var time_data" $DCRAB_HTML | cut -f1 -d:)
 	elapsedTime_plot_line=$((time_data_line + 2))
         remainingTime_plot_line=$((time_data_line + 3))
@@ -127,7 +144,7 @@ init_variables () {
 	local m=$(echo "$DCRAB_REQ_CPUT" | cut -d':' -f2)
 	local s=$(echo "$DCRAB_REQ_CPUT" | cut -d':' -f3)
 	DCRAB_TIME_REQ_SECONDS=$(((h * 3600) + (m * 60) + s))
-	DCRAB_REQ_TIME_PER_NODE=$(echo "$DCRAB_TIME_REQ_SECONDS / $DCRAB_REQ_PPN" | bc)
+	DCRAB_REQ_TIME_PER_NODE=$(echo "$DCRAB_TIME_REQ_SECONDS / ($DCRAB_REQ_PPN * $DCRAB_NNODES)" | bc)
 	local time_req_per_node=$DCRAB_REQ_TIME_PER_NODE
 	time_req_per_node=${time_req_per_node%.*}
 	local d=$((time_req_per_node / 86400 ))
@@ -140,10 +157,26 @@ init_variables () {
 	[[ "$m" -gt 9 ]] && DCRAB_REQ_TIME="$DCRAB_REQ_TIME:$m" || DCRAB_REQ_TIME="$DCRAB_REQ_TIME:0$m"
 	time_req_per_node=$((time_req_per_node - (m * 60) ))
 	[[ "$time_req_per_node" -gt 9 ]] && DCRAB_REQ_TIME="$DCRAB_REQ_TIME:$time_req_per_node" || DCRAB_REQ_TIME="$DCRAB_REQ_TIME:0$time_req_per_node"
+
+	# DISK
+	disk_data=""
+	disk_total_read=0
+	disk_total_write=0
+	disk_total_read_reduced=0
+	disk_total_write_reduced=0
+	disk_total_read_value="MB"
+	disk_total_write_value="MB"
+	disk_last_total_read_value="MB"
+	disk_last_total_write_value="MB"
+	disk_data_line=$(grep -n -m 1 "var disk_data_$node_hostname_mod" $DCRAB_HTML | cut -f1 -d:)
+	disk_data_line=$((disk_data_line + 2))
+	disk_text_baseline=$(grep -n -m 1 "id='plot_disk_$node_hostname_mod" $DCRAB_HTML | cut -f1 -d:)
+	disk_total_read_line=$((disk_text_baseline + 5))
+	disk_total_write_line=$((disk_text_baseline + 7))	
 }
 
 write_initial_values () {
-	
+	j=0	
 	while [ 1 ]; do
 		if ( set -o noclobber; echo "$node_hostname" > "$DCRAB_LOCK_FILE") 2> /dev/null; then
 			sed -i "$mem_piePlot1_nodeMemory_line"'s|\([0-9]\) GB|'"$node_total_mem"' GB|' $DCRAB_HTML 
@@ -157,7 +190,14 @@ write_initial_values () {
 			break
 		else
 		        echo "Lock Exists: $DCRAB_LOCK_FILE owned by $(cat $DCRAB_LOCK_FILE)"
+			j=$((j+1))
 		fi
+			
+		# To avoid block in the loop when the report directory has been deleted or moved 
+                if [ "$j" -ge "$DCRAB_LOOP_BEFORE_CRASH" ]; then
+                        echo "$node_hostname: DCRAB directory has been deleted or moved. DCRAB stop." >> $DCRAB_WORKDIR/DCRAB_ERROR_$node_hostname_$DCRAB_JOB_ID
+      	        	exit 1
+                fi
 	
 		# Sleep a bit to take the lock in the next loop
 		echo "Sleeping for the lock ..."
@@ -166,6 +206,7 @@ write_initial_values () {
 
 	# Modify total pie chart text
 	if [ "$DCRAB_NODE_NUMBER" -eq 0 ] && [ "$DCRAB_NNODES" -gt 1 ]; then
+		j=0
 		while [ 1 ]; do
         	        if ( set -o noclobber; echo "$node_hostname" > "$DCRAB_LOCK_FILE") 2> /dev/null; then
 	                        sed -i "$mem_total_plot_requested_text_line"'s|\([0-9]*[.]*[0-9]*\) GB</td></tr>|'"$DCRAB_REQ_MEM"' GB</td></tr>|' $DCRAB_HTML
@@ -177,7 +218,14 @@ write_initial_values () {
         	                break
         	        else
                         	echo "Lock Exists: $DCRAB_LOCK_FILE owned by $(cat $DCRAB_LOCK_FILE)"
+				j=$((j + 1))
                 	fi
+			
+			# To avoid block in the loop when the report directory has been deleted or moved 
+			if [ "$j" -ge "$DCRAB_LOOP_BEFORE_CRASH" ]; then
+				echo "$node_hostname: DCRAB directory has been deleted or moved. DCRAB stop." >> $DCRAB_WORKDIR/DCRAB_ERROR_$node_hostname_$DCRAB_JOB_ID
+				exit 1
+			fi
 
 	                # Sleep a bit to take the lock in the next loop
 			echo "Sleeping for the lock ..."
@@ -190,7 +238,8 @@ write_data () {
 	### CPU specific change ###
         # Update the plot to insert new processes
         if [ "$updates" -gt 0 ]; then
-                for i in $(seq 0 $((updates -1)) ); do
+                for i in $( seq 0 $((updates -1)) ); do
+			j=0
 			while [ 1 ]; do
 	                        if ( set -o noclobber; echo "$node_hostname" > "$DCRAB_LOCK_FILE") 2> /dev/null; then
         	                        sed -i "$cpu_addRow_inject_line"'s|\[\([0-9]*\),|\[\1, ,|g' $DCRAB_HTML
@@ -203,6 +252,13 @@ write_data () {
 	                                break
 	                        else
         	                        echo "Lock Exists: $DCRAB_LOCK_FILE owned by $(cat $DCRAB_LOCK_FILE)"
+					j=$((j+1))
+	                        fi
+
+				# To avoid block in the loop when the report directory has been deleted or moved 
+	                        if [ "$j" -ge "$DCRAB_LOOP_BEFORE_CRASH" ]; then
+					echo "$node_hostname: DCRAB directory has been deleted or moved. DCRAB stop." >> $DCRAB_WORKDIR/DCRAB_ERROR_$node_hostname_$DCRAB_JOB_ID
+        	                        exit 1
 	                        fi
 
 	                        # Sleep a bit to take the lock in the next loop
@@ -215,6 +271,7 @@ write_data () {
 	### MEM  specific change ###
 	# The main node must make the changes in the total memory plot
 	if [ "$DCRAB_NODE_NUMBER" -eq 0 ] && [ "$DCRAB_NNODES" -gt 1 ]; then
+		j=0
 		while [ 1 ]; do
 	               	if ( set -o noclobber; echo "$node_hostname" > "$DCRAB_LOCK_FILE") 2> /dev/null; then
         	                sed -i "$memUnUsed_total_plot_line"'s|\([0-9]*[.]*[0-9]*\)\]|'"$total_notUtilizedMem"'\]|' $DCRAB_HTML
@@ -229,6 +286,13 @@ write_data () {
                                 break
                         else
                                 echo "Lock Exists: $DCRAB_LOCK_FILE owned by $(cat $DCRAB_LOCK_FILE)"
+				j=$((j+1))
+                        fi
+			
+			# To avoid block in the loop when the report directory has been deleted or moved 
+                        if [ "$j" -ge "$DCRAB_LOOP_BEFORE_CRASH" ]; then
+				echo "$node_hostname: DCRAB directory has been deleted or moved. DCRAB stop." >> $DCRAB_WORKDIR/DCRAB_ERROR_$node_hostname_$DCRAB_JOB_ID
+                                exit 1
                         fi
 
                         # Sleep a bit to take the lock in the next loop
@@ -236,6 +300,7 @@ write_data () {
                         sleep 0.5
                 done
 	        if [ "$exceeded" -eq 1 ] && [ "$changed" -eq 0 ]; then
+			j=0
 			while [ 1 ]; do
                                 if ( set -o noclobber; echo "$node_hostname" > "$DCRAB_LOCK_FILE") 2> /dev/null; then
                                         sed -i "$mem_total_options_color_line"'s/#3366CC/#ff0000/' $DCRAB_HTML
@@ -246,8 +311,15 @@ write_data () {
                                         # Exit while
                                         break
                                 else
-                                        echo "Lock Exists: $DCRAB_LOCK_FILE owned by $(cat $DCRAB_LOCK_FILE)"
+                                        echo "Lock Exists: $DCRAB_LOCK_FILE owned by $(cat $DCRAB_LOCK_FILE)"	
+					j=$((j+1))
                                 fi
+				
+				# To avoid block in the loop when the report directory has been deleted or moved 
+	                        if [ "$j" -ge "$DCRAB_LOOP_BEFORE_CRASH" ]; then
+					echo "$node_hostname: DCRAB directory has been deleted or moved. DCRAB stop." >> $DCRAB_WORKDIR/DCRAB_ERROR_$node_hostname_$DCRAB_JOB_ID
+        	                        exit 1
+	                        fi
 
                                 # Sleep a bit to take the lock in the next loop
 				echo "Sleeping for the lock ..."
@@ -260,7 +332,7 @@ write_data () {
 
 	### Time specific change ###
 	if [ "$DCRAB_NODE_NUMBER" -eq 0 ]; then
-		echo "TIME: $elapsedTime_text_line , $elapsedTime_plot_line , $remainingTime_plot_line, $DCRAB_ELAPSED_TIME_TEXT , $DCRAB_ELAPSED_TIME_VALUE , $DCRAB_REMAINING_TIME_VALUE"
+		j=0
 	        while [ 1 ]; do
 	                if ( set -o noclobber; echo "$node_hostname" > "$DCRAB_LOCK_FILE") 2> /dev/null; then
 				sed -i "$elapsedTime_text_line"'s|\([0-9]*:[0-9]*:[0-9]*:[0-9]*\)|'"$DCRAB_ELAPSED_TIME_TEXT"'|' $DCRAB_HTML
@@ -274,15 +346,22 @@ write_data () {
                                 break
                         else
 	                        echo "Lock Exists: $DCRAB_LOCK_FILE owned by $(cat $DCRAB_LOCK_FILE)"
+				j=$((j+1))
+                        fi
+
+			# To avoid block in the loop when the report directory has been deleted or moved 
+                        if [ "$j" -ge "$DCRAB_LOOP_BEFORE_CRASH" ]; then
+				echo "$node_hostname: DCRAB directory has been deleted or moved. DCRAB stop." >> $DCRAB_WORKDIR/DCRAB_ERROR_$node_hostname_$DCRAB_JOB_ID
+                                exit 1
                         fi
 
                         # Sleep a bit to take the lock in the next loop
                         echo "Sleeping for the lock ..."
                         sleep 0.5
                 done
-        fi
-
+        fi	
         # Write data 
+	j=0
 	while [ 1 ]; do
                 if ( set -o noclobber; echo "$node_hostname" > "$DCRAB_LOCK_FILE") 2> /dev/null; then
 			### CPU ###
@@ -297,6 +376,11 @@ write_data () {
 
         	        # IB 
 	                sed -i "$ib_addRow_inject_line"'s/.*/&'"$ib_data"'/' $DCRAB_HTML
+			
+			# DISK
+			sed -i "$disk_data_line"'s/.*/&'"$disk_data"'/' $DCRAB_HTML
+			sed -i "$disk_total_read_line"'s|\([0-9]*[.]*[0-9]*\) '"$disk_last_total_read_value"'</td></tr>|'"$disk_total_read_reduced $disk_total_read_value"'</td></tr>|' $DCRAB_HTML
+			sed -i "$disk_total_write_line"'s|\([0-9]*[.]*[0-9]*\) '"$disk_last_total_write_value"'</td></tr>|'"$disk_total_write_reduced $disk_total_write_value"'</td></tr>|' $DCRAB_HTML
 
                 	# Remove lock file
 		        rm -f "$DCRAB_LOCK_FILE"
@@ -305,6 +389,13 @@ write_data () {
                 	break
                 else
         	        echo "Lock Exists: $DCRAB_LOCK_FILE owned by $(cat $DCRAB_LOCK_FILE)"
+			j=$((j+1))
+                fi
+
+		# To avoid block in the loop when the report directory has been deleted or moved 
+                if [ "$j" -ge "$DCRAB_LOOP_BEFORE_CRASH" ]; then
+			echo "$node_hostname: DCRAB directory has been deleted or moved. DCRAB stop." >> $DCRAB_WORKDIR/DCRAB_ERROR_$node_hostname_$DCRAB_JOB_ID
+	                exit 1
                 fi
 
                 # Sleep a bit to take the lock in the next loop
@@ -390,7 +481,7 @@ dcrab_collect_ib_data () {
 
 	# Construct ib data
 	ib_data="$ib_data"" $((new_ib_xmit_pck_value - ib_xmit_pck_value)), $((new_ib_rcv_pck_value - ib_rcv_pck_value)), $aux1, $aux2 ],"
-	
+
 	ib_xmit_pck_value=$new_ib_xmit_pck_value
 	ib_xmit_data_value=$new_ib_xmit_data_value
 	ib_rcv_pck_value=$new_ib_rcv_pck_value
@@ -401,16 +492,15 @@ dcrab_format_time () {
 	
 	DCRAB_ELAPSED_TIME_TEXT=""
         local timeStamp=$DCRAB_DIFF_TIMESTAMP
-	echo "TIMESTAMP: $timeStamp"
         local d=$((timeStamp / 86400 ))
         [[ "$d" -gt 9 ]] && DCRAB_ELAPSED_TIME_TEXT="$d" || DCRAB_ELAPSED_TIME_TEXT="0$d"
-        timeStamp=$((timeStamp - (d * 86400) )); echo "TIMESTAMP: $timeStamp"
+        timeStamp=$((timeStamp - (d * 86400) ))
         local h=$((timeStamp / 3600))
         [[ "$h" -gt 9 ]] && DCRAB_ELAPSED_TIME_TEXT="$DCRAB_ELAPSED_TIME_TEXT:$h" || DCRAB_ELAPSED_TIME_TEXT="$DCRAB_ELAPSED_TIME_TEXT:0$h"
-        timeStamp=$((timeStamp - (h * 3600) )); echo "TIMESTAMP: $timeStamp"
+        timeStamp=$((timeStamp - (h * 3600) ))
         local m=$((timeStamp / 60))
         [[ "$m" -gt 9 ]] && DCRAB_ELAPSED_TIME_TEXT="$DCRAB_ELAPSED_TIME_TEXT:$m" || DCRAB_ELAPSED_TIME_TEXT="$DCRAB_ELAPSED_TIME_TEXT:0$m"
-	timeStamp=$((timeStamp - (m * 60) )); echo "TIMESTAMP: $timeStamp"
+	timeStamp=$((timeStamp - (m * 60) ))
         [[ "$timeStamp" -gt 9 ]] && DCRAB_ELAPSED_TIME_TEXT="$DCRAB_ELAPSED_TIME_TEXT:$timeStamp" || DCRAB_ELAPSED_TIME_TEXT="$DCRAB_ELAPSED_TIME_TEXT:0$timeStamp"
 
 	if [ $(echo "$DCRAB_DIFF_TIMESTAMP < $DCRAB_REQ_TIME_PER_NODE" | bc) -eq 1 ]; then
@@ -422,6 +512,115 @@ dcrab_format_time () {
 	fi
 }
 
+dcrab_collect_disk_data () {
+
+	#
+	# 0 - The firts loop ; 1 - Other loops
+	#	
+	case $1 in 
+	0)
+		
+		# Store the data of all the processes	 
+	        for line in $(cat $DCRAB_JOB_PROCESSES_FILE); do
+
+			pid=$(echo "$line" | awk '{print $1}')
+			
+			# Collect disk actual data
+                        new_rchar=$(cat /proc/$pid/io | grep rchar | awk '{print $2}')
+                        new_wchar=$(cat /proc/$pid/io | grep wchar | awk '{print $2}')
+			[[ "$new_rchar" == "" ]] && new_rchar=0
+	                [[ "$new_wchar" == "" ]] && new_wchar=0	
+
+			disk_total_read=$new_rchar
+			disk_total_write=$new_wchar
+		done
+	
+		if [ ! -f $DCRAB_DISK_FILE ]; then
+			:> $DCRAB_DISK_FILE
+		fi		
+	
+		# Construct data fot the plot
+	        disk_data="$disk_data""0, 0],"
+	;;
+	1)
+		disk_partial_read=0
+		disk_partial_write=0
+		last_rchar=""
+		last_wchar=""
+	        for line in $(cat $DCRAB_JOB_PROCESSES_FILE); do
+	
+			pid=$(echo "$line" | awk '{print $1}')	
+			
+			# Collect disk last data
+			last_rchar=$(cat $DCRAB_DISK_FILE | grep "^$pid " | awk '{print $2}')
+                        last_wchar=$(cat $DCRAB_DISK_FILE | grep "^$pid " | awk '{print $3}')
+
+			# Collect disk actual data
+			new_rchar=$(cat /proc/$pid/io | grep rchar | awk '{print $2}')
+			new_wchar=$(cat /proc/$pid/io | grep wchar | awk '{print $2}')
+			[[ "$new_rchar" == "" ]] && new_rchar=0
+                        [[ "$new_wchar" == "" ]] && new_wchar=0
+
+			if [ "$last_rchar" == "" ]; then
+				echo "$pid $new_rchar $new_wchar" >> $DCRAB_DISK_FILE 
+			
+				disk_total_read=$(echo "$disk_total_read + $new_rchar" | bc)
+                                disk_partial_read=$(echo "$disk_partial_read + $new_rchar" | bc)
+
+                                disk_total_write=$(echo "$disk_total_write + $new_wchar" | bc )
+                                disk_partial_write=$(echo "$disk_partial_write + $new_wchar" | bc )				
+			else
+				lineNumber=$(cat $DCRAB_DISK_FILE | grep -n "^$pid " | awk '{print $1}' | cut -d':' -f1)
+				sed -i "$lineNumber"'s/'"$pid $last_rchar $last_wchar"'/'"$pid $new_rchar $new_wchar"'/' $DCRAB_HTML
+
+				disk_total_read=$(echo "$disk_total_read + $new_rchar - $last_rchar"  | bc)
+                                disk_partial_read=$(echo "$disk_partial_read + $new_rchar - $last_rchar" | bc)
+
+                                disk_total_write=$(echo "$disk_total_write + $new_wchar - $last_wchar" | bc)
+                                disk_partial_write=$(echo "$disk_partial_write + $new_wchar - $last_wchar" | bc)
+			fi
+		done
+
+		local aux1=$( echo "scale=3; (($disk_partial_read / 1024) / 1024) / $DCRAB_DIFF_PARTIAL"  | bc )
+		local aux2=$( echo "scale=3; (($disk_partial_write / 1024) / 1024) / $DCRAB_DIFF_PARTIAL"  | bc )
+	
+		# Construct data for the plot
+		disk_data="$disk_data"" $aux1, $aux2 ],"
+	
+		# Construct data for the read text value
+		disk_last_total_read_value=$disk_total_read_value
+		case $disk_total_read_value in 
+		"MB")
+			disk_total_read_reduced=$(echo "scale=4; ($disk_total_read /1024) /1024" | bc)
+			if [ $(echo "$disk_total_read_reduced >= 1024" | bc)  -eq 1 ]; then
+				disk_total_read_reduced=$(echo "scale=4; $disk_total_read_reduced / 1024 " | bc )
+	                	disk_total_read_value="GB"
+			fi
+			[[ "${disk_total_read_reduced:0:1}" == "." ]] && disk_total_read_reduced="0""$disk_total_read_reduced"
+		;;
+		"GB")
+			disk_total_read_reduced=$(echo "scale=4; (($disk_total_read /1024) /1024 ) /1024" | bc)
+		;;
+		esac
+		# Construct data for the write text value
+	        disk_last_total_write_value=$disk_total_write_value
+	        case $disk_total_write_value in
+	        "MB")
+	                disk_total_write_reduced=$(echo "scale=4; ($disk_total_write /1024) /1024" | bc)
+			if [ $(echo "$disk_total_write_reduced >= 1024" | bc)  -eq 1 ]; then
+	                        disk_total_write_reduced=$(echo "scale=4; $disk_total_write_reduced / 1024 " | bc )
+	                        disk_total_write_value="GB"
+	                fi
+			[[ "${disk_total_write_reduced:0:1}" == "." ]] && disk_total_write_reduced="0""$disk_total_write_reduced"
+		;;
+	        "GB")
+	                disk_total_write_reduced=$(echo "scale=4; (($disk_total_write /1024) /1024 ) /1024" | bc)
+	        ;;
+	        esac
+	;;
+	esac
+}
+
 dcrab_determine_main_process () {
 
         # CPU
@@ -430,9 +629,10 @@ dcrab_determine_main_process () {
 	mem_data="[0,"	
 	# IB
 	ib_data="[0,"
+	# DISK
+	disk_data="[0,"
 
 	# MAIN NODE
-	echo "$node_hostname , $DCRAB_NODE_NUMBER"
 	if [ "$DCRAB_NODE_NUMBER" -eq 0 ]; then
 	        IFS=$'\n'
 		ps axo stat,euid,ruid,sess,ppid,pid,pcpu,comm,command | sed 's|\s\s*| |g' | awk '{if ($2 == '"$DCRAB_USER_ID"'){print}}' | grep -v " $DCRAB_DCRAB_PID " > $DCRAB_USER_PROCESSES_FILE
@@ -508,20 +708,20 @@ dcrab_determine_main_process () {
 		if [ $(echo "$cpu > $cpu_threshold" | bc) -eq 1 ]; then
 			# Save in the data file
         	        echo "$pid $commandName" >> $DCRAB_JOB_PROCESSES_FILE
+		
+			# CPU data
+	                upd_proc_name[$updates]=$commandName
+        	        cpu_data="$cpu_data $cpu,"
 
-			# If it is the control process the main node must store it. Needed for multinode statistics. 
-	                echo $line | grep -q "control-port"
-	                if [ "$?" -eq 0 ] && [ "$DCRAB_NODE_NUMBER" -eq 0 ]; then
-	                        DCRAB_CONTROL_PORT_MAIN_NODE=$(echo ${line#*control-port} | awk '{print $1}')
-	                        echo "$DCRAB_CONTROL_PORT_MAIN_NODE" > $DCRAB_REPORT_DIR/aux/control_port.txt
-	                fi
-
-        	        # CPU data
-			upd_proc_name[$updates]=$commandName
-	                cpu_data="$cpu_data $cpu,"
-	
-			updates=$((updates + 1))
+	                updates=$((updates + 1))
 		fi
+
+		# If it is the control process the main node must store it. Needed for multinode statistics. 
+	        echo $line | grep -q "control-port"
+	        if [ "$?" -eq 0 ] && [ "$DCRAB_NODE_NUMBER" -eq 0 ]; then
+	       		DCRAB_CONTROL_PORT_MAIN_NODE=$(echo ${line#*control-port} | awk '{print $1}')
+	                echo "$DCRAB_CONTROL_PORT_MAIN_NODE" > $DCRAB_REPORT_DIR/aux/control_port.txt
+	        fi
         done
 
 	# Initialize file if there is no process 	
@@ -537,6 +737,7 @@ dcrab_determine_main_process () {
 
         # Get time
         DCRAB_M1_TIMESTAMP=`date +"%s"`
+	DCRAB_M3_TIMESTAMP=$DCRAB_M1_TIMESTAMP
 
         # CPU data. Remove the last comma
         cpu_data=${cpu_data%,*}
@@ -548,6 +749,9 @@ dcrab_determine_main_process () {
 	# IB data
 	dcrab_collect_ib_data
 	
+	# DISK data
+	dcrab_collect_disk_data 0
+	
 	write_data 	
 }
 
@@ -558,20 +762,25 @@ dcrab_update_data () {
         IFS=$'\n'
         DCRAB_M2_TIMESTAMP=`date +"%s"`
         DCRAB_DIFF_TIMESTAMP=$((DCRAB_M2_TIMESTAMP - DCRAB_M1_TIMESTAMP))
+	DCRAB_DIFF_PARTIAL=$((DCRAB_M2_TIMESTAMP - DCRAB_M3_TIMESTAMP))
+	DCRAB_M3_TIMESTAMP=$DCRAB_M2_TIMESTAMP
+
         # CPU data      
         cpu_data="$DCRAB_DIFF_TIMESTAMP,"
         # MEM data
         mem_data="[$DCRAB_DIFF_TIMESTAMP,"
 	# IB data
 	ib_data="[$DCRAB_DIFF_TIMESTAMP,"
+	# DISK data
+	disk_data="[$DCRAB_DIFF_TIMESTAMP,"
 
         # Collect the data
 	ps axo stat,euid,ruid,sess,ppid,pid,pcpu,comm,command | sed 's|\s\s*| |g' | awk '{if ($2 == '"$DCRAB_USER_ID"'){print}}' | grep -v " $DCRAB_DCRAB_PID " > $DCRAB_USER_PROCESSES_FILE
         cat $DCRAB_USER_PROCESSES_FILE | grep -E "$DCRAB_MAIN_PIDS" > $DCRAB_JOB_PROCESSES_FILE.tmp
 
 	# To check if there is some processes that aren't in the process tree of the main node but belongs the job (this case occurs with mvapich)
-	diff -u $DCRAB_JOB_PROCESSES_FILE.tmp $DCRAB_USER_PROCESSES_FILE | grep "^\+" | awk 'NR>1 {print}' | sed 's|+||' > $DCRAB_USER_PROCESSES_FILE.tmp
-	if [ $(cat $DCRAB_USER_PROCESSES_FILE.tmp | wc -l) -gt 0 ]; then
+	diff -u $DCRAB_JOB_PROCESSES_FILE.tmp $DCRAB_USER_PROCESSES_FILE | grep "^\+" | awk 'NR>1 {print}' | sed 's|+||' > $DCRAB_JOB_CANDIDATE_PROCESSES_FILE
+	if [ $(cat $DCRAB_JOB_CANDIDATE_PROCESSES_FILE | wc -l) -gt 0 ]; then
 
 		# Renew DCRAB_MAIN_PROCESS_LAST_CHILD_PID variable
                 DCRAB_MAIN_PROCESS_LAST_CHILD_PID=$(cat $DCRAB_USER_PROCESSES_FILE | grep $DCRAB_FIRST_MAIN_PROCESS_PID | tail -1 | awk '{printf $6}')
@@ -581,8 +790,8 @@ dcrab_update_data () {
                 	kill -0 $DCRAB_LAST_CHILD_NEXT_VALID_PID >> /dev/null 2>&1
                         [[ $? -eq 0 ]] && found=1 || DCRAB_LAST_CHILD_NEXT_VALID_PID=$((DCRAB_LAST_CHILD_NEXT_VALID_PID + 1))
                 done
-
-	        for line in $(cat $DCRAB_USER_PROCESSES_FILE.tmp)
+		echo "DCRAB_MAIN_PROCESS_LAST_CHILD_PID= $DCRAB_MAIN_PROCESS_LAST_CHILD_PID , DCRAB_LAST_CHILD_NEXT_VALID_PID= $DCRAB_LAST_CHILD_NEXT_VALID_PID"
+	        for line in $(cat $DCRAB_JOB_CANDIDATE_PROCESSES_FILE)
 	        do
 			pid=$(echo "$line" | awk '{print $6}')
                         if [ "$DCRAB_MAIN_PROCESS_LAST_CHILD_PID" != "" ] && [ "$DCRAB_FIRST_MAIN_PROCESS_PID" != "0" ]; then
@@ -647,22 +856,21 @@ dcrab_update_data () {
 	        cpu=$(echo "$line" | awk '{print $7}')
 	        commandName=$(echo "$line" | awk '{print $8}')
 	
-		
 		if [ $(echo "$cpu > $cpu_threshold" | bc) -eq 1 ]; then
-	                sed -i '1s|^|'"$pid $commandName"'\n|' $DCRAB_JOB_PROCESSES_FILE
-	                upd_proc_name[$updates]=$commandName
-
-			# If the new process is the control process. Needed for multinode statistics.
-			echo $line | grep -q "control-port"
-			if [ "$?" -eq 0 ] && [ "$DCRAB_NODE_NUMBER" -eq 0 ]; then
-				DCRAB_CONTROL_PORT_MAIN_NODE=$(echo ${line#*control-port} | awk '{print $1}')
-				echo "$DCRAB_CONTROL_PORT_MAIN_NODE" > $DCRAB_REPORT_DIR/aux/control_port.txt
-			fi
-
-	                # CPU data
+			sed -i '1s|^|'"$pid $commandName"'\n|' $DCRAB_JOB_PROCESSES_FILE
+	                upd_proc_name[$updates]=$commandName	
+			
+			# CPU data
 	                cpu_data=`echo $cpu_data | sed "s|^$DCRAB_DIFF_TIMESTAMP,|$DCRAB_DIFF_TIMESTAMP, $cpu,|"`
+				
+			updates=$((updates + 1))
+		fi
 
-	                updates=$((updates + 1))
+		# If the new process is the control process. Needed for multinode statistics.
+		echo $line | grep -q "control-port"
+		if [ "$?" -eq 0 ] && [ "$DCRAB_NODE_NUMBER" -eq 0 ]; then
+			DCRAB_CONTROL_PORT_MAIN_NODE=$(echo ${line#*control-port} | awk '{print $1}')
+			echo "$DCRAB_CONTROL_PORT_MAIN_NODE" > $DCRAB_REPORT_DIR/aux/control_port.txt
 		fi
         done
 
@@ -682,15 +890,14 @@ dcrab_update_data () {
 	
 	# IB data
 	dcrab_collect_ib_data
-
-	# Time data (only the main node)
+	
+	# TIME data (only the main node)
 	if [ "$DCRAB_NODE_NUMBER" -eq 0 ]; then
 		dcrab_format_time
 	fi
+	
+	# DISK data
+        dcrab_collect_disk_data 1
 }
-
-
-
-
 
 
