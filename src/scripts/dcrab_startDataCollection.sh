@@ -22,7 +22,7 @@
 
 
 # Redirect all the output to DCRAB log file
-exec >> $4 
+exec >> $4 ; exec 2>&1
 echo "--- DCRAB `hostname` log ---" 
 
 # Save hostname of the node
@@ -31,28 +31,35 @@ node_hostname_mod=`echo $node_hostname | sed 's|-||g'`
 
 # Sets environment
 source "$1"
-
 # Move to the working directory
 cd $DCRAB_WORKDIR
 
 # Source modules
 source $DCRAB_BIN/scripts/dcrab_node_report_functions.sh
 
-# Save hostname of the node
+# Necessary variables
 node_hostname=`hostname`
 node_hostname_mod=`echo $node_hostname | sed 's|-||g'`
+DCRAB_PROCESS_FILE=$DCRAB_REPORT_DIR/data/dcrab_process_$node_hostname.txt
+DCRAB_MEM_FILE=$DCRAB_REPORT_DIR/data/dcrab_mem_$node_hostname.txt
 
 # Save the line to inject CPU data
-addRow_data_line=`grep -n -m 1 "\/\* $node_hostname_mod addRow space \*\/" $DCRAB_REPORT_DIR/dcrab_report.html | cut -f1 -d:`
-addColumn_data_line=`grep -n -m 1 "\/\* $node_hostname_mod addColumn space \*\/" $DCRAB_REPORT_DIR/dcrab_report.html | cut -f1 -d:`
-addRow_inject_line=$((addRow_data_line + 2))
-addColumn_inject_line=$((addColumn_data_line + 1))
+addRow_data_line=`grep -n -m 1 "\/\* $node_hostname_mod addRow space \*\/" $DCRAB_HTML | cut -f1 -d:`
+addColumn_data_line=`grep -n -m 1 "\/\* $node_hostname_mod addColumn space \*\/" $DCRAB_HTML | cut -f1 -d:`
 
+# CPU
+cpu_addRow_inject_line=$((addRow_data_line + 2))
+cpu_addColumn_inject_line=$((addColumn_data_line + 1))
+
+# MEM
+mem_addRow_inject_line=$((addRow_data_line + 6))
+memUsed_addRow_inject_line=$((addRow_data_line + 10))
+memUnUsed_addRow_inject_line=$((addRow_data_line + 11))
+node_total_mem=`free -g | grep "Mem" | awk ' {printf $2}'`
 
 # Sleep first time to desynchronize with other nodes
 sleep "$3"
-
-dcrab_determine_main_process $DCRAB_REPORT_DIR/data/dcrab_cpu_$node_hostname.txt
+dcrab_determine_main_process 
 
 
 ###############
@@ -67,10 +74,13 @@ while [ 1 ]; do
 	echo "$node_hostname - loop $loopNumber" 
 
 	# Update and collect data
-	dcrab_update_data $DCRAB_REPORT_DIR/data/dcrab_cpu_$node_hostname.txt
+	dcrab_update_data 
 
 	# Insert CPU data in the main .html page
-	write_data $addRow_inject_line $addColumn_inject_line $cpu_data
+	write_data 0
+
+	# Insert MEM data in the main .html page
+	write_data 1
 
 	loopNumber=$((loopNumber + 1))
 done

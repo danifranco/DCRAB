@@ -24,3 +24,8 @@ The first D is of Donostia International Physics Center Fundation (DIPC), who ar
   - All data collected in a single .html file
   - No compilation required
   - Easy to use in a script because only two sentence are required to monitor data
+
+### Requirements/Limitations
+
+  - Only supports one node calculations
+  - With PBS scheduler the option "#PBS -l mem=" must be written explicitly for the memory data plot  
