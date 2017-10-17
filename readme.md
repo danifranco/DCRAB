@@ -17,23 +17,25 @@ dcrab finish
 ### Why DCRAB?
 
 The first D is of Donostia International Physics Center Fundation (DIPC), who are the main developers of the software. The 'crab' part is related to the animal because this
-monitoring tool, like a crab grabbing its food, grabs the processes associated in the computation to collect the data. 
+monitoring tool, like a crab grabbing its food, grabs the processes associated in the computation to collect the data. Furthermore, there is an analogy between crab claw
+and the way DCRAB monitors the processes with 'start' and 'finish' commands. DCRAB catches the block code to monitor inside this commands like a crab holds everything 
+inside its claws.
+
 
 ### PROS
 
-  - Real time monitorization. The report file is continuously updating
+  - Real time monitorization. The report file is continuously updating so if the job fails the report will be completed up to there 
   - All data collected in a single .html file
   - No compilation required
-  - Easy to use in a script because only two sentences are required to monitor data
+  - Easy to use in a script because only two sentences are required to monitor processes
 
 ### Requirements/Limitations
 
-  - Only supports one node calculations (will be added in a future version)
-  - With PBS scheduler the option "#PBS -l mem=" must be written explicitly in the submission script for the memory data plot. The memory must be in GB.
+  - Supports multinode statistics (only for MPI jobs)
+  - With PBS scheduler the option "#PBS -l mem=" must be written explicitly in the submission script for the memory data plot. The memory must be in GB
 
 ### Coming features
 
-  - Multinode computations (with MPI)
   - MPI comunication statistics
   - IB network statistics
   - Support for Slurm.
