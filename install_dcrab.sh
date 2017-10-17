@@ -12,18 +12,8 @@ if [ -z "$DCRAB_INSTALL_PREFIX" ]; then
     exit
 fi
 
+# Copy all the files
 if [ "$DCRAB_INSTALL_PREFIX" != "$PWD" ]; then
 	cp -r * $DCRAB_INSTALL_PREFIX/	
 	cd $DCRAB_INSTALL_PREFIX
 fi
-
-# mpstat installation
-cd src/extra
-sysfile=`ls -ld sysstat*.tar.gz | awk '{print $9}' | head -n 1`
-sysdir=`echo  ${sysfile%%.tar.gz}`
-tar xzvf ${sysfile}
-cd ${sysdir}
-./configure 
-make mpstat 
-cp mpstat $DCRAB_INSTALL_PREFIX/src/bin
-chmod 755 $DCRAB_INSTALL_PREFIX/src/bin/mpstat

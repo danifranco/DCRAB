@@ -23,47 +23,58 @@ dcrab_generate_html (){
 	printf "%s \n" "<script type=\"text/javascript\"> " >> $DCRAB_HTML
 
 	# Load packages and callbacks for plot functions
-	printf "%s \n" "google.charts.load('current', {'packages':['line']}); " >> $DCRAB_HTML
+	printf "%s \n" "google.charts.load('visualization', '1', { 'packages': ['corechart'] });" >> $DCRAB_HTML
         printf "%s \n" "google.charts.setOnLoadCallback(plot_cpu); " >> $DCRAB_HTML
 
 	################# CPU plot function #################
         printf "%s \n" "function plot_cpu() { " >> $DCRAB_HTML
+
 	# Data of each nodes
         for node in $DCRAB_NODES_MOD
         do
-		# Variables to store data declaration (where the nodes will inject collected data)
-		printf "%s \n" "/* $node data space */" >> $DCRAB_HTML
-		printf "%s \n" "var cpu_$node = [" >> $DCRAB_HTML
-		printf "%s \n" "[0, 0, 0]," >> $DCRAB_HTML
-		printf "%s \n" "];" >> $DCRAB_HTML
-		printf "%s \n" "var mem_$node ;" >> $DCRAB_HTML
-		
-		printf "%s \n" "var data_$node = new google.visualization.DataTable(); " >> $DCRAB_HTML
-
+                printf "%s \n" "var data_$node = new google.visualization.DataTable(); " >> $DCRAB_HTML
+		printf "%s \n" "data_$node.addColumn('number', 'Execution Time (s)');" >> $DCRAB_HTML
 		printf "%s \n" "/* $node addColumn space */" >> $DCRAB_HTML
-		printf "%s \n" "data_$node.addColumn('number', 'Execution Time (s)'); " >> $DCRAB_HTML
-        	printf "%s \n" "data_$node.addColumn('number', 'core 0 '); " >> $DCRAB_HTML
-        	printf "%s \n" "data_$node.addColumn('number', 'core 1 '); " >> $DCRAB_HTML
-	        printf "%s \n" "data_$node.addRows(cpu_$node)" >> $DCRAB_HTML
+		printf "\n" >> $DCRAB_HTML
+
+		# Variables to store data declaration (where the nodes will write collected data)
+		printf "%s \n" "/* $node addRow space */" >> $DCRAB_HTML
+		printf "%s \n" "var cpu_$node = [" >> $DCRAB_HTML
+		printf "\n"  >> $DCRAB_HTML
+		printf "%s \n" "];" >> $DCRAB_HTML
+	        printf "%s \n" "data_$node.addRows(cpu_$node);" >> $DCRAB_HTML
 	done
-        printf "%s \n" "var options = {  " >> $DCRAB_HTML
-        printf "%s \n" "chart: { " >> $DCRAB_HTML
-        printf "%s \n" "title: 'CPU Utilization', " >> $DCRAB_HTML
-        printf "%s \n" "subtitle: 'in percentage'  " >> $DCRAB_HTML
-        printf "%s \n" "}, " >> $DCRAB_HTML
-        printf "%s \n" "legend: {position: 'none', textStyle: {fontSize: 16}}, " >> $DCRAB_HTML
-        printf "%s \n" "width: $plot_width,  " >> $DCRAB_HTML
-        printf "%s \n" "height: $plot_height,  " >> $DCRAB_HTML
-        printf "%s \n" "axes: {  " >> $DCRAB_HTML
-        printf "%s \n" "x: {  " >> $DCRAB_HTML
-        printf "%s \n" "0: {side: 'top'}  " >> $DCRAB_HTML
-        printf "%s \n" "}  " >> $DCRAB_HTML
-        printf "%s \n" "},  " >> $DCRAB_HTML
-       	printf "%s \n" "};" >> $DCRAB_HTML
+
+        printf "%s \n" "var options = {" >> $DCRAB_HTML
+        printf "%s \n" "title: 'CPU Utilization'," >> $DCRAB_HTML
+        printf "%s \n" "width: '$plot_width'," >> $DCRAB_HTML
+        printf "%s \n" "height: '$plot_height'," >> $DCRAB_HTML
+        printf "%s \n" "hAxis: {" >> $DCRAB_HTML
+        printf "%s \n" "title: 'Execution Time (s)'," >> $DCRAB_HTML
+        printf "%s \n" "titleTextStyle: {" >> $DCRAB_HTML
+        printf "%s \n" "color: '#757575'," >> $DCRAB_HTML
+        printf "%s \n" "fontSize: 16," >> $DCRAB_HTML
+        printf "%s \n" "fontName: 'Arial'," >> $DCRAB_HTML
+        printf "%s \n" "bold: false," >> $DCRAB_HTML
+        printf "%s \n" "italic: true" >> $DCRAB_HTML
+        printf "%s \n" "}" >> $DCRAB_HTML
+        printf "%s \n" "}," >> $DCRAB_HTML
+        printf "%s \n" "vAxis: {" >> $DCRAB_HTML
+        printf "%s \n" "title: 'CPU used (%)'," >> $DCRAB_HTML
+        printf "%s \n" "titleTextStyle: {" >> $DCRAB_HTML
+        printf "%s \n" "color: '#757575'," >> $DCRAB_HTML
+        printf "%s \n" "fontSize: 16," >> $DCRAB_HTML
+        printf "%s \n" "fontName: 'Arial'," >> $DCRAB_HTML
+        printf "%s \n" "bold: false," >> $DCRAB_HTML
+        printf "%s \n" "italic: true" >> $DCRAB_HTML
+        printf "%s \n" "}" >> $DCRAB_HTML
+        printf "%s \n" "}," >> $DCRAB_HTML
+        printf "%s \n" "chartArea: {  width: \"70%\", height: \"80%\" }," >> $DCRAB_HTML
+        printf "%s \n" "};" >> $DCRAB_HTML
 
         for node in $DCRAB_NODES_MOD
         do
-	        printf "%s \n" "var chart_$node = new google.charts.Line(document.getElementById('plot_cpu_$node'));"  >> $DCRAB_HTML
+	        printf "%s \n" "var chart_$node = new google.visualization.LineChart(document.getElementById('plot_cpu_$node'));"  >> $DCRAB_HTML
         	printf "%s \n" "chart_$node.draw(data_$node, options);  " >> $DCRAB_HTML
         done
 	printf "%s \n" "}" >> $DCRAB_HTML
@@ -236,11 +247,15 @@ dcrab_start_data_collection () {
 
 dcrab_determine_main_process () {
 
+	DCRAB_DIFF_TIMESTAMP=0
 	DCRAB_MAIN_PID=0
-		
+	updates=0
+	declare -a upd_proc_name		
+	
 	# CPU data
-        cpu_data="["
+        cpu_data="0,"
 
+	# Determine the main process
 	IFS=$'\n'
 	for line in $(ps axo stat,euid,ruid,sess,ppid,pid,pcpu,comm | sed 's|\s\s*| |g' | grep "\s$DCRAB_USER_ID\s" | grep "Ss")
 	do
@@ -249,18 +264,32 @@ dcrab_determine_main_process () {
 		[ "$?" -eq 0 ] && DCRAB_MAIN_PID=$pid && break
 	done
 	export DCRAB_MAIN_PID
-	
+
 	# Initialize data file
 	for line in $(ps axo stat,euid,ruid,sess,ppid,pid,pcpu,comm | sed 's|\s\s*| |g' | grep "$DCRAB_MAIN_PID")
 	do
 	        pid=$(echo "$line" | awk '{print $6}')
 		cpu=$(echo "$line" | awk '{print $7}')
                 commandName=$(echo "$line" | awk '{print $8}')
-		echo "$pid $commandName $cpu" >> $1
-
+		echo "$pid $commandName" >> $1
+		upd_proc_name[$updates]=$commandName
+		
 		# CPU data
-                cpu_data="$cpu_data $cpu,"
+		cpu_data="$cpu_data $cpu,"
+
+		updates=$((updates + 1))	
 	done
+	
+	# Get time
+	DCRAB_M1_TIMESTAMP=`date +"%s"`
+	
+	# Remove the last comma
+        cpu_data=${cpu_data%,*}
+        cpu_data="[$cpu_data ],"
+	echo "PRIMERA VUELTA:"
+	cat "$1"	
+
+	write_data $addRow_inject_line $addColumn_inject_line $cpu_data 
 }
 
 dcrab_update_data () {
@@ -269,28 +298,69 @@ dcrab_update_data () {
 	cpu_data="["
 
 	updates=0
-	declare -a upd_proc_name
 	IFS=$'\n'
-        for line in $(ps axo stat,euid,ruid,sess,ppid,pid,pcpu,comm | sed 's|\s\s*| |g' | grep "$DCRAB_MAIN_PID")
-        do
-                pid=$(echo "$line" | awk '{print $6}')
-		cpu=$(echo "$line" | awk '{print $7}')
-		commandName=$(echo "$line" | awk '{print $8}')
-		
-		cat $1 | grep "^$pid $commandName"
-		if [ "$?" -eq 0 ]; then
-			sed 's/\('"$pid $name"'.*\)/\1 '"$cpu"'/' $1 
-		else
-			echo "^$pid $commandName $cpu" >> $1
-			upd_proc_name[$updates]=$commandName
-			updates=$((updates + 1))
-		fi
 	
+	# Collect the data
+	:> $1.tmp
+	ps axo stat,euid,ruid,sess,ppid,pid,pcpu,comm | sed 's|\s\s*| |g' | grep "$DCRAB_MAIN_PID" >> $1.tmp
+        DCRAB_M2_TIMESTAMP=`date +"%s"`
+	DCRAB_DIFF_TIMESTAMP=$((DCRAB_M2_TIMESTAMP - DCRAB_M1_TIMESTAMP))
+
+	# CPU data	
+	cpu_data="$DCRAB_DIFF_TIMESTAMP,"
+
+	lastEmptyValue=0
+	i=1
+	echo "LOS QUE ESTAN: "; cat $1
+	echo "LOS DE ESTA VUELTA: "; cat $1.tmp
+        for line in $(cat $1)
+        do
+                pid=$(echo "$line" | awk '{print $1}')
+                commandName=$(echo "$line" | awk '{print $2}')
+
+		pos=`cat $1.tmp | grep -n "$pid" | grep "$commandName"`
+		if [ "$?" -eq 0 ]; then
+			lineNumber=$(echo $pos | cut -d: -f1)
+			cpu=$(echo "$pos" | awk '{print $7}')
+			sed -i "$lineNumber""d" $1.tmp
+		else
+			lastEmptyValue=$i	
+			cpu=" "	
+		fi
+			
 		# CPU data
 		cpu_data="$cpu_data $cpu,"
 		
-
+		i=$((i + 1))
         done
+
+	echo "LO que queda: "; cat $1.tmp	
+	# Check if there are new processes
+	for line in $(cat $1.tmp)
+	do		
+		echo "NEW: $line"
+		pid=$(echo "$line" | awk '{print $6}')
+                cpu=$(echo "$line" | awk '{print $7}')
+                commandName=$(echo "$line" | awk '{print $8}')
+		sed -i '1s|^|'"$pid $commandName"'\n|' $1
+                upd_proc_name[$updates]=$commandName
+                
+                # CPU data
+		cpu_data=`echo $cpu_data | sed "s|^$DCRAB_DIFF_TIMESTAMP,|$DCRAB_DIFF_TIMESTAMP, $cpu,|"`
+
+                updates=$((updates + 1))
+	done
+
+	# To avoid cpu_data termine like '0, ]', which means that the last process has been terminated, and will cause an error in the plot 
+	# So we put a 0 value instead of the ' ' (space) character 
+	if [ $((lastEmptyValue + 1)) -eq $i ]; then
+		cpu_data=${cpu_data%,*}
+		cpu_data="$cpu_data""0,"		
+	fi
+	
+	# Remove the last comma
+	cpu_data=${cpu_data%,*}
+	cpu_data="[$cpu_data],"
 } 
 
 dcrab_init_variables () {
@@ -300,6 +370,4 @@ dcrab_init_variables () {
         export DCRAB_MAIN_JOB_PID=$PPID
 	export DCRAB_USER_ID=`id -u $USER`
 }
-
-
 

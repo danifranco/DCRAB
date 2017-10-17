@@ -32,6 +32,8 @@ case "$1" in
         	# Initialize dcrab report
 		dcrab_start_report >> $DCRAB_LOG_DIR/dcrab.log 2>&1 
 
+		export DCRAB_START_TIMESTAMP=`date +"%s"`
+
 		# Launch processes in each node to collect data
 		dcrab_start_data_collection  >> $DCRAB_LOG_DIR/dcrab.log 2>&1
 	
