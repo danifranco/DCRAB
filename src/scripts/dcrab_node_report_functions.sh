@@ -126,10 +126,11 @@ init_variables () {
 	local h=$(echo "$DCRAB_REQ_CPUT" | cut -d':' -f1)
 	local m=$(echo "$DCRAB_REQ_CPUT" | cut -d':' -f2)
 	local s=$(echo "$DCRAB_REQ_CPUT" | cut -d':' -f3)
-	DCRAB_TIME_REQ_SECONDS=$(((h * 60) + (m * 60) + s))
-	local time_req_per_node=$(echo "$DCRAB_TIME_REQ_SECONDS / $DCRAB_REQ_PPN" | bc)		
+	DCRAB_TIME_REQ_SECONDS=$(((h * 3600) + (m * 60) + s))
+	DCRAB_REQ_TIME_PER_NODE=$(echo "$DCRAB_TIME_REQ_SECONDS / $DCRAB_REQ_PPN" | bc)
+	local time_req_per_node=$DCRAB_REQ_TIME_PER_NODE
 	time_req_per_node=${time_req_per_node%.*}
-	local d=$((time_req_per_node / 86400))
+	local d=$((time_req_per_node / 86400 ))
 	[[ "$d" -gt 9 ]] && DCRAB_REQ_TIME="$d" || DCRAB_REQ_TIME="0$d"
 	time_req_per_node=$((time_req_per_node - (d * 86400) ))
 	local h=$((time_req_per_node / 3600))
@@ -401,7 +402,7 @@ dcrab_format_time () {
 	DCRAB_ELAPSED_TIME_TEXT=""
         local timeStamp=$DCRAB_DIFF_TIMESTAMP
 	echo "TIMESTAMP: $timeStamp"
-        local d=$((timeStamp / 86400))
+        local d=$((timeStamp / 86400 ))
         [[ "$d" -gt 9 ]] && DCRAB_ELAPSED_TIME_TEXT="$d" || DCRAB_ELAPSED_TIME_TEXT="0$d"
         timeStamp=$((timeStamp - (d * 86400) )); echo "TIMESTAMP: $timeStamp"
         local h=$((timeStamp / 3600))
@@ -412,14 +413,13 @@ dcrab_format_time () {
 	timeStamp=$((timeStamp - (m * 60) )); echo "TIMESTAMP: $timeStamp"
         [[ "$timeStamp" -gt 9 ]] && DCRAB_ELAPSED_TIME_TEXT="$DCRAB_ELAPSED_TIME_TEXT:$timeStamp" || DCRAB_ELAPSED_TIME_TEXT="$DCRAB_ELAPSED_TIME_TEXT:0$timeStamp"
 
-	if [ $(echo "$DCRAB_DIFF_TIMESTAMP < $DCRAB_TIME_REQ_SECONDS" | bc) -eq 1 ]; then
-		DCRAB_ELAPSED_TIME_VALUE=$( echo "($DCRAB_DIFF_TIMESTAMP * 100 ) / $DCRAB_TIME_REQ_SECONDS " | bc )	
-		DCRAB_REMAINING_TIME_VALUE=$(( 100 - DCRAB_ELAPSED_TIME_VALUE))
+	if [ $(echo "$DCRAB_DIFF_TIMESTAMP < $DCRAB_REQ_TIME_PER_NODE" | bc) -eq 1 ]; then
+		DCRAB_ELAPSED_TIME_VALUE=$( echo "scale=3; ($DCRAB_DIFF_TIMESTAMP * 100 ) / $DCRAB_REQ_TIME_PER_NODE " | bc )	
+		DCRAB_REMAINING_TIME_VALUE=$( echo "scale=3; 100 - $DCRAB_ELAPSED_TIME_VALUE" | bc)
 	else
 		DCRAB_ELAPSED_TIME_VALUE=100
                 DCRAB_REMAINING_TIME_VALUE=0
 	fi
-	echo "$DCRAB_DIFF_TIMESTAMP - $DCRAB_TIME_REQ_SECONDS , $DCRAB_ELAPSED_TIME_VALUE , $DCRAB_REMAINING_TIME_VALUE"
 }
 
 dcrab_determine_main_process () {
