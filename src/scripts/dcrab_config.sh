@@ -160,7 +160,7 @@ dcrab_generate_html (){
 	
 	# DISK
         printf "%s \n" "var disk_options = {  " >> $DCRAB_HTML
-        printf "%s \n" "title : 'Disk I/O Stats', " >> $DCRAB_HTML
+        printf "%s \n" "title : 'Disk I/O Stats (lscratch)', " >> $DCRAB_HTML
         printf "%s \n" "vAxis: {title: 'MB/s'}, " >> $DCRAB_HTML
         printf "%s \n" "hAxis: {title: 'Time (s)'}, " >> $DCRAB_HTML
         printf "%s \n" "width: $plot_width,  " >> $DCRAB_HTML
@@ -171,7 +171,6 @@ dcrab_generate_html (){
         printf "%s \n" "}  " >> $DCRAB_HTML
         printf "%s \n" "},  " >> $DCRAB_HTML
         printf "%s \n" "};  " >> $DCRAB_HTML
-
 
 	if [ "$DCRAB_NNODES" -gt 1 ]; then
 		printf "%s \n" "var total_mem_options = {" >> $DCRAB_HTML
@@ -314,6 +313,12 @@ dcrab_generate_html (){
         printf "%s \n" "width:49%;" >> $DCRAB_HTML
         printf "%s \n" "height: 300px;" >> $DCRAB_HTML
         printf "%s \n" "}" >> $DCRAB_HTML
+        printf "%s \n" ".warningText {" >> $DCRAB_HTML
+        printf "%s \n" "height: 200px;" >> $DCRAB_HTML
+        printf "%s \n" "vertical-align: top;" >> $DCRAB_HTML
+        printf "%s \n" "margin-top: 230px;" >> $DCRAB_HTML
+        printf "%s \n" "color: #ff8000;" >> $DCRAB_HTML
+        printf "%s \n" "}" >> $DCRAB_HTML
 	printf "%s \n" "</style>" >> $DCRAB_HTML
 	################# END Style #################
 
@@ -425,6 +430,19 @@ dcrab_generate_html (){
 
         #IB plots
         printf "%s \n" "<div class=\"overflowDivs\">" >> $DCRAB_HTML
+        printf "%s \n" "<div class=\"text rcorners inline warningText\" style=\"height: 200px; vertical-align: top; margin-top: 230px; color: #ff8000\" >" >> $DCRAB_HTML
+        printf "%s \n" "<center><b>" >> $DCRAB_HTML
+        printf "%s \n" "-- WARNING --<br>" >> $DCRAB_HTML
+        printf "%s \n" "Infiniband charts are generated<br>" >> $DCRAB_HTML
+        printf "%s \n" "with general statistics of the IB<br>" >> $DCRAB_HTML
+        printf "%s \n" "port during the execution. This <br>" >> $DCRAB_HTML
+        printf "%s \n" "means that is not considering only<br>" >> $DCRAB_HTML
+        printf "%s \n" "your job IB usage but the whole node.<br>" >> $DCRAB_HTML
+        printf "%s \n" "So keep in mind when analizing the<br>" >> $DCRAB_HTML
+        printf "%s \n" "chart because maybe can be another<br>" >> $DCRAB_HTML
+        printf "%s \n" "job using IB device <br>" >> $DCRAB_HTML
+        printf "%s \n" "</b></center>" >> $DCRAB_HTML
+        printf "%s \n" "</div>" >> $DCRAB_HTML
         i=1
         while [ $i -le $DCRAB_NNODES ]; do
                 printf "%s \n" "<div class=\"inline\">" >> $DCRAB_HTML
