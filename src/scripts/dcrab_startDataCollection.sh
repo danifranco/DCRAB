@@ -1,9 +1,29 @@
 #!/bin/bash
+# DCRAB SOFTWARE
+# Version: 1.0
+# Autor: CC-staff
+# Donostia International Physics Center
+#
+# ===============================================================================================================
+#
+# This script is the core of the monitorization of the nodes. Is used in 'dcrab_start_data_collection' function 
+# inside 'scripts/dcrab_config.sh' file.
+#
+# Arguments:
+#
+#  1- aux/env.txt  	<-- Used to store environment
+#  2- int	   	<-- Node number 
+#  3- int   	   	<-- Time of desynchronization. To try not overlapping the writes on the .html file.
+#  4- dcrab_$node.log	<-- Log file
+# 
+# Do NOT execute manually. DCRAB will start it automatically
+#
+# ===============================================================================================================
+
 
 # Redirect all the output to DCRAB log file
 exec >> $4 
-
-echo "--- DCRAB `hostname` log ---" 2>&1
+echo "--- DCRAB `hostname` log ---" 
 
 # Save hostname of the node
 node_hostname=`hostname`
@@ -16,8 +36,7 @@ source "$1"
 cd $DCRAB_WORKDIR
 
 # Source modules
-source $DCRAB_BIN/modules/cpu/dcrab_cpu.sh
-source $DCRAB_BIN/scripts/dcrab_config.sh
+source $DCRAB_BIN/scripts/dcrab_node_report_functions.sh
 
 # Save hostname of the node
 node_hostname=`hostname`
@@ -35,6 +54,10 @@ sleep "$3"
 
 dcrab_determine_main_process $DCRAB_REPORT_DIR/data/dcrab_cpu_$node_hostname.txt
 
+
+###############
+## MAIN LOOP ##
+###############
 loopNumber=1
 updates=0
 while [ 1 ]; do
@@ -51,3 +74,6 @@ while [ 1 ]; do
 
 	loopNumber=$((loopNumber + 1))
 done
+
+
+
