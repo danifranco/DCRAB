@@ -38,7 +38,7 @@ case "$1" in
 
                 # Initialize log report of the main node
 		echo "--- DCRAB main-node: `hostname` log ---" >> $DCRAB_LOG_DIR/dcrab.log
-		
+
         	# Initialize dcrab report
 		dcrab_start_report_files >> $DCRAB_LOG_DIR/dcrab.log 2>&1 
 
