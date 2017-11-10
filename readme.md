@@ -21,7 +21,7 @@ monitoring tool, like a crab grabbing its food, grabs the processes associated i
 
 ### PROS
 
-  - Real time monitorization
+  - Real time monitorization. The report file is continuously updating
   - All data collected in a single .html file
   - No compilation required
   - Easy to use in a script because only two sentences are required to monitor data
@@ -33,6 +33,7 @@ monitoring tool, like a crab grabbing its food, grabs the processes associated i
 
 ### Coming features
 
+  - Multinode computations (with MPI)
   - MPI comunication statistics
-  - Multinode computations
+  - IB network statistics
   - Support for Slurm.

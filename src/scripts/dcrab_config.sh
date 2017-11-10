@@ -152,6 +152,10 @@ dcrab_generate_html (){
         printf "%s \n" "margin: 0px;" >> $DCRAB_HTML
         printf "%s \n" "}" >> $DCRAB_HTML
         printf "%s \n" "" >> $DCRAB_HTML
+	printf "%s \n" ".inline {" >> $DCRAB_HTML
+	printf "%s \n" "display:inline-block;" >> $DCRAB_HTML
+	printf "%s \n" "}" >> $DCRAB_HTML
+        printf "%s \n" "" >> $DCRAB_HTML
         printf "%s \n" ".text {" >> $DCRAB_HTML
         printf "%s \n" "font-family: Consolas,monospace;" >> $DCRAB_HTML
         printf "%s \n" "font-size: 14px;" >> $DCRAB_HTML
@@ -178,6 +182,7 @@ dcrab_generate_html (){
         printf "%s \n" "" >> $DCRAB_HTML
         printf "%s \n" ".overflowDivs {" >> $DCRAB_HTML
         printf "%s \n" "overflow:auto;" >> $DCRAB_HTML
+	printf "%s \n" "white-space: nowrap;" >> $DCRAB_HTML
         printf "%s \n" "}" >> $DCRAB_HTML
         printf "%s \n" "" >> $DCRAB_HTML
         printf "%s \n" ".header2 {" >> $DCRAB_HTML
@@ -208,6 +213,7 @@ dcrab_generate_html (){
         printf "%s \n" "" >> $DCRAB_HTML
         printf "%s \n" ".plot{" >> $DCRAB_HTML
         printf "%s \n" "border: 1px solid rgba(254, 254, 254, 0.3);" >> $DCRAB_HTML
+	printf "%s \n" "vertical-align:middle;" >> $DCRAB_HTML
         printf "%s \n" "}" >> $DCRAB_HTML
         printf "%s \n" "" >> $DCRAB_HTML
         printf "%s \n" ".space {" >> $DCRAB_HTML
@@ -243,28 +249,18 @@ dcrab_generate_html (){
 
 	################# CPU plots #################
         printf "%s \n" "<div class=\"overflowDivs\">" >> $DCRAB_HTML
-        printf "%s \n" "<table>" >> $DCRAB_HTML
-        printf "%s \n" "<tr>" >> $DCRAB_HTML
-	i=1
-        for node in $DCRAB_NODES
-        do      
-	        printf "%s \n" "<td><div class=\"header\">$node</div></td>" >> $DCRAB_HTML
-		[[ "$i" -ne "$DCRAB_NNODES" ]] && printf "%s \n" "<td><div class=\"space\"></div></td>" >> $DCRAB_HTML
-		i=$((i + 1))
+	for node in $DCRAB_NODES_MOD
+        do
+	        printf "%s \n" "<div class=\"inline\">" >> $DCRAB_HTML
+	        printf "%s \n" "<table><tr><td>" >> $DCRAB_HTML
+        	printf "%s \n" "<div class=\"header\">$node</div>" >> $DCRAB_HTML
+	        printf "%s \n" "</td></tr>" >> $DCRAB_HTML
+        	printf "%s \n" "<tr><td>" >> $DCRAB_HTML
+		printf "%s \n" "<div class=\"plot\" id='plot_cpu_$node'></div>" >> $DCRAB_HTML
+		printf "%s \n" "</td></tr>" >> $DCRAB_HTML
+	        printf "%s \n" "</table>" >> $DCRAB_HTML
+        	printf "%s \n" "</div>" >> $DCRAB_HTML
         done
-        printf "%s \n" "</tr>" >> $DCRAB_HTML
-        printf "%s \n" "</table>" >> $DCRAB_HTML
-        printf "%s \n" "<table>" >> $DCRAB_HTML
-        printf "%s \n" "<tr>" >> $DCRAB_HTML
-	i=1
-        for node in $DCRAB_NODES_MOD
-        do         
-		printf "%s \n" "<td><div class=\"plot\" id='plot_cpu_$node'></div></td>" >> $DCRAB_HTML
-                [[ "$i" -ne "$DCRAB_NNODES" ]] && printf "%s \n" "<td><div class=\"space\"></div></td>" >> $DCRAB_HTML
-		i=$((i + 1))
-        done
-        printf "%s \n" "</tr>" >> $DCRAB_HTML
-        printf "%s \n" "</table>" >> $DCRAB_HTML
         printf "%s \n" "</div>" >> $DCRAB_HTML
 	################# END CPU plots ##############
 
@@ -272,36 +268,25 @@ dcrab_generate_html (){
 
 	################# MEM plots #################
         printf "%s \n" "<div class=\"overflowDivs\">" >> $DCRAB_HTML
-        printf "%s \n" "<table>" >> $DCRAB_HTML
-        printf "%s \n" "<tr>" >> $DCRAB_HTML
-	i=1
-        for node in $DCRAB_NODES
-        do      
-	        printf "%s \n" "<td><div class=\"header2\">$node</div></td>" >> $DCRAB_HTML
-		[[ "$i" -ne "$DCRAB_NNODES" ]] && printf "%s \n" "<td><div class=\"space\"></div></td>" >> $DCRAB_HTML
-		i=$((i + 1))
-        done
-        printf "%s \n" "</tr>" >> $DCRAB_HTML
-        printf "%s \n" "</table>" >> $DCRAB_HTML
-        printf "%s \n" "<table>" >> $DCRAB_HTML
-        printf "%s \n" "<tr>" >> $DCRAB_HTML
-	i=1
         for node in $DCRAB_NODES_MOD
-        do         
-		printf "%s \n" "<td><div class=\"plot\" id='plot1_mem_$node'></div></td>" >> $DCRAB_HTML
-                printf "%s \n" "<td><div class=\"space\"></div></td>" >> $DCRAB_HTML
-		printf "%s \n" "<td><div class=\"plot\" id='plot2_mem_$node'></div></td>" >> $DCRAB_HTML
-                [[ "$i" -ne "$DCRAB_NNODES" ]] && printf "%s \n" "<td><div class=\"space\"></div></td>" >> $DCRAB_HTML
-		i=$((i + 1))
+        do      
+                printf "%s \n" "<div class=\"inline\">" >> $DCRAB_HTML
+                printf "%s \n" "<table><tr><td>" >> $DCRAB_HTML
+	        printf "%s \n" "<div class=\"header2\">$node</div>" >> $DCRAB_HTML
+		printf "%s \n" "</td></tr>" >> $DCRAB_HTML
+		printf "%s \n" "<tr><td>" >> $DCRAB_HTML
+		printf "%s \n" "<div class=\"plot inline\" id='plot1_mem_$node'></div>" >> $DCRAB_HTML
+		printf "%s \n" "<div class=\"plot inline\" id='plot2_mem_$node'></div>" >> $DCRAB_HTML
+		printf "%s \n" "</td></tr>" >> $DCRAB_HTML
+		printf "%s \n" "</table>" >> $DCRAB_HTML
+		printf "%s \n" "</div>" >> $DCRAB_HTML
         done
-        printf "%s \n" "</tr>" >> $DCRAB_HTML
-        printf "%s \n" "</table>" >> $DCRAB_HTML
         printf "%s \n" "</div>" >> $DCRAB_HTML
 	################# END CPU plots ##############
 
         printf "%s \n" "<div id='foot'>" >> $DCRAB_HTML
-        printf "%s \n" "<div style=\"display: inline;\">&nbsp;&nbsp;&nbsp;</div>" >> $DCRAB_HTML
-        printf "%s \n" "<div style=\"display: inline;\">" >> $DCRAB_HTML
+        printf "%s \n" "<div class=\"inline\">&nbsp;&nbsp;&nbsp;</div>" >> $DCRAB_HTML
+        printf "%s \n" "<div class=\"inline\">" >> $DCRAB_HTML
         printf "%s \n" "<a href=\"http://dipc.ehu.es/\" target=\"_blank\">" >> $DCRAB_HTML
         printf "%s \n" "<svg version=\"1.1\" x=\"0px\" y=\"0px\" width=\"90px\" height=\"45px\" viewBox=\"0 0 90 45\" enable-background=\"new 0 0 90 45\" xml:space=\"preserve\" style=\"margin-top: 10px;\"><image width=\"90\" height=\"45\" x=\"0\" y=\"0\"" >> $DCRAB_HTML
         printf "%s \n" "xlink:href=\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHgAAABFCAMAAAC2XtKTAAAABGdBTUEAALGPC/xhBQAAACBjSFJN" >> $DCRAB_HTML
@@ -352,7 +337,7 @@ dcrab_generate_html (){
         printf "%s \n" "MTEtMDdUMDc6MDM6MDgtMDc6MDDPpLLAAAAAAElFTkSuQmCC\"/>" >> $DCRAB_HTML
         printf "%s \n" "</a>" >> $DCRAB_HTML
         printf "%s \n" "</div>" >> $DCRAB_HTML
-        printf "%s \n" "<div style=\"display: inline; font-size: 12px; display: table-cell; vertical-align: middle;\" class=\"text\">" >> $DCRAB_HTML
+        printf "%s \n" "<div style=\"font-size: 12px; display: table-cell; vertical-align: middle;\" class=\"text inline\">" >> $DCRAB_HTML
         printf "%s \n" "Copyright &copy; 2017 DIPC (Donostia International Physics Center)" >> $DCRAB_HTML
         printf "%s \n" "<div class=\"vl\"></div>" >> $DCRAB_HTML
         printf "%s \n" "<a href=\"http://dipc.ehu.es/cc/computing_resources/index.html\" target=\"_blank\"  style=\"text-decoration: none; color: black;\"><b>Wiki</b></a>" >> $DCRAB_HTML
@@ -374,16 +359,19 @@ dcrab_check_scheduler () {
                 DCRAB_JOBNAME=$SLURM_JOB_NAME
                 DCRAB_NODES=`scontrol show hostname $SLURM_NODELIST`
                 DCRAB_NNODES=`scontrol show hostname $SLURM_NODELIST | wc -l`
-		DCRAB_JOBFILE=`ps $PPID  | awk '{printf $6}'`
+		DCRAB_JOBFILE=`ps $PPID | awk '{printf $6}'`
 		DCRAB_REQ_MEM=0
         elif [ -n "$PBS_NODEFILE" ]; then
                 DCRAB_SCHEDULER=pbs
                 DCRAB_JOB_ID=$PBS_JOBID
                 DCRAB_WORKDIR=$PBS_O_WORKDIR
                 DCRAB_JOBNAME=$PBS_JOBNAME
-                DCRAB_NODES=`cat $PBS_NODEFILE | sort | uniq`
+		# Sort reverse because PBS scheduler starts the execution in descending order
+                for n in `cat $PBS_NODEFILE | sort -r | uniq`; do
+			DCRAB_NODES="$DCRAB_NODES"" $n"
+		done
                 DCRAB_NNODES=`cat $PBS_NODEFILE | sort | uniq | wc -l`
-		DCRAB_JOBFILE=`ps $PPID  | awk '{printf $6}'`
+		DCRAB_JOBFILE=`ps $PPID | awk '{printf $6}'`
 		DCRAB_REQ_MEM=`cat $DCRAB_JOBFILE | grep "\-l mem=" | cut -d= -f2 | sed 's/[^0-9]*//g'`
         else
                 DCRAB_SCHEDULER="none"
