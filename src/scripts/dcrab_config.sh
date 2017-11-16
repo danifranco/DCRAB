@@ -16,15 +16,14 @@
 
 dcrab_save_environment () {
 
-        declare -p | grep "$1" >> $DCRAB_REPORT_DIR/aux/env.txt
+        declare -p | grep "^$1" >> $DCRAB_REPORT_DIR/aux/env.txt
 }
 
 dcrab_generate_html (){
 
 	plot_width=800
 	plot_height=600
-	space_width=30
-	addedBorder=6
+	addedBorder=7
 
         # Generate the first steps of the report
         printf "%s \n" "<html>" >> $DCRAB_HTML
@@ -59,7 +58,7 @@ dcrab_generate_html (){
 
 		# MEM
                 printf "%s \n" "var mem1_$node = google.visualization.arrayToDataTable([" >> $DCRAB_HTML
-		printf "%s \n" "['Execution Time (s)', 'Node Memory', 'Requested Memory', 'Consumed Memory Peak (VmPeak)', 'Consumed Memory (VmSize)', 'Resident Memory (VmRSS)']," >> $DCRAB_HTML
+		printf "%s \n" "['Execution Time (s)', 'Node Memory', 'Requested Memory', 'Consumed Memory Peak (of VmRSS)', 'Consumed Memory (VmSize)', 'Resident Memory (VmRSS)']," >> $DCRAB_HTML
                 printf "\n"  >> $DCRAB_HTML
                 printf "%s \n" "]);" >> $DCRAB_HTML
                 printf "%s \n" "var mem2_$node = google.visualization.arrayToDataTable([" >> $DCRAB_HTML
@@ -186,7 +185,7 @@ dcrab_generate_html (){
         printf "%s \n" "}" >> $DCRAB_HTML
         printf "%s \n" "" >> $DCRAB_HTML
         printf "%s \n" ".header2 {" >> $DCRAB_HTML
-        printf "%s \n" "width: $(( (plot_width * 2) - (plot_width / 2) + (space_width + addedBorder) ))px;" >> $DCRAB_HTML
+        printf "%s \n" "width: $(( (plot_width * 2) - (plot_width / 2) +  addedBorder ))px;" >> $DCRAB_HTML
         printf "%s \n" "border: 1px solid rgba(254, 254, 254, 0.3);" >> $DCRAB_HTML
         printf "%s \n" "float: left;" >> $DCRAB_HTML
         printf "%s \n" "text-align: center;" >> $DCRAB_HTML 
@@ -228,6 +227,13 @@ dcrab_generate_html (){
         printf "%s \n" "display: table;" >> $DCRAB_HTML
         printf "%s \n" "width:100%;" >> $DCRAB_HTML
         printf "%s \n" "}" >> $DCRAB_HTML
+        printf "%s \n" "" >> $DCRAB_HTML
+	printf "%s \n" "#textmem2 {" >> $DCRAB_HTML
+	printf "%s \n" "border-spacing: 5px;" >> $DCRAB_HTML
+	printf "%s \n" "border-collapse: separate;" >> $DCRAB_HTML
+	printf "%s \n" "margin: 0 auto;" >> $DCRAB_HTML
+	printf "%s \n" "border: 1px solid rgba(254, 254, 254, 0.3); " >> $DCRAB_HTML
+	printf "%s \n" "}" >> $DCRAB_HTML
 	printf "%s \n" "</style>" >> $DCRAB_HTML
 	################# END Style #################
 
@@ -249,17 +255,18 @@ dcrab_generate_html (){
 
 	################# CPU plots #################
         printf "%s \n" "<div class=\"overflowDivs\">" >> $DCRAB_HTML
-	for node in $DCRAB_NODES_MOD
-        do
+	i=1
+	while [ $i -le $DCRAB_NNODES ]; do 
 	        printf "%s \n" "<div class=\"inline\">" >> $DCRAB_HTML
 	        printf "%s \n" "<table><tr><td>" >> $DCRAB_HTML
-        	printf "%s \n" "<div class=\"header\">$node</div>" >> $DCRAB_HTML
+        	printf "%s \n" "<div class=\"header\">$(echo $DCRAB_NODES | cut -d' ' -f $i)</div>" >> $DCRAB_HTML
 	        printf "%s \n" "</td></tr>" >> $DCRAB_HTML
         	printf "%s \n" "<tr><td>" >> $DCRAB_HTML
-		printf "%s \n" "<div class=\"plot\" id='plot_cpu_$node'></div>" >> $DCRAB_HTML
+		printf "%s \n" "<div class=\"plot\" id='plot_cpu_$(echo $DCRAB_NODES_MOD | cut -d' ' -f$i)'></div>" >> $DCRAB_HTML
 		printf "%s \n" "</td></tr>" >> $DCRAB_HTML
 	        printf "%s \n" "</table>" >> $DCRAB_HTML
         	printf "%s \n" "</div>" >> $DCRAB_HTML
+		i=$((i+1))
         done
         printf "%s \n" "</div>" >> $DCRAB_HTML
 	################# END CPU plots ##############
@@ -268,18 +275,30 @@ dcrab_generate_html (){
 
 	################# MEM plots #################
         printf "%s \n" "<div class=\"overflowDivs\">" >> $DCRAB_HTML
-        for node in $DCRAB_NODES_MOD
-        do      
+	i=1
+        while [ $i -le $DCRAB_NNODES ]; do      
                 printf "%s \n" "<div class=\"inline\">" >> $DCRAB_HTML
                 printf "%s \n" "<table><tr><td>" >> $DCRAB_HTML
-	        printf "%s \n" "<div class=\"header2\">$node</div>" >> $DCRAB_HTML
+	        printf "%s \n" "<div class=\"header2\">$(echo $DCRAB_NODES | cut -d' ' -f $i)</div>" >> $DCRAB_HTML
 		printf "%s \n" "</td></tr>" >> $DCRAB_HTML
 		printf "%s \n" "<tr><td>" >> $DCRAB_HTML
-		printf "%s \n" "<div class=\"plot inline\" id='plot1_mem_$node'></div>" >> $DCRAB_HTML
-		printf "%s \n" "<div class=\"plot inline\" id='plot2_mem_$node'></div>" >> $DCRAB_HTML
+                printf "%s \n" "<div class=\"plot inline\" id='plot1_mem_$(echo $DCRAB_NODES_MOD | cut -d' ' -f$i)'></div>" >> $DCRAB_HTML
+                printf "%s \n" "<div style=\"border: 0px;\" class=\"plot inline\">" >> $DCRAB_HTML
+                printf "%s \n" "<div class=\"text\">" >> $DCRAB_HTML
+                printf "%s \n" "<table id=\"textmem2\">" >> $DCRAB_HTML
+                printf "%s \n" "<tr style=\"border: 0px;\"><td><b><u>Node memory</u></b>:&nbsp;&nbsp;&nbsp;&nbsp;</td><td>0 GB</td></tr>" >> $DCRAB_HTML
+                printf "%s \n" "<tr style=\"border: 0px;\"><td><b><u>Requested memory</u></b>:&nbsp;&nbsp;&nbsp;&nbsp;</td><td>0 GB</td></tr>" >> $DCRAB_HTML
+                printf "%s \n" "<tr style=\"border: 0px;\"><td><b><u>VmRSS</u></b>:&nbsp;&nbsp;&nbsp;&nbsp;</td><td>0 GB</td></tr>" >> $DCRAB_HTML
+                printf "%s \n" "<tr style=\"border: 0px;\"><td><b><u>VmSize</u></b>:&nbsp;&nbsp;&nbsp;&nbsp;</td><td>0 GB</td></tr>" >> $DCRAB_HTML
+                printf "%s \n" "</table>" >> $DCRAB_HTML
+                printf "%s \n" "</div>" >> $DCRAB_HTML
+                printf "%s \n" "<br><br><br>" >> $DCRAB_HTML
+                printf "%s \n" "<div class=\"plot inline\" id='plot2_mem_$(echo $DCRAB_NODES_MOD | cut -d' ' -f$i)'></div>" >> $DCRAB_HTML
+                printf "%s \n" "</div>" >> $DCRAB_HTML
 		printf "%s \n" "</td></tr>" >> $DCRAB_HTML
 		printf "%s \n" "</table>" >> $DCRAB_HTML
 		printf "%s \n" "</div>" >> $DCRAB_HTML
+		i=$((i+1))
         done
         printf "%s \n" "</div>" >> $DCRAB_HTML
 	################# END CPU plots ##############
@@ -388,9 +407,6 @@ dcrab_check_scheduler () {
 dcrab_start_report_files () {
 	# Sets the delay to collect data 
         DCRAB_COLLECT_TIME=10
-        # To try no overlap writes in the main .html we can try to asign the second in which the node
-        # must make that write operation
-        [[ "$DCRAB_NNODES" -eq 1 ]] && DCRAB_TIME_HOWOFTEN=0  || DCRAB_TIME_HOWOFTEN=$((DCRAB_COLLECT_TIME / DCRAB_NNODES))
 
 	#tmp
 	#DCRAB_NODES="atlas-104 atlas-105 atlas-106"
@@ -403,7 +419,6 @@ dcrab_start_report_files () {
 	
 	# Create folder to save required files
 	mkdir -p $DCRAB_REPORT_DIR/aux
-        mkdir $DCRAB_REPORT_DIR/aux/htmlResources
 
 	# Generate the first steps of the report
 	dcrab_generate_html 
@@ -433,15 +448,12 @@ dcrab_start_data_collection () {
                 # Create node folders
                 mkdir -p $DCRAB_REPORT_DIR/data/$node
 		
-		# Calculate the second
-		cont=$((DCRAB_TIME_HOWOFTEN * i))
-
-                COMMAND="$DCRAB_BIN/scripts/dcrab_startDataCollection.sh $DCRAB_WORKDIR/$DCRAB_REPORT_DIR/aux/env.txt $i $cont $DCRAB_WORKDIR/$DCRAB_LOG_DIR/dcrab_$node.log & echo \$!"
+                COMMAND="$DCRAB_BIN/scripts/dcrab_startDataCollection.sh $DCRAB_WORKDIR/$DCRAB_REPORT_DIR/aux/env.txt $i $DCRAB_WORKDIR/$DCRAB_LOG_DIR/dcrab_$node.log & echo \$!"
 
                 # Hay que poner la key, sino pide password
                 DCRAB_PIDs[$i]=`ssh -n $node PATH=$PATH $COMMAND | tail -n 1 `
 
-                echo "N: $node P:"${DCRAB_PIDs[$i]}", $DCRAB_TIME_HOWOFTEN" 
+                echo "N: $node P:"${DCRAB_PIDs[$i]}
 
                 # Next
                 i=$((i+1))
@@ -455,7 +467,6 @@ dcrab_init_variables () {
 
 	export DCRAB_REPORT_DIR=dcrab_report_$DCRAB_JOB_ID
         export DCRAB_LOG_DIR=$DCRAB_REPORT_DIR/log
-        export DCRAB_MAIN_JOB_PID=$PPID
 	export DCRAB_USER_ID=`id -u $USER`
 	export DCRAB_HTML=$DCRAB_REPORT_DIR/dcrab_report.html
 }
