@@ -18,11 +18,11 @@ dcrab_save_environment () {
 
 	case $DCRAB_HOST_OS in
 		SUSE)
-		echo "Entra en SUSE"
+		echo "OS: SUSE"
 	        declare -p | grep "^$1" >> $DCRAB_REPORT_DIR/aux/env.txt
 		;;
 		CentOS)
-		echo "Entra en Centos"
+		echo "OS: Centos"
 	        declare -p | grep "$1" >> $DCRAB_REPORT_DIR/aux/env.txt
 		;;
 		*)
@@ -81,6 +81,14 @@ dcrab_generate_html (){
 		
 	        printf "%s \n" "cpu_data_$node.addRows(cpu_$node);" >> $DCRAB_HTML
 	done
+	
+	if [ "$DCRAB_NNODES" -gt 1 ]; then
+                printf "%s \n" "var total_mem = google.visualization.arrayToDataTable([" >> $DCRAB_HTML
+	        printf "%s \n" "['Mem class', 'Percentage']," >> $DCRAB_HTML
+                printf "%s \n" "['Used memory', 0]," >> $DCRAB_HTML
+                printf "%s \n" "['Not utilized memory', 100]," >> $DCRAB_HTML
+                printf "%s \n" "]);" >> $DCRAB_HTML
+	fi
 
 	# CPU
         printf "%s \n" "var cpu_options = {" >> $DCRAB_HTML
@@ -132,6 +140,15 @@ dcrab_generate_html (){
         printf "%s \n" "is3D: true" >> $DCRAB_HTML
         printf "%s \n" "};" >> $DCRAB_HTML
 
+	if [ "$DCRAB_NNODES" -gt 1 ]; then
+		printf "%s \n" "var total_mem_options = {" >> $DCRAB_HTML
+	        printf "%s \n" " title: 'Requested memory usage'," >> $DCRAB_HTML
+	        printf "%s \n" " width: 650," >> $DCRAB_HTML
+	        printf "%s \n" " height: 450," >> $DCRAB_HTML
+	        printf "%s \n" " colors: ['#3366CC', '#109618']," >> $DCRAB_HTML
+	        printf "%s \n" " is3D: true" >> $DCRAB_HTML
+	        printf "%s \n" "};" >> $DCRAB_HTML
+	fi
 
         for node in $DCRAB_NODES_MOD
         do
@@ -146,6 +163,11 @@ dcrab_generate_html (){
         	printf "%s \n" "mem1_chart_$node.draw(mem1_$node, mem1_options);  " >> $DCRAB_HTML
         	printf "%s \n" "mem2_chart_$node.draw(mem2_$node, mem2_options);  " >> $DCRAB_HTML
         done
+
+	if [ "$DCRAB_NNODES" -gt 1 ]; then
+		printf "%s \n" "var total_mem_chart = new google.visualization.PieChart(document.getElementById('plot_total_mem'));" >> $DCRAB_HTML
+		printf "%s \n" "total_mem_chart.draw(total_mem, total_mem_options);" >> $DCRAB_HTML
+	fi
 
 	printf "%s \n" "}" >> $DCRAB_HTML
         ################# END plot function #################
@@ -196,19 +218,6 @@ dcrab_generate_html (){
 	printf "%s \n" "white-space: nowrap;" >> $DCRAB_HTML
         printf "%s \n" "}" >> $DCRAB_HTML
         printf "%s \n" "" >> $DCRAB_HTML
-        printf "%s \n" ".header2 {" >> $DCRAB_HTML
-        printf "%s \n" "width: $(( (plot_width * 2) - (plot_width / 2) +  addedBorder ))px;" >> $DCRAB_HTML
-        printf "%s \n" "border: 1px solid rgba(254, 254, 254, 0.3);" >> $DCRAB_HTML
-        printf "%s \n" "float: left;" >> $DCRAB_HTML
-        printf "%s \n" "text-align: center;" >> $DCRAB_HTML 
-        printf "%s \n" "font-family: 'Roboto', sans-serif;" >> $DCRAB_HTML
-        printf "%s \n" "font-size: 16px;" >> $DCRAB_HTML
-        printf "%s \n" "color: #fff;" >> $DCRAB_HTML
-        printf "%s \n" "text-transform: uppercase;" >> $DCRAB_HTML
-        printf "%s \n" "vertical-align: middle;" >> $DCRAB_HTML
-        printf "%s \n" "background-color: rgba(255,255,255,0.3);" >> $DCRAB_HTML
-        printf "%s \n" "}" >> $DCRAB_HTML
-        printf "%s \n" "" >> $DCRAB_HTML
         printf "%s \n" ".header {" >> $DCRAB_HTML
         printf "%s%s \n" "width: $plot_width" "px;" >> $DCRAB_HTML
         printf "%s \n" "border: 1px solid rgba(254, 254, 254, 0.3);" >> $DCRAB_HTML
@@ -223,7 +232,6 @@ dcrab_generate_html (){
         printf "%s \n" "}" >> $DCRAB_HTML
         printf "%s \n" "" >> $DCRAB_HTML
         printf "%s \n" ".plot{" >> $DCRAB_HTML
-        printf "%s \n" "border: 1px solid rgba(254, 254, 254, 0.3);" >> $DCRAB_HTML
 	printf "%s \n" "vertical-align:middle;" >> $DCRAB_HTML
         printf "%s \n" "}" >> $DCRAB_HTML
         printf "%s \n" "" >> $DCRAB_HTML
@@ -246,6 +254,15 @@ dcrab_generate_html (){
 	printf "%s \n" "margin: 0 auto;" >> $DCRAB_HTML
 	printf "%s \n" "border: 1px solid rgba(254, 254, 254, 0.3); " >> $DCRAB_HTML
 	printf "%s \n" "}" >> $DCRAB_HTML
+	printf "%s \n" "" >> $DCRAB_HTML
+        printf "%s \n" "#detailedText {" >> $DCRAB_HTML
+        printf "%s \n" "vertical-align: top;" >> $DCRAB_HTML
+        printf "%s \n" "padding-top: 230px;" >> $DCRAB_HTML
+        printf "%s \n" "font-family: 'Roboto', sans-serif;" >> $DCRAB_HTML
+        printf "%s \n" "font-size: 56px;" >> $DCRAB_HTML
+        printf "%s \n" "color: #fff;" >> $DCRAB_HTML
+        printf "%s \n" "text-transform: uppercase;" >> $DCRAB_HTML
+        printf "%s \n" "}" >> $DCRAB_HTML
 	printf "%s \n" "</style>" >> $DCRAB_HTML
 	################# END Style #################
 
@@ -287,11 +304,38 @@ dcrab_generate_html (){
 
 	################# MEM plots #################
         printf "%s \n" "<div class=\"overflowDivs\">" >> $DCRAB_HTML
+	if [ "$DCRAB_NNODES" -gt 1 ]; then
+	        printf "%s \n" "<div class=\"inline\" style=\"margin-right: 50px;\">" >> $DCRAB_HTML
+	        printf "%s \n" "<table><tr><td>" >> $DCRAB_HTML
+	        printf "%s \n" "<div style=\"width: 1009px;\" class=\"header\">TOTAL MEMORY (PEAK)</div>" >> $DCRAB_HTML
+	        printf "%s \n" "</td></tr>" >> $DCRAB_HTML
+	        printf "%s \n" "<tr><td>" >> $DCRAB_HTML
+	        printf "%s \n" "<div style=\"padding-top: 75px;padding-bottom: 75px;padding-left: 15px;padding-right: 15px;\" class=\"plot inline\" id='plot_total_mem'></div>" >> $DCRAB_HTML
+	        printf "%s \n" "<div style=\"border: 0px;padding-right: 15px;\" class=\"plot inline\">" >> $DCRAB_HTML
+	        printf "%s \n" "<div class=\"text\">" >> $DCRAB_HTML
+	        printf "%s \n" "<table id=\"textmem2\">" >> $DCRAB_HTML
+	        printf "%s \n" "<tr style=\"border: 0px;\"><td><b><u>Requested memory</u></b>:&nbsp;&nbsp;&nbsp;&nbsp;</td><td>0 GB</td></tr>" >> $DCRAB_HTML
+	        printf "%s \n" "<tr style=\"border: 0px;\"><td><b><u>VmRSS (peak)</u></b>:&nbsp;&nbsp;&nbsp;&nbsp;</td><td>0 GB</td></tr>" >> $DCRAB_HTML
+	        printf "%s \n" "<tr style=\"border: 0px;\"><td><b><u>VmSize (peak)</u></b>:&nbsp;&nbsp;&nbsp;&nbsp;</td><td>0 GB</td></tr>" >> $DCRAB_HTML
+	        printf "%s \n" "</table>" >> $DCRAB_HTML
+	        printf "%s \n" "</div>" >> $DCRAB_HTML
+	        printf "%s \n" "<br><br><br>" >> $DCRAB_HTML
+	        printf "%s \n" "</div>" >> $DCRAB_HTML
+	        printf "%s \n" "</td></tr>" >> $DCRAB_HTML
+	        printf "%s \n" "</table>" >> $DCRAB_HTML
+	        printf "%s \n" "</div>" >> $DCRAB_HTML
+	        printf "%s \n" "" >> $DCRAB_HTML
+	        printf "%s \n" "<div class=\"inline\" id=\"detailedText\">" >> $DCRAB_HTML
+	        printf "%s \n" "<pre style=\"margin: 0px;\">MORE DETAILED " >> $DCRAB_HTML
+	        printf "%s \n" "    DATA </pre>" >> $DCRAB_HTML
+	        printf "%s \n" "<p style=\"margin: 0px; font-size: 115px;\">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#8594;</p>" >> $DCRAB_HTML
+	        printf "%s \n" "</div>" >> $DCRAB_HTML
+	fi
 	i=1
         while [ $i -le $DCRAB_NNODES ]; do      
                 printf "%s \n" "<div class=\"inline\">" >> $DCRAB_HTML
                 printf "%s \n" "<table><tr><td>" >> $DCRAB_HTML
-	        printf "%s \n" "<div class=\"header2\">$(echo $DCRAB_NODES | cut -d' ' -f $i)</div>" >> $DCRAB_HTML
+	        printf "%s \n" "<div style=\"width: 1207px;\" class=\"header\">$(echo $DCRAB_NODES | cut -d' ' -f $i)</div>" >> $DCRAB_HTML
 		printf "%s \n" "</td></tr>" >> $DCRAB_HTML
 		printf "%s \n" "<tr><td>" >> $DCRAB_HTML
                 printf "%s \n" "<div class=\"plot inline\" id='plot1_mem_$(echo $DCRAB_NODES_MOD | cut -d' ' -f$i)'></div>" >> $DCRAB_HTML
@@ -300,8 +344,8 @@ dcrab_generate_html (){
                 printf "%s \n" "<table id=\"textmem2\">" >> $DCRAB_HTML
                 printf "%s \n" "<tr style=\"border: 0px;\"><td><b><u>Node memory</u></b>:&nbsp;&nbsp;&nbsp;&nbsp;</td><td>0 GB</td></tr>" >> $DCRAB_HTML
                 printf "%s \n" "<tr style=\"border: 0px;\"><td><b><u>Requested memory</u></b>:&nbsp;&nbsp;&nbsp;&nbsp;</td><td>0 GB</td></tr>" >> $DCRAB_HTML
-                printf "%s \n" "<tr style=\"border: 0px;\"><td><b><u>VmRSS</u></b>:&nbsp;&nbsp;&nbsp;&nbsp;</td><td>0 GB</td></tr>" >> $DCRAB_HTML
-                printf "%s \n" "<tr style=\"border: 0px;\"><td><b><u>VmSize</u></b>:&nbsp;&nbsp;&nbsp;&nbsp;</td><td>0 GB</td></tr>" >> $DCRAB_HTML
+                printf "%s \n" "<tr style=\"border: 0px;\"><td><b><u>VmRSS (peak)</u></b>:&nbsp;&nbsp;&nbsp;&nbsp;</td><td>0 GB</td></tr>" >> $DCRAB_HTML
+                printf "%s \n" "<tr style=\"border: 0px;\"><td><b><u>VmSize (peak)</u></b>:&nbsp;&nbsp;&nbsp;&nbsp;</td><td>0 GB</td></tr>" >> $DCRAB_HTML
                 printf "%s \n" "</table>" >> $DCRAB_HTML
                 printf "%s \n" "</div>" >> $DCRAB_HTML
                 printf "%s \n" "<br><br><br>" >> $DCRAB_HTML
@@ -431,6 +475,7 @@ dcrab_start_report_files () {
 	
 	# Create folder to save required files
 	mkdir -p $DCRAB_REPORT_DIR/aux
+	mkdir $DCRAB_REPORT_DIR/aux/mem
 
 	# Generate the first steps of the report
 	dcrab_generate_html 

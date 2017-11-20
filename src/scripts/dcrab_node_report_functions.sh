@@ -17,9 +17,16 @@ write_initial_values () {
 	# Write memory static values 
         (
         flock -e 200
-        sed -i "$mem_piePlot1_nodeMemory_line"'s|\([0-9]*\) GB</td></tr>|'"$node_total_mem"' GB</td></tr>|' $DCRAB_HTML
-        sed -i "$mem_piePlot1_requestedMemory_line"'s|\([0-9]*\) GB</td></tr>|'"$DCRAB_REQ_MEM"' GB</td></tr>|' $DCRAB_HTML
+  		sed -i "$mem_piePlot1_nodeMemory_line"'s|\([0-9]*\) GB</td></tr>|'"$node_total_mem"' GB</td></tr>|' $DCRAB_HTML
+        	sed -i "$mem_piePlot1_requestedMemory_line"'s|\([0-9]*\) GB</td></tr>|'"$DCRAB_REQ_MEM"' GB</td></tr>|' $DCRAB_HTML
 	) 200>$DCRAB_REPORT_DIR/aux/.dcrab.lockfile
+	
+	if [ "$DCRAB_NODE_NUMBER" -eq 0 ] && [ "$DCRAB_NNODES" -gt 1 ]; then
+		(
+	        flock -e 200
+        	        sed -i "$mem_total_plot_requested_text_line"'s|\([0-9]*\) GB</td></tr>|'"$DCRAB_REQ_MEM"' GB</td></tr>|' $DCRAB_HTML
+	        ) 200>$DCRAB_REPORT_DIR/aux/.dcrab.lockfile	
+	fi
 }
 
 write_data () {
@@ -41,27 +48,30 @@ write_data () {
         fi
 
 	### MEM  specific change ###
-	# Change the color when exceeds memory limit
-        if [ "$exceeded" -eq 1 ] && [ "$changed" -eq 0 ]; then
-                (
-                flock -e 200
+	# The main node must make the changes in the total memory plot
+	if [ "$DCRAB_NODE_NUMBER" -eq 0 ] && [ "$DCRAB_NNODES" -gt 1 ]; then
+		(
+	        flock -e 200
+	                ### MEM ###
+	                sed -i "$memUnUsed_total_plot_line"'s|\([0-9]*[.]*[0-9]*\)\]|'"$total_notUtilizedMem"'\]|' $DCRAB_HTML
+	                sed -i "$memUsed_total_plot_line"'s|\([0-9]*[.]*[0-9]*\)\]|'"$total_utilizedMem"'\]|' $DCRAB_HTML
 
-                sed -i "$memUsed_addRow_inject_line"'s/#3366CC/#ff0000/' $DCRAB_HTML
+	                sed -i "$mem_total_plot_VmRSS_text_line"'s|\([0-9]*[.]*[0-9]*\) GB</td></tr>|'"$total_max_vmRSS"' GB</td></tr>|' $DCRAB_HTML
+	                sed -i "$mem_total_plot_VmSize_text_line"'s|\([0-9]*[.]*[0-9]*\) GB</td></tr>|'"$total_max_vmSize"' GB</td></tr>|' $DCRAB_HTML
 
-                ) 200>$DCRAB_REPORT_DIR/aux/.dcrab.lockfile
-                exceeded=0
-                changed=1
-        # Set the color to normal again
-        elif [ "$exceeded" -eq 0 ] && [ "$changed" -eq 1 ]; then
-                (
-                flock -e 200
+		) 200>$DCRAB_REPORT_DIR/aux/.dcrab.lockfile
 
-                sed -i "$memUsed_addRow_inject_line"'s/#ff0000/#3366CC/' $DCRAB_HTML
-
-                ) 200>$DCRAB_REPORT_DIR/aux/.dcrab.lockfile
-                changed=0
-        fi
-
+	        if [ "$exceeded" -eq 1 ] && [ "$changed" -eq 0 ]; then
+	                (
+	                flock -e 200
+	
+	                sed -i "$mem_total_options_color_line"'s/#3366CC/#ff0000/' $DCRAB_HTML
+	
+	                ) 200>$DCRAB_REPORT_DIR/aux/.dcrab.lockfile
+	                exceeded=0
+	                changed=1
+	        fi
+	fi
 
         # Write data 
         (
@@ -84,14 +94,13 @@ dcrab_collect_mem_data () {
 
 	# Store the data of all the processes 
 	:> $DCRAB_MEM_FILE
-	for pid in $(cat $DCRAB_JOB_PROCESSES_FILE | awk '{print $1}'); do echo "mem-pid: $pid"; cat /proc/$pid/status 2> /dev/null 1 >> $DCRAB_MEM_FILE; done
+	for pid in $(cat $DCRAB_JOB_PROCESSES_FILE | awk '{print $1}'); do cat /proc/$pid/status 2> /dev/null 1 >> $DCRAB_MEM_FILE; done
 
 	# Collect memory data of the file
-    	vmSize=$(grep VmSize $DCRAB_MEM_FILE | awk '{sum+=$2} END {print sum/1024/1024}') ; echo "vmSize= $vmSize"
+    	vmSize=$(grep VmSize $DCRAB_MEM_FILE | awk '{sum+=$2} END {print sum/1024/1024}') 
 	vmSize=$(printf "%.3f\n" "$vmSize") # 3 decimmals only
-	vmRSS=$(grep VmRSS $DCRAB_MEM_FILE | awk '{sum+=$2} END {print sum/1024/1024}'); echo "vmRSS= $vmRSS"
+	vmRSS=$(grep VmRSS $DCRAB_MEM_FILE | awk '{sum+=$2} END {print sum/1024/1024}')
 	vmRSS=$(printf "%.3f\n" "$vmRSS") # 3 decimmals only
-	echo "$vmSize , $vmRSS"	
 	if [ $(echo "$vmRSS > $max_RSS_size" | bc) -eq 1 ]; then
         	max_RSS_size=$vmRSS
 	fi
@@ -100,13 +109,46 @@ dcrab_collect_mem_data () {
         fi
 
 	# Check if exceeds memory requested. The job may be killed by the scheduler.
-	if [ $(echo "$vmRSS < $DCRAB_REQ_MEM" | bc) -eq 1 ]; then
-		utilizedMem=`echo "scale=3; ($max_RSS_size * 100)/$DCRAB_REQ_MEM" | bc `
-		notUtilizedMem=`echo "scale=3; 100 - $utilizedMem" | bc `
-	else
-		notUtilizedMem=0
+        if [ $(echo "$max_RSS_size < $DCRAB_REQ_MEM" | bc) -eq 1 ]; then
+                utilizedMem=`echo "scale=3; ($max_RSS_size * 100)/$DCRAB_REQ_MEM" | bc `
+                notUtilizedMem=`echo "scale=3; 100 - $utilizedMem" | bc `
+        else    
+                notUtilizedMem=0
                 utilizedMem=100
-                exceeded=1
+        fi
+
+	if [ "$DCRAB_NNODES" -gt 1 ]; then
+		if [ "$DCRAB_NODE_NUMBER" -eq 0 ]; then
+			total_vmRSS=0
+			total_vmSize=0
+			
+			echo "$vmRSS $vmSize" > $DCRAB_TOTAL_MEM_FILE
+
+			for file in $DCRAB_TOTAL_MEM_DIR/*
+			do
+				total_vmRSS=$(echo "$total_vmRSS + $(cat $file | awk '{print $1}')" | bc)
+				total_vmSize=$(echo "$total_vmSize + $(cat $file | awk '{print $2}')" | bc)
+			done
+		
+			if [ $(echo "$total_vmSize > $total_max_vmSize" | bc) -eq 1 ]; then
+		                total_max_vmSize=$total_vmSize
+		        fi
+			if [ $(echo "$total_vmRSS > $total_max_vmRSS" | bc) -eq 1 ]; then
+		                total_max_vmRSS=$total_vmRSS
+		        fi	
+	
+			if [ $(echo "$total_max_vmRSS < $DCRAB_REQ_MEM" | bc) -eq 2 ]; then
+				total_utilizedMem=`echo "scale=3; ($total_max_vmRSS * 100)/$DCRAB_REQ_MEM" | bc `
+				total_notUtilizedMem=`echo "scale=3; 100 - $total_utilizedMem" | bc `
+			else
+				total_utilizedMem=100
+				total_notUtilizedMem=0
+				exceeded=1		
+			fi
+			
+		else
+			echo "$vmRSS $vmSize" > $DCRAB_TOTAL_MEM_FILE
+		fi
 	fi
 
 	# Construct mem data string
@@ -129,7 +171,10 @@ dcrab_determine_main_process () {
         # CPU variables
         cpu_data="0,"
 	# MEM variables
-	min_utilizedMem=0
+	total_max_vmSize=0
+	total_max_vmRSS=0
+	total_vmSize=0
+	total_vmRSS=0
 	max_RSS_size=0
 	max_vmSize=0
 	mem_data="[0,"	
