@@ -13,81 +13,255 @@
 #
 # ===============================================================================================================
 
-write_initial_values () {
-	# Write memory static values 
-        (
-        flock -e 200
-  		sed -i "$mem_piePlot1_nodeMemory_line"'s|\([0-9]*\) GB</td></tr>|'"$node_total_mem"' GB</td></tr>|' $DCRAB_HTML
-        	sed -i "$mem_piePlot1_requestedMemory_line"'s|\([0-9]*\) GB</td></tr>|'"$DCRAB_REQ_MEM"' GB</td></tr>|' $DCRAB_HTML
-	) 200>$DCRAB_REPORT_DIR/aux/.dcrab.lockfile
+init_variables () {
+
+	# Host
+	DCRAB_NODE_NUMBER=$1
+	DCRAB_DCRAB_PID=$$
+	node_hostname=`hostname`
+	node_hostname_mod=`echo $node_hostname | sed 's|-||g'`
+
+	# Time 
+	DCRAB_WAIT_TIME_CONTROL=180 # 3 minutes
+	DCRAB_SLEEP_TIME_CONTROL=5
+	DCRAB_DIFF_TIMESTAMP=0
+	DCRAB_NUMBERS_OF_LOOPS_CONTROL=$(( DCRAB_WAIT_TIME_CONTROL / DCRAB_SLEEP_TIME_CONTROL ))
+
+	# Files and directories	
+	DCRAB_USER_PROCESSES_FILE=$DCRAB_REPORT_DIR/data/$node_hostname/dcrab_user_processes_$node_hostname.txt
+	DCRAB_JOB_PROCESSES_FILE=$DCRAB_REPORT_DIR/data/$node_hostname/dcrab_job_processes_$node_hostname.txt
+	DCRAB_MEM_FILE=$DCRAB_REPORT_DIR/data/$node_hostname/dcrab_mem_$node_hostname.txt
+	DCRAB_TOTAL_MEM_FILE=$DCRAB_REPORT_DIR/aux/mem/$node_hostname.txt
+	DCRAB_TOTAL_MEM_DIR=$DCRAB_REPORT_DIR/aux/mem/
+	if [ -d "/sys/class/infiniband/mlx5_0/ports/1/counters_ext/" ]; then
+		DCRAB_IB_BASE_DIR=/sys/class/infiniband/mlx5_0/ports/1/counters_ext
+	else
+		DCRAB_IB_BASE_DIR=/sys/class/infiniband/mlx4_0/ports/1/counters_ext
+	fi
+	DCRAB_IB_XMIT_PACK=$DCRAB_IB_BASE_DIR/port_xmit_packets_64
+	DCRAB_IB_XMIT_DATA=$DCRAB_IB_BASE_DIR/port_xmit_data_64
+	DCRAB_IB_RCV_PACK=$DCRAB_IB_BASE_DIR/port_rcv_packets_64
+	DCRAB_IB_RCV_DATA=$DCRAB_IB_BASE_DIR/port_rcv_data_64
+
+	# PIDs
+        DCRAB_MAIN_PIDS=0
+        DCRAB_FIRST_MAIN_PROCESS_PID=""
+        DCRAB_NUMBER_MAIN_PIDS=0
+        DCRAB_MAIN_PROCESS_LAST_CHILD_PID=""
+	DCRAB_RANGE_PIDs=1
+
+	# MPI
+        DCRAB_CONTROL_PORT_MAIN_NODE="none1"
+        DCRAB_CONTROL_PORT_OTHER_NODE="none2"
+
+	# Updates
+        updates=0
+	declare -a upd_proc_name
 	
+	# Data insert lines
+	addRow_data_line=`grep -n -m 1 "\/\* $node_hostname_mod addRow space \*\/" $DCRAB_HTML | cut -f1 -d:`
+	addColumn_data_line=`grep -n -m 1 "\/\* $node_hostname_mod addColumn space \*\/" $DCRAB_HTML | cut -f1 -d:`
+	
+	# CPU
+	cpu_data=""
+	cpu_addRow_inject_line=$((addRow_data_line + 2))
+	cpu_addColumn_inject_line=$((addColumn_data_line + 1))
+	cpu_threshold="5.0"
+	
+	# MEM
+	mem_data=""
+	node_total_mem=`free -g | grep "Mem" | awk ' {printf $2}'`
+	# Area chart
+	mem_addRow_inject_line=$((addRow_data_line + 7))
+	# Pie chart
+	memUsed_addRow_inject_line=$((addRow_data_line + 11))
+	memUnUsed_addRow_inject_line=$((addRow_data_line + 12))
+	# Total pie chart
 	if [ "$DCRAB_NODE_NUMBER" -eq 0 ] && [ "$DCRAB_NNODES" -gt 1 ]; then
-		(
-	        flock -e 200
-        	        sed -i "$mem_total_plot_requested_text_line"'s|\([0-9]*\) GB</td></tr>|'"$DCRAB_REQ_MEM"' GB</td></tr>|' $DCRAB_HTML
-	        ) 200>$DCRAB_REPORT_DIR/aux/.dcrab.lockfile	
+	        mem_total_plot_line=$(grep -n -m 1 "var total_mem" $DCRAB_HTML | cut -f1 -d:)
+	        memUsed_total_plot_line=$((mem_total_plot_line + 2))
+	        memUnUsed_total_plot_line=$((mem_total_plot_line + 3))
+	
+	        mem_total_plot_text_line=$(grep -n -m 1 "id='plot_total_mem'" $DCRAB_HTML | cut -f1 -d:)
+	        mem_total_plot_requested_text_line=$((mem_total_plot_text_line + 4))
+	        mem_total_plot_VmRSS_text_line=$((mem_total_plot_text_line + 5))
+	        mem_total_plot_VmSize_text_line=$((mem_total_plot_text_line + 6))
+	
+	        mem_total_options_color_line=$(grep -n -m 1 "var total_mem_options" $DCRAB_HTML | cut -f1 -d:)
+	        mem_total_options_color_line=$((mem_total_options_color_line + 4))
+
+		total_max_vmSize=0
+	        total_max_vmRSS=0
+        	total_vmSize=0
+	        total_vmRSS=0
+		exceeded=0
+	        changed=0
+
+	fi
+	# Pie table text
+	mem_piePlot1_div_line=$(grep -n -m 1 "id='plot1_mem_$node_hostname_mod" $DCRAB_HTML | cut -f1 -d:)
+	mem_piePlot1_nodeMemory_line=$((mem_piePlot1_div_line + 4))
+	mem_piePlot1_requestedMemory_line=$((mem_piePlot1_div_line + 5))
+	mem_piePlot1_VmRSS_text_line=$((mem_piePlot1_div_line + 6))
+	mem_piePlot1_VmSize_text_line=$((mem_piePlot1_div_line + 7))
+        max_RSS_size=0
+        max_vmSize=0
+
+	# IB
+        ib_data=""
+        ib_addRow_inject_line=$((addRow_data_line + 16))
+	ib_xmit_pck_value=$(cat $DCRAB_IB_XMIT_PACK)
+        ib_xmit_data_value=$(cat $DCRAB_IB_XMIT_DATA)
+        ib_rcv_pck_value=$(cat $DCRAB_IB_RCV_PACK)
+        ib_rcv_data_value=$(cat $DCRAB_IB_RCV_DATA)
+
+}
+
+write_initial_values () {
+	
+	# Modify pie chart text 
+	while [ 1 ]; do
+		if ( set -o noclobber; echo "$node_hostname" > "$DCRAB_LOCK_FILE") 2> /dev/null; then
+			sed -i "$mem_piePlot1_nodeMemory_line"'s|\([0-9]\) GB|'"$node_total_mem"' GB|' $DCRAB_HTML 
+	                sed -i "$mem_piePlot1_requestedMemory_line"'s|\([0-9]\) GB|'"$DCRAB_REQ_MEM"' GB|' $DCRAB_HTML
+
+		        # Remove lock file
+		        rm -f "$DCRAB_LOCK_FILE"
+				
+			# Exit while
+			break
+		else
+		        echo "Lock Exists: $DCRAB_LOCK_FILE owned by $(cat $DCRAB_LOCK_FILE)"
+		fi
+	
+		# Sleep a bit to take the lock in the next loop
+		echo "Sleeping for the lock ..."
+		sleep 0.5
+	done
+
+	# Modify total pie chart text
+	if [ "$DCRAB_NODE_NUMBER" -eq 0 ] && [ "$DCRAB_NNODES" -gt 1 ]; then
+		while [ 1 ]; do
+        	        if ( set -o noclobber; echo "$node_hostname" > "$DCRAB_LOCK_FILE") 2> /dev/null; then
+	                        sed -i "$mem_total_plot_requested_text_line"'s|\([0-9]*[.]*[0-9]*\) GB</td></tr>|'"$DCRAB_REQ_MEM"' GB</td></tr>|' $DCRAB_HTML
+
+	                        # Remove lock file
+	                        rm -f "$DCRAB_LOCK_FILE"
+
+	                        # Exit while
+        	                break
+        	        else
+                        	echo "Lock Exists: $DCRAB_LOCK_FILE owned by $(cat $DCRAB_LOCK_FILE)"
+                	fi
+
+	                # Sleep a bit to take the lock in the next loop
+			echo "Sleeping for the lock ..."
+	       	        sleep 0.5
+	        done
 	fi
 }
 
 write_data () {
 	### CPU specific change ###
-        # Update the plot to insert new process
+        # Update the plot to insert new processes
         if [ "$updates" -gt 0 ]; then
                 for i in $(seq 0 $((updates -1)) ); do
-                        # Creates a lock to write the data
-                        (
-                        flock -e 200
+			while [ 1 ]; do
+	                        if ( set -o noclobber; echo "$node_hostname" > "$DCRAB_LOCK_FILE") 2> /dev/null; then
+        	                        sed -i "$cpu_addRow_inject_line"'s|\[\([0-9]*\),|\[\1, ,|g' $DCRAB_HTML
+					sed -i "$cpu_addColumn_inject_line""s|^|cpu_data_$node_hostname_mod.addColumn('number', '${upd_proc_name[$i]}'); |" $DCRAB_HTML
 
-                        # Add new process entry in the plot. Specifically in the second position of the every data array
-                        sed -i "$cpu_addRow_inject_line"'s|\[\([0-9]*\),|\[\1, ,|g' $DCRAB_HTML
-                        # Add new process column
-                        sed -i "$cpu_addColumn_inject_line""s|^|cpu_data_$node_hostname_mod.addColumn('number', '${upd_proc_name[$i]}'); |" $DCRAB_HTML
+	                                # Remove lock file
+	                                rm -f "$DCRAB_LOCK_FILE"
 
-                        ) 200>$DCRAB_REPORT_DIR/aux/.dcrab.lockfile
+        	                        # Exit while
+	                                break
+	                        else
+        	                        echo "Lock Exists: $DCRAB_LOCK_FILE owned by $(cat $DCRAB_LOCK_FILE)"
+	                        fi
+
+	                        # Sleep a bit to take the lock in the next loop
+				echo "Sleeping for the lock ..."
+                        	sleep 0.5
+                	done
                 done
         fi
 
 	### MEM  specific change ###
 	# The main node must make the changes in the total memory plot
 	if [ "$DCRAB_NODE_NUMBER" -eq 0 ] && [ "$DCRAB_NNODES" -gt 1 ]; then
-		(
-	        flock -e 200
-	                ### MEM ###
-	                sed -i "$memUnUsed_total_plot_line"'s|\([0-9]*[.]*[0-9]*\)\]|'"$total_notUtilizedMem"'\]|' $DCRAB_HTML
-	                sed -i "$memUsed_total_plot_line"'s|\([0-9]*[.]*[0-9]*\)\]|'"$total_utilizedMem"'\]|' $DCRAB_HTML
+		while [ 1 ]; do
+	               	if ( set -o noclobber; echo "$node_hostname" > "$DCRAB_LOCK_FILE") 2> /dev/null; then
+        	                sed -i "$memUnUsed_total_plot_line"'s|\([0-9]*[.]*[0-9]*\)\]|'"$total_notUtilizedMem"'\]|' $DCRAB_HTML
+                	        sed -i "$memUsed_total_plot_line"'s|\([0-9]*[.]*[0-9]*\)\]|'"$total_utilizedMem"'\]|' $DCRAB_HTML
+                        	sed -i "$mem_total_plot_VmRSS_text_line"'s|\([0-9]*[.]*[0-9]*\) GB</td></tr>|'"$total_max_vmRSS"' GB</td></tr>|' $DCRAB_HTML
+	                        sed -i "$mem_total_plot_VmSize_text_line"'s|\([0-9]*[.]*[0-9]*\) GB</td></tr>|'"$total_max_vmSize"' GB</td></tr>|' $DCRAB_HTML
 
-	                sed -i "$mem_total_plot_VmRSS_text_line"'s|\([0-9]*[.]*[0-9]*\) GB</td></tr>|'"$total_max_vmRSS"' GB</td></tr>|' $DCRAB_HTML
-	                sed -i "$mem_total_plot_VmSize_text_line"'s|\([0-9]*[.]*[0-9]*\) GB</td></tr>|'"$total_max_vmSize"' GB</td></tr>|' $DCRAB_HTML
+                                # Remove lock file
+                                rm -f "$DCRAB_LOCK_FILE"
 
-		) 200>$DCRAB_REPORT_DIR/aux/.dcrab.lockfile
+                                # Exit while
+                                break
+                        else
+                                echo "Lock Exists: $DCRAB_LOCK_FILE owned by $(cat $DCRAB_LOCK_FILE)"
+                        fi
 
+                        # Sleep a bit to take the lock in the next loop
+			echo "Sleeping for the lock ..."
+                        sleep 0.5
+                done
 	        if [ "$exceeded" -eq 1 ] && [ "$changed" -eq 0 ]; then
-	                (
-	                flock -e 200
-	
-	                sed -i "$mem_total_options_color_line"'s/#3366CC/#ff0000/' $DCRAB_HTML
-	
-	                ) 200>$DCRAB_REPORT_DIR/aux/.dcrab.lockfile
+			while [ 1 ]; do
+                                if ( set -o noclobber; echo "$node_hostname" > "$DCRAB_LOCK_FILE") 2> /dev/null; then
+                                        sed -i "$mem_total_options_color_line"'s/#3366CC/#ff0000/' $DCRAB_HTML
+
+                                        # Remove lock file
+                                        rm -f "$DCRAB_LOCK_FILE"
+
+                                        # Exit while
+                                        break
+                                else
+                                        echo "Lock Exists: $DCRAB_LOCK_FILE owned by $(cat $DCRAB_LOCK_FILE)"
+                                fi
+
+                                # Sleep a bit to take the lock in the next loop
+				echo "Sleeping for the lock ..."
+                                sleep 0.5
+                        done
 	                exceeded=0
 	                changed=1
 	        fi
 	fi
 
         # Write data 
-        (
-        flock -e 200
+	while [ 1 ]; do
+                if ( set -o noclobber; echo "$node_hostname" > "$DCRAB_LOCK_FILE") 2> /dev/null; then
+			### CPU ###
+	                sed -i "$cpu_addRow_inject_line"'s/.*/&'"$cpu_data"'/' $DCRAB_HTML
 
-		### CPU ###
-	        sed -i "$cpu_addRow_inject_line"'s/.*/&'"$cpu_data"'/' $DCRAB_HTML
+	                ### MEM ###
+	                sed -i "$mem_addRow_inject_line"'s/.*/&'"$mem_data"'/' $DCRAB_HTML
+	                sed -i "$memUnUsed_addRow_inject_line"'s|\([0-9]*[.]*[0-9]*\)\]|'"$notUtilizedMem"'\]|' $DCRAB_HTML
+	                sed -i "$memUsed_addRow_inject_line"'s|\([0-9]*[.]*[0-9]*\)\]|'"$utilizedMem"'\]|' $DCRAB_HTML
+	                sed -i "$mem_piePlot1_VmRSS_text_line"'s|\([0-9]*[.]*[0-9]*\) GB</td></tr>|'"$max_RSS_size"' GB</td></tr>|' $DCRAB_HTML
+	                sed -i "$mem_piePlot1_VmSize_text_line"'s|\([0-9]*[.]*[0-9]*\) GB</td></tr>|'"$max_vmSize"' GB</td></tr>|' $DCRAB_HTML
 
-		### MEM ###
-	        sed -i "$mem_addRow_inject_line"'s/.*/&'"$mem_data"'/' $DCRAB_HTML
-		sed -i "$memUnUsed_addRow_inject_line"'s|\([0-9]*[.]*[0-9]*\)\]|'"$notUtilizedMem"'\]|' $DCRAB_HTML
-		sed -i "$memUsed_addRow_inject_line"'s|\([0-9]*[.]*[0-9]*\)\]|'"$utilizedMem"'\]|' $DCRAB_HTML
-		sed -i "$mem_piePlot1_VmRSS_text_line"'s|\([0-9]*[.]*[0-9]*\) GB</td></tr>|'"$max_RSS_size"' GB</td></tr>|' $DCRAB_HTML
-		sed -i "$mem_piePlot1_VmSize_text_line"'s|\([0-9]*[.]*[0-9]*\) GB</td></tr>|'"$max_vmSize"' GB</td></tr>|' $DCRAB_HTML
+        	        # IB 
+	                sed -i "$ib_addRow_inject_line"'s/.*/&'"$ib_data"'/' $DCRAB_HTML
 
-        ) 200>$DCRAB_REPORT_DIR/aux/.dcrab.lockfile
+                	# Remove lock file
+		        rm -f "$DCRAB_LOCK_FILE"
+
+        	        # Exit while
+                	break
+                else
+        	        echo "Lock Exists: $DCRAB_LOCK_FILE owned by $(cat $DCRAB_LOCK_FILE)"
+                fi
+
+                # Sleep a bit to take the lock in the next loop
+		echo "Sleeping for the lock ..."
+	        sleep 0.5
+        done
 }
 
 dcrab_collect_mem_data () {
@@ -136,8 +310,8 @@ dcrab_collect_mem_data () {
 			if [ $(echo "$total_vmRSS > $total_max_vmRSS" | bc) -eq 1 ]; then
 		                total_max_vmRSS=$total_vmRSS
 		        fi	
-	
-			if [ $(echo "$total_max_vmRSS < $DCRAB_REQ_MEM" | bc) -eq 2 ]; then
+			
+			if [ $(echo "$total_max_vmRSS < $DCRAB_REQ_MEM" | bc) -eq 1 ]; then
 				total_utilizedMem=`echo "scale=3; ($total_max_vmRSS * 100)/$DCRAB_REQ_MEM" | bc `
 				total_notUtilizedMem=`echo "scale=3; 100 - $total_utilizedMem" | bc `
 			else
@@ -152,34 +326,36 @@ dcrab_collect_mem_data () {
 	fi
 
 	# Construct mem data string
-	mem_data="$mem_data""$node_total_mem, ""$DCRAB_REQ_MEM, ""$max_RSS_size, ""$vmSize, ""$vmRSS ],"
+	mem_data="$mem_data""$node_total_mem, $DCRAB_REQ_MEM, $max_RSS_size, $vmSize, $vmRSS ],"
+}
+
+dcrab_collect_ib_data () {
+
+        new_ib_xmit_pck_value=$(cat $DCRAB_IB_XMIT_PACK)
+	new_ib_rcv_pck_value=$(cat $DCRAB_IB_RCV_PACK)	
+        new_ib_xmit_data_value=$(cat $DCRAB_IB_XMIT_DATA)
+        new_ib_rcv_data_value=$(cat $DCRAB_IB_RCV_DATA)
+
+	local aux1=$( echo "($new_ib_xmit_data_value - $ib_xmit_data_value) / 1024" | bc )
+	local aux2=$( echo "($new_ib_rcv_data_value - $ib_rcv_data_value) / 1024" | bc )
+
+	# Construct ib data
+	ib_data="$ib_data"" $((new_ib_xmit_pck_value - ib_xmit_pck_value)), $((new_ib_rcv_pck_value - ib_rcv_pck_value)), $aux1, $aux2 ],"
+	
+	ib_xmit_pck_value=$new_ib_xmit_pck_value
+	ib_xmit_data_value=$new_ib_xmit_data_value
+	ib_rcv_pck_value=$new_ib_rcv_pck_value
+	ib_rcv_data_value=$new_ib_rcv_data_value
 }
 
 dcrab_determine_main_process () {
 
-	# Init. variables	
-        DCRAB_DIFF_TIMESTAMP=0
-        DCRAB_MAIN_PIDS=0
-	DCRAB_FIRST_MAIN_PROCESS_PID=""
-	DCRAB_NUMBER_MAIN_PIDS=0
-	DCRAB_MAIN_PROCESS_LAST_CHILD_PID=""
-	DCRAB_CONTROL_PORT_MAIN_NODE="none1"
-	DCRAB_CONTROL_PORT_OTHER_NODE="none2"
-	DCRAB_RANGE_PIDs=1
-        updates=0
-        declare -a upd_proc_name                
-        # CPU variables
+        # CPU
         cpu_data="0,"
-	# MEM variables
-	total_max_vmSize=0
-	total_max_vmRSS=0
-	total_vmSize=0
-	total_vmRSS=0
-	max_RSS_size=0
-	max_vmSize=0
+	# MEM
 	mem_data="[0,"	
-        exceeded=0
-        changed=0
+	# IB
+	ib_data="[0,"
 
 	# MAIN NODE
 	echo "$node_hostname , $DCRAB_NODE_NUMBER"
@@ -295,6 +471,9 @@ dcrab_determine_main_process () {
 	# MEM data
 	dcrab_collect_mem_data
 
+	# IB data
+	dcrab_collect_ib_data
+	
 	write_data 	
 }
 
@@ -309,6 +488,8 @@ dcrab_update_data () {
         cpu_data="$DCRAB_DIFF_TIMESTAMP,"
         # MEM data
         mem_data="[$DCRAB_DIFF_TIMESTAMP,"
+	# IB data
+	ib_data="[$DCRAB_DIFF_TIMESTAMP,"
 
         # Collect the data
 	ps axo stat,euid,ruid,sess,ppid,pid,pcpu,comm,command | sed 's|\s\s*| |g' | awk '{if ($2 == '"$DCRAB_USER_ID"'){print}}' | grep -v " $DCRAB_DCRAB_PID " > $DCRAB_USER_PROCESSES_FILE
@@ -424,6 +605,9 @@ dcrab_update_data () {
 	
         # MEM data
         dcrab_collect_mem_data
+	
+	# IB data
+	dcrab_collect_ib_data
 }
 
 
