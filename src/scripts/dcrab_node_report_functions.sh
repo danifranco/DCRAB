@@ -114,16 +114,40 @@ init_variables () {
         ib_xmit_data_value=$(cat $DCRAB_IB_XMIT_DATA)
         ib_rcv_pck_value=$(cat $DCRAB_IB_RCV_PACK)
         ib_rcv_data_value=$(cat $DCRAB_IB_RCV_DATA)
-
+	
+	# Time
+	time_data_line=$(grep -n -m 1 "var time_data" $DCRAB_HTML | cut -f1 -d:)
+	elapsedTime_plot_line=$((time_data_line + 2))
+        remainingTime_plot_line=$((time_data_line + 3))
+	time_data_text=$(grep -n -m 1 "Elapsed Time (DD:HH:MM:SS)" $DCRAB_HTML | cut -f1 -d:)
+	elapsedTime_text_line=$((time_data_text + 1))
+	reqTime_text_line=$((time_data_text + 3))
+	DCRAB_ELAPSED_TIME_TEXT="00:00:00:00"	
+	local h=$(echo "$DCRAB_REQ_CPUT" | cut -d':' -f1)
+	local m=$(echo "$DCRAB_REQ_CPUT" | cut -d':' -f2)
+	local s=$(echo "$DCRAB_REQ_CPUT" | cut -d':' -f3)
+	DCRAB_TIME_REQ_SECONDS=$(((h * 60) + (m * 60) + s))
+	local time_req_per_node=$(echo "$DCRAB_TIME_REQ_SECONDS / $DCRAB_REQ_PPN" | bc)		
+	time_req_per_node=${time_req_per_node%.*}
+	local d=$((time_req_per_node / 86400))
+	[[ "$d" -gt 9 ]] && DCRAB_REQ_TIME="$d" || DCRAB_REQ_TIME="0$d"
+	time_req_per_node=$((time_req_per_node - (d * 86400) ))
+	local h=$((time_req_per_node / 3600))
+	[[ "$h" -gt 9 ]] && DCRAB_REQ_TIME="$DCRAB_REQ_TIME:$h" || DCRAB_REQ_TIME="$DCRAB_REQ_TIME:0$h"
+	time_req_per_node=$((time_req_per_node - (h * 3600) ))
+	local m=$((time_req_per_node / 60))
+	[[ "$m" -gt 9 ]] && DCRAB_REQ_TIME="$DCRAB_REQ_TIME:$m" || DCRAB_REQ_TIME="$DCRAB_REQ_TIME:0$m"
+	time_req_per_node=$((time_req_per_node - (m * 60) ))
+	[[ "$time_req_per_node" -gt 9 ]] && DCRAB_REQ_TIME="$DCRAB_REQ_TIME:$time_req_per_node" || DCRAB_REQ_TIME="$DCRAB_REQ_TIME:0$time_req_per_node"
 }
 
 write_initial_values () {
 	
-	# Modify pie chart text 
 	while [ 1 ]; do
 		if ( set -o noclobber; echo "$node_hostname" > "$DCRAB_LOCK_FILE") 2> /dev/null; then
 			sed -i "$mem_piePlot1_nodeMemory_line"'s|\([0-9]\) GB|'"$node_total_mem"' GB|' $DCRAB_HTML 
 	                sed -i "$mem_piePlot1_requestedMemory_line"'s|\([0-9]\) GB|'"$DCRAB_REQ_MEM"' GB|' $DCRAB_HTML
+			sed -i "$reqTime_text_line"'s|00:00:00:00|'"$DCRAB_REQ_TIME"'|' $DCRAB_HTML 
 
 		        # Remove lock file
 		        rm -f "$DCRAB_LOCK_FILE"
@@ -232,6 +256,30 @@ write_data () {
 	                changed=1
 	        fi
 	fi
+
+	### Time specific change ###
+	if [ "$DCRAB_NODE_NUMBER" -eq 0 ]; then
+		echo "TIME: $elapsedTime_text_line , $elapsedTime_plot_line , $remainingTime_plot_line, $DCRAB_ELAPSED_TIME_TEXT , $DCRAB_ELAPSED_TIME_VALUE , $DCRAB_REMAINING_TIME_VALUE"
+	        while [ 1 ]; do
+	                if ( set -o noclobber; echo "$node_hostname" > "$DCRAB_LOCK_FILE") 2> /dev/null; then
+				sed -i "$elapsedTime_text_line"'s|\([0-9]*:[0-9]*:[0-9]*:[0-9]*\)|'"$DCRAB_ELAPSED_TIME_TEXT"'|' $DCRAB_HTML
+				sed -i "$elapsedTime_plot_line"'s|\([0-9]*[.]*[0-9]*\)\]|'"$DCRAB_ELAPSED_TIME_VALUE"'\]|' $DCRAB_HTML
+                                sed -i "$remainingTime_plot_line"'s|\([0-9]*[.]*[0-9]*\)\]|'"$DCRAB_REMAINING_TIME_VALUE"'\]|' $DCRAB_HTML
+
+                                # Remove lock file
+                                rm -f "$DCRAB_LOCK_FILE"
+
+        	                # Exit while
+                                break
+                        else
+	                        echo "Lock Exists: $DCRAB_LOCK_FILE owned by $(cat $DCRAB_LOCK_FILE)"
+                        fi
+
+                        # Sleep a bit to take the lock in the next loop
+                        echo "Sleeping for the lock ..."
+                        sleep 0.5
+                done
+        fi
 
         # Write data 
 	while [ 1 ]; do
@@ -346,6 +394,32 @@ dcrab_collect_ib_data () {
 	ib_xmit_data_value=$new_ib_xmit_data_value
 	ib_rcv_pck_value=$new_ib_rcv_pck_value
 	ib_rcv_data_value=$new_ib_rcv_data_value
+}
+
+dcrab_format_time () {
+	
+	DCRAB_ELAPSED_TIME_TEXT=""
+        local timeStamp=$DCRAB_DIFF_TIMESTAMP
+	echo "TIMESTAMP: $timeStamp"
+        local d=$((timeStamp / 86400))
+        [[ "$d" -gt 9 ]] && DCRAB_ELAPSED_TIME_TEXT="$d" || DCRAB_ELAPSED_TIME_TEXT="0$d"
+        timeStamp=$((timeStamp - (d * 86400) )); echo "TIMESTAMP: $timeStamp"
+        local h=$((timeStamp / 3600))
+        [[ "$h" -gt 9 ]] && DCRAB_ELAPSED_TIME_TEXT="$DCRAB_ELAPSED_TIME_TEXT:$h" || DCRAB_ELAPSED_TIME_TEXT="$DCRAB_ELAPSED_TIME_TEXT:0$h"
+        timeStamp=$((timeStamp - (h * 3600) )); echo "TIMESTAMP: $timeStamp"
+        local m=$((timeStamp / 60))
+        [[ "$m" -gt 9 ]] && DCRAB_ELAPSED_TIME_TEXT="$DCRAB_ELAPSED_TIME_TEXT:$m" || DCRAB_ELAPSED_TIME_TEXT="$DCRAB_ELAPSED_TIME_TEXT:0$m"
+	timeStamp=$((timeStamp - (m * 60) )); echo "TIMESTAMP: $timeStamp"
+        [[ "$timeStamp" -gt 9 ]] && DCRAB_ELAPSED_TIME_TEXT="$DCRAB_ELAPSED_TIME_TEXT:$timeStamp" || DCRAB_ELAPSED_TIME_TEXT="$DCRAB_ELAPSED_TIME_TEXT:0$timeStamp"
+
+	if [ $(echo "$DCRAB_DIFF_TIMESTAMP < $DCRAB_TIME_REQ_SECONDS" | bc) -eq 1 ]; then
+		DCRAB_ELAPSED_TIME_VALUE=$( echo "($DCRAB_DIFF_TIMESTAMP * 100 ) / $DCRAB_TIME_REQ_SECONDS " | bc )	
+		DCRAB_REMAINING_TIME_VALUE=$(( 100 - DCRAB_ELAPSED_TIME_VALUE))
+	else
+		DCRAB_ELAPSED_TIME_VALUE=100
+                DCRAB_REMAINING_TIME_VALUE=0
+	fi
+	echo "$DCRAB_DIFF_TIMESTAMP - $DCRAB_TIME_REQ_SECONDS , $DCRAB_ELAPSED_TIME_VALUE , $DCRAB_REMAINING_TIME_VALUE"
 }
 
 dcrab_determine_main_process () {
@@ -608,6 +682,11 @@ dcrab_update_data () {
 	
 	# IB data
 	dcrab_collect_ib_data
+
+	# Time data (only the main node)
+	if [ "$DCRAB_NODE_NUMBER" -eq 0 ]; then
+		dcrab_format_time
+	fi
 }
 
 
