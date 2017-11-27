@@ -85,14 +85,14 @@ dcrab_generate_html (){
                 printf "%s \n" "['Execution Time (s)', 'Transmitted Packets', 'Received Packets', 'Transmitted Bytes (KB)', 'Received Bytes (KB)']," >> $DCRAB_HTML
 		printf "\n"  >> $DCRAB_HTML
                 printf "%s \n" "]);" >> $DCRAB_HTML
-
-		# TIME
-		printf "%s \n" "var time_data = google.visualization.arrayToDataTable([" >> $DCRAB_HTML
-                printf "%s \n" "['Consumed Time', 'Percentage']," >> $DCRAB_HTML
-                printf "%s \n" "['Elapsed Time', 0]," >> $DCRAB_HTML
-                printf "%s \n" "['Remaining Time', 100]," >> $DCRAB_HTML
-                printf "%s \n" "]);" >> $DCRAB_HTML
 	done
+
+	# TIME
+        printf "%s \n" "var time_data = google.visualization.arrayToDataTable([" >> $DCRAB_HTML
+        printf "%s \n" "['Consumed Time', 'Percentage']," >> $DCRAB_HTML
+        printf "%s \n" "['Elapsed Time', 0]," >> $DCRAB_HTML
+        printf "%s \n" "['Remaining Time', 100]," >> $DCRAB_HTML
+        printf "%s \n" "]);" >> $DCRAB_HTML
 	
 	if [ "$DCRAB_NNODES" -gt 1 ]; then
                 printf "%s \n" "var total_mem = google.visualization.arrayToDataTable([" >> $DCRAB_HTML

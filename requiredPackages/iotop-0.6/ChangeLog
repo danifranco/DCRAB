@@ -1,0 +1,897 @@
+2013-05-27  Guillaume Chazarain <guichaz@gmail.com>
+
+	* NEWS: Document signature
+
+2013-05-27  Guillaume Chazarain <guichaz@gmail.com>
+
+	* release.sh: GPG sign all released files
+
+2013-05-26  Guillaume Chazarain <guichaz@gmail.com>
+
+	* NEWS, iotop/version.py: Version bump.
+
+2013-05-26  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/ui.py: Clean exit also on SIGTERM otherwise the terminal is
+	unusable.
+
+2013-05-26  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/ui.py: Python3 can print UTF-8 to curses, python2 can't so
+	let's handle both.
+
+2013-05-26  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/ui.py: Cleanly exit on SIGINT otherwise python3 will leave
+	the terminal in an unusable state.
+
+2013-05-26  Guillaume Chazarain <guichaz@gmail.com>
+
+	* .install-rpm.sh: No need to make the RPM install script move bin/
+	to sbin/ now that setup.py installs to sbin/.
+
+2013-05-26  Guillaume Chazarain <guichaz@gmail.com>
+
+	* setup.py: Make setup.py install the iotop script in sbin/ instead
+	of bin/.
+
+2013-05-26  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/ui.py: In some setup closing the xterm window only has the
+	effect of deleting the pty.  Then iotop would be busy looping
+	reading on stdin. Instead we should detect the terminal deletion and
+	exit.  When this happens iotop receives (0, 25) as an event, which
+	is (stdin, select.POLLIN|select.POLLERR|select.POLLHUP).  Also, represent an empty even list as [] instead of 0, this is just
+	cosmetic.
+
+2013-02-04  Paul Wise <pabs3@bonedaddy.net>
+
+	* iotop/data.py, iotop/ioprio.py, iotop/ui.py, iotop/vmstat.py: Fix
+	the FSF address embedded in a few files
+
+2013-02-04  Paul Wise <pabs3@bonedaddy.net>
+
+	* sbin/iotop: Fix python3 compatibility for iotop when installed
+
+2013-02-03  Guillaume Chazarain <guichaz@gmail.com>
+
+	* README, iotop/data.py: Update python requirements
+
+2013-02-03  Guillaume Chazarain <guichaz@gmail.com>
+
+	* NEWS: Also advertise the move to sbin/ as it's significant
+
+2013-02-03  Guillaume Chazarain <guichaz@gmail.com>
+
+	* .install-rpm.sh: The RPM should also install to sbin.
+
+2013-02-03  Guillaume Chazarain <guichaz@gmail.com>
+
+	* bin/iotop, sbin/iotop: Moved to sbin.
+
+2013-02-03  Guillaume Chazarain <guichaz@gmail.com>
+
+	* .install-rpm.sh, MANIFEST.in: Finish man page renaming
+
+2013-02-03  Guillaume Chazarain <guichaz@gmail.com>
+
+	* NEWS, iotop/version.py: Version bump
+
+2013-02-03  Guillaume Chazarain <guichaz@gmail.com>
+
+	* NEWS, THANKS: Advertise the newly introduced differentiation
+	between total and actual I/O.
+
+2013-02-03  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/ui.py: 80 cols
+
+2012-10-10  Igor Bazhitov <ibazhitov@parallels.com>
+
+	* iotop.8, iotop/data.py, iotop/ui.py: Add 'Actual' bandwidth stats
+	to summary header 'Total' values in the summary header may look confusing to users.
+	They represent actual kernel <-> disk I/O bandwidth, while
+	individual values for processes/threads show process <-> kernel I/O
+	bandwidth.  Rename 'Total' to 'Actual' and add old 'Total' status line that sums
+	up all individual process/thread bandwidths. Explain the difference
+	between 'Total' and 'Actual' in the manpage.
+
+2012-10-09  Igor Bazhitov <ibazhitov@parallels.com>
+
+	* README: Update manpage name in README
+
+2012-12-05  Paul Wise <pabs3@bonedaddy.net>
+
+	* iotop/data.py: Fix crash when running under python3.  This reverts cd6ffb5913664844290f44a7ea48533caf8c459e Traceback (most recent call last):   File "./iotop.py", line 12, in <module>     main()   File "./iotop/iotop/ui.py", line 597, in main     main_loop()   File "./iotop/iotop/ui.py", line 587, in <lambda>     main_loop = lambda: run_iotop(options)   File "./iotop/iotop/ui.py", line 485, in run_iotop     return curses.wrapper(run_iotop_window, options)   File "/usr/lib/python3.2/curses/wrapper.py", line 43, in wrapper     return func(stdscr, *args, **kwds)   File "./iotop/iotop/ui.py", line 478, in run_iotop_window     ui.run()   File "./iotop/iotop/ui.py", line 153, in run     total = self.process_list.refresh_processes()   File "./iotop/iotop/data.py", line 459, in refresh_processes     self.processes.items() if   File "./iotop/iotop/data.py", line 460, in <listcomp>     process.update_stats()])   File "./iotop/iotop/data.py", line 358, in update_stats     for tid, thread in self.threads.items(): RuntimeError:
+	dictionary changed size during iteration [This is valid since 0fc4ab84c8cbba1fbe83dc71fb89100b87c54898  added the self.threads = dict(...)]
+
+2012-09-02  Paul Wise <pabs3@bonedaddy.net>
+
+	* iotop.1, iotop.8, setup.py: Move iotop out of the path for users
+
+2012-09-03  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/ui.py: Fix the setting of the I/O priority and advertise it
+	a litle more.
+
+2012-09-03  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/ui.py: Here we print a string, not bytes.
+
+2012-09-03  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/netlink.py: Remove stray print added during the python3
+	conversion.
+
+2012-09-03  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/data.py: Restore compatibility with python2
+
+2012-09-03  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/data.py: Put back code deleted in the python3 conversion
+
+2012-09-03  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/data.py: Some missed python3 conversions
+
+2012-09-03  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/data.py, iotop/ui.py: Cosmetic fixes
+
+2012-09-02  Paul Wise <pabs3@bonedaddy.net>
+
+	* iotop/data.py, iotop/genetlink.py, iotop/ioprio.py,
+	iotop/netlink.py, iotop/ui.py: Port to Python 3 Not entirely sure about all parts of this but it works in Python 2/3
+
+2012-09-03  Guillaume Chazarain <guichaz@gmail.com>
+
+	* THANKS, iotop/data.py: Show custom thread names.
+
+2012-05-13  Paul Wise <pabs3@bonedaddy.net>
+
+	* iotop/ui.py: Improve the message that is printed when Linux denies
+	access to taskstats.
+
+2012-03-08  Guillaume Chazarain <guichaz@gmail.com>
+
+	* README: Consistent option names
+
+2012-01-22  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/ui.py: Restore the default SIGPIPE handler so that sudo
+	./iotop.py -b|head does what's expected.
+
+2012-01-22  Guillaume Chazarain <guichaz@gmail.com>
+
+	* NEWS, iotop/ui.py: Adapt the display to the maximum pid width
+
+2012-01-18  Guillaume Chazarain <guichaz@gmail.com>
+
+	* .gitignore: Ignore the build directory.
+
+2011-10-30  Guillaume Chazarain <guichaz@gmail.com>
+
+	* .install-rpm.sh, setup.cfg: Actually install-rpm.sh is still
+	needed.
+
+2011-10-30  Guillaume Chazarain <guichaz@gmail.com>
+
+	* NEWS, iotop/version.py: Version bump
+
+2011-10-15  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/ui.py: Explain that iotop now requires root.
+	https://lkml.org/lkml/2011/10/1/170
+
+	http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=1a51410abe7d0ee4b1d112780f46df87d3621043
+
+2011-09-17  Thomas Guettler <tguettler@tbz-pariv.de>
+
+	* iotop/ui.py: Right-justify the header so that numbers stop
+	"bouncing".
+
+2011-08-04  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/ui.py: When printing the time, print it also in the summary
+
+2011-04-10  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/data.py, iotop/genetlink.py, iotop/ioprio.py,
+	iotop/netlink.py, iotop/ui.py, iotop/vmstat.py: Address some
+	pyflakes and pychecker warnings
+
+2011-03-28  Guillaume Chazarain <guichaz@gmail.com>
+
+	* NEWS, iotop/version.py: Version bump
+
+2011-03-14  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/ui.py: Show stats since iotop started, not since 'a' was
+	pressed.  This is to avoid losing valuable data when 'a' is
+	inadvertently pressed.
+
+2011-03-13  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/ui.py: Force UTF-8 output even if the locale is not set to
+	UTF-8.  At worst it will output garbage, which is better than
+	crashing in this case.
+
+2011-01-16  Guillaume Chazarain <guichaz@gmail.com>
+
+	* THANKS, iotop/data.py, iotop/genetlink.py: Fix netlink message
+	parsing to accept alignement padding.  https://lkml.org/lkml/2010/12/13/176
+	https://lkml.org/lkml/2010/12/29/237
+
+2010-12-15  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/data.py: Removing dead code
+
+2010-12-14  Guillaume Chazarain <guichaz@gmail.com>
+
+	* NEWS: Grammar
+
+2010-12-14  Guillaume Chazarain <guichaz@gmail.com>
+
+	* NEWS, iotop/version.py: Version bump
+
+2010-12-14  Guillaume Chazarain <guichaz@gmail.com>
+
+	* MANIFEST.in, install-rpm.sh, setup.cfg: Try to do without
+	install-rpm.sh
+
+2010-12-14  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/ui.py: With addstr instead of insstr we get a harmless
+	exception when writing on the last column.  Confirmed by http://ubuntuforums.org/showthread.php?t=457689
+	addstr() raises an exception but the string is printed anyway
+
+2010-12-14  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/ui.py: Back to addstr because of:
+	http://marc.info/?l=ncurses-bug&m=125233342917443&w=3 insstr (from ncursesw) UTF-8 issue => The cursor position was not
+	updated for wide characters by insstr()
+
+2010-09-06  Guillaume Chazarain <guichaz@gmail.com>
+
+	* bin/iotop: Revert "Some distributions have a default distutils
+	prefix which is not in sys.path, so installed modules cannot be
+	imported." This reverts commit d0812c2024a1f8edb081a2996af12efacdf8c961.  Actually I don't think this is needed for now.
+
+2010-09-06  Guillaume Chazarain <guichaz@gmail.com>
+
+	* bin/iotop: Some distributions have a default distutils prefix
+	which is not in sys.path, so installed modules cannot be imported.
+	To address that, explicitely add the path where the module is
+	supposed to be installed to sys.path.
+
+2010-09-04  Guillaume Chazarain <guichaz@gmail.com>
+
+	* THANKS, iotop/ioprio.py: Support for getting and setting IO
+	priority on armel and hppa architectures.
+
+2010-09-04  Guillaume Chazarain <guichaz@gmail.com>
+
+	* THANKS, iotop/data.py: Instead of assuming the pid field is 4
+	bytes long, take its length from the header.  This is needed for
+	http://lkml.org/lkml/2010/2/12/167 [PATCH] delayacct: align to 8
+	byte boundary on 64-bit systems
+
+2010-08-22  Paul Wise <pabs3@bonedaddy.net>
+
+	* iotop/ui.py: Fix traceback with an invalid locale.  Closes: http://bugs.debian.org/593846
+
+2010-06-27  Guillaume Chazarain <guichaz@gmail.com>
+
+	* NEWS, iotop/version.py: Bump version
+
+2010-06-26  Guillaume Chazarain <guichaz@gmail.com>
+
+	* MANIFEST.in: We no longer use setuptools.
+
+2010-06-26  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop.1: Document the competition
+
+2010-06-26  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/data.py: Whitespace fixes
+
+2010-05-31  Paul Wise <pabs3@bonedaddy.net>
+
+	* README, iotop.1, iotop/data.py: Document the requirement for
+	CONFIG_VM_EVENT_COUNTERS and check for it on startup.  Closes: http://bugs.debian.org/574346
+
+2010-03-17  Paul Wise <pabs3@bonedaddy.net>
+
+	* iotop/data.py: Do not report requirements that are available.  Closes: http://bugs.debian.org/574246
+
+2010-06-26  Guillaume Chazarain <guichaz@gmail.com>
+
+	* release.sh: Build the source distribution using ./setup.py sdist
+
+2010-06-26  Guillaume Chazarain <guichaz@gmail.com>
+
+	* MANIFEST.in: Make sure to bundle all files in the source
+	distribution
+
+2010-06-26  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop.py, iotop/data.py, iotop/ioprio.py, iotop/ui.py,
+	iotop/vmstat.py: Added GPLv2+ headers
+
+2010-04-27  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/genetlink.py, iotop/netlink.py: Johannes relicensed
+	pynl80211 to GPL version 2 or later.
+
+2010-04-26  Jiri Olsa <jolsa@redhat.com>
+
+	* iotop/netlink.py: This broke on ppc64. Let's make U32Attr
+	consistent with u32().
+
+2010-01-11  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/version.py: Bump the version number
+
+2010-01-11  Guillaume Chazarain <guichaz@gmail.com>
+
+	* release.sh, setup.cfg: Bring back the building of RPMs and
+	integration of the ChangeLog
+
+2010-01-11  Guillaume Chazarain <guichaz@gmail.com>
+
+	* NEWS, install-rpm.sh, setup.cfg, setup.py: Stopped using
+	setuptools in favor of straight distutils
+
+2010-01-02  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/ui.py: Negative sizes shouldn't ever happen, but let's
+	handle them gracefully anyway.
+
+2009-12-13  Guillaume Chazarain <guichaz@gmail.com>
+
+	* : commit b76e492ce5dbdecb198109e1bbc77aad909a0a67 Author:
+	Guillaume Chazarain <guichaz@gmail.com> Date:   Sun Dec 13 21:17:56
+	2009 +0100
+
+2009-12-13  Guillaume Chazarain <guichaz@gmail.com>
+
+	* README, iotop/data.py: Document the new python requirements
+
+2009-12-13  Jiri Olsa <jolsa@redhat.com>
+
+	* NEWS, THANKS, iotop/data.py, iotop/netlink.py: Compatibility with
+	python2.4 using the ctypes module
+
+2009-12-13  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/genetlink.py: 80 columns
+
+2009-12-13  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/genetlink.py, iotop/netlink.py: Untabify
+
+2009-12-13  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/data.py: Don't use all() as it was introduced in python-2.5
+
+2009-11-05  Guillaume Chazarain <guichaz@gmail.com>
+
+	* THANKS, iotop/data.py: Fix a crash were iotop could open
+	/proc/PID/status but not read it as the process disappeared by then.
+
+2009-09-26  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/ui.py: Default to 0 instead of None
+
+2009-09-22  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/data.py: commit d4cab23b1c8c2f91ae7b353087bc60e7659620ef
+	broke iotop -o
+
+2009-09-06  Guillaume Chazarain <guichaz@gmail.com>
+
+	* : commit b8bf63094a8903004126c8293d1874ad0565e68a Author: Paul
+	Wise <pabs@debian.org> Date:   Sun Sep 6 23:19:46 2009 +0200
+
+2009-09-06  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/data.py: ioprio.sort_key() expects keys starting with '?' to
+	be at least two character long. It was not the case when different
+	threads in the same process had different ionice values, so adjust
+	the ionice key in this case.  Bug reported by: Paul Wise <pabs@debian.org>
+
+2009-09-06  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/ui.py: Make it even more obvious that something is wrong
+	when CONFIG_TASK_DELAY_ACCT is missing
+
+2009-09-06  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/data.py: Detect python-2.5 before importing incompatible
+	stuff
+
+2009-08-30  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/data.py: Turns out returning a list is faster than
+	iterating.
+
+2009-08-30  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/data.py: Some more minor optimizations
+
+2009-08-30  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/data.py: Optimize Stats.__init__ so that Stats.accumulate
+	can be cleaned up
+
+2009-08-29  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/data.py: Gracefully handle disappearing PIDs
+
+2009-08-29  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/ui.py: Faster ui.human_size()
+
+2009-08-29  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/data.py: Faster ProcessList.list_dir()
+
+2009-08-29  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/ioprio.py: Optimization: call getpriority() instead of
+	reading /proc
+
+2009-08-29  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/data.py: Finish the implementation of the UID cache... by
+	actually caching the UID
+
+2009-08-29  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/data.py, iotop/ui.py: 80 columns
+
+2009-08-29  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/data.py: Cache the taskstats request in the thread_info as
+	building it every time is a hotspot
+
+2009-08-29  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/data.py: Optimize even further the hotspot by unrolling the
+	loop and keeping the __dict__ objects in local variables.
+
+2009-08-29  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/data.py: Optimize even further Stats.accumulate as it's a
+	hotspot: don't create a new Stats object everytime on every
+	invocation, keep updating the same object.
+
+2009-08-23  Guillaume Chazarain <guichaz@gmail.com>
+
+	* NEWS, iotop/data.py, iotop/ui.py: Added a heuristic to detect
+	kernels without CONFIG_TASK_DELAY_ACCT
+
+2009-08-02  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/data.py: Use .__dict__ instead of [gs]etattr as it's
+	slightly faster.
+
+2009-08-02  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/ui.py: Use insstr instead of addstr so that we can write in
+	the last column, but this means we have to be careful not to add
+	trailing garbage as it would appear on the next line.
+
+2009-08-02  Guillaume Chazarain <guichaz@gmail.com>
+
+	* NEWS, iotop/ui.py: Split long command lines in the middle instead
+	of cutting them at the end.
+
+2009-08-02  Guillaume Chazarain <guichaz@gmail.com>
+
+	* NEWS, iotop/version.py: Bump version.
+
+2009-06-10  Guillaume Chazarain <guichaz@gmail.com>
+
+	* release.sh: Stop building RPMs after my move to Ubuntu
+
+2009-06-10  Guillaume Chazarain <guichaz@gmail.com>
+
+	* NEWS, iotop/ui.py: Fixed column sorting with --accumulated
+
+2009-06-10  Guillaume Chazarain <guichaz@gmail.com>
+
+	* NEWS, iotop/data.py, iotop/ui.py: Fixed interaction between
+	--accumulated and --only
+
+2009-06-10  Guillaume Chazarain <guichaz@gmail.com>
+
+	* NEWS, iotop/version.py: Version bump and start documenting new
+	features
+
+2009-05-19  Guillaume Chazarain <guichaz@gmail.com>
+
+	* THANKS, iotop/ioprio.py: Fixed ioprio_get syscall detection on
+	i386 userspace/x86_64 kernel
+	(http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=529429)
+
+2009-05-05  Guillaume Chazarain <guichaz@gmail.com>
+
+	* MANIFEST.in, README, setup.cfg: Include a light README
+
+2009-05-05  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop.1: Escape even more minus signs in the iotop manual page
+
+2009-05-05  Paul Wise <pabs3@bonedaddy.net>
+
+	* iotop.1: Escape some more minus signs in the iotop manual page
+
+2009-05-04  Guillaume Chazarain <guichaz@gmail.com>
+
+	* NEWS, THANKS, iotop.1, iotop/ui.py: Added --quiet
+
+2009-05-03  Guillaume Chazarain <guichaz@gmail.com>
+
+	* NEWS, THANKS, iotop.1, iotop/ui.py: Added --time
+
+2009-05-02  Guillaume Chazarain <guichaz@gmail.com>
+
+	* NEWS, iotop.1, iotop/data.py, iotop/ui.py: Added the -k,
+	--kilobytes option
+
+2009-05-02  Guillaume Chazarain <guichaz@gmail.com>
+
+	* MANIFEST.in, setup.py: Upgrade setuptools from 0.6c6 to 0.6c9
+
+2009-03-31  Guillaume Chazarain <guichaz@gmail.com>
+
+	* MANIFEST.in, release.sh, setup.cfg: Include a ChangeLog in the
+	release
+
+2009-03-30  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/data.py: Put kernel threads between square brackets
+
+2009-03-30  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/ui.py: Properly sanitize the value in the error report
+
+2009-03-30  Guillaume Chazarain <guichaz@gmail.com>
+
+	* NEWS, iotop.1, iotop/data.py, iotop/ui.py: - Added the --accumulated option to show the accumulated traffic
+	instead of the current bandwidth (dynamically toggled with 'a') - Resist to process dying during the taskstats retrieval - Adjusted column headers
+
+2009-03-29  Guillaume Chazarain <guichaz@gmail.com>
+
+	* NEWS: Document some recent changes
+
+2009-03-29  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/data.py, iotop/ui.py, iotop/vmstat.py: - Manage a two level tree of processes: o with --processes:
+	[tgids...] -> [tid...] o without: [tids...] -> [tid] => This handles
+	nicely the case where a thread dies during a sampling period and we
+	should drop its stats.  - Don't cache the ioprio as it may change - Get the total I/O bandwidth from /proc/vmstat instead of summing
+	it, as we can count some of it twice (ntfs-3g, nfsd...)
+
+2009-03-29  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/ui.py: Added --profile
+
+2009-03-29  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/data.py: Don't crash when a thread just disappeared
+
+2009-03-29  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/data.py, iotop/ui.py: Better UID detection: read it from
+	stat(/proc/PID) instead of /proc/PID/status and cache it only if not
+	running as root as the process may setuid().  Rewrite
+	check_if_valid() to is_monitored().  Also re-read /proc/PID/status
+	if needed when re-reading /proc/PID/cmdline.
+
+2009-01-31  Guillaume Chazarain <guichaz@gmail.com>
+
+	* THANKS, iotop/ui.py: From: Ryan Lovett <ryan@stat.berkeley.edu>
+	When running in batch mode, iotop doesn't flush its output so if
+	you're writing to a file, you won't see anything (e.g. via 'tail
+	-f') until iotop terminates
+
+2008-12-29  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/data.py: Add a meaningful __repr__()
+
+2008-12-29  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/data.py: If a new pinfo() is successfully created but we
+	cannot get its taskstats, it will not have a .ioprio field, so it
+	must be garbage collected. So, initialize .mark to False so that
+	incompletely built objects are garbage collected.  Traceback (most recent call last):   File "./iotop.py", line 11, in <module>     main()   File "/home/g/iotop/iotop/ui.py", line 271, in main     curses.wrapper(run_iotop, options)   File "/usr/lib/python2.5/curses/wrapper.py", line 44, in wrapper     return func(stdscr, *args, **kwds)   File "/home/g/iotop/iotop/ui.py", line 226, in run_iotop     ui.run()   File "/home/g/iotop/iotop/ui.py", line 97, in run     self.process_list.duration)   File "/home/g/iotop/iotop/ui.py", line 195, in refresh_display     lines = self.get_data()   File "/home/g/iotop/iotop/ui.py", line 183, in get_data     return map(format, processes)   File "/home/g/iotop/iotop/ui.py", line 167, in format     line = '%5d %4s %-8s %11s %11s %7s %7s ' % (p.pid, p.ioprio,
+	AttributeError: 'pinfo' object has no attribute 'ioprio'
+
+2008-12-28  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/data.py: The I/O priority can be dynamically changed, so we
+	must re-fetch it every time.
+
+2008-12-28  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop.1, iotop/ui.py: Added the 'p' key to dynamically toggle the
+	--processes option
+
+2008-12-25  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/ui.py: The interactive control 'O' is the same as 'o'.
+
+2008-12-25  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop.1, iotop/data.py, iotop/ioprio.py, iotop/ui.py: Added
+	support for showing the I/O priority
+
+2008-12-23  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/ui.py: More verbose error handling for this exception:
+	Traceback (most recent call last):  File "./iotop.py", line 11, in <module>    main()  File "/src/iotop/iotop/iotop/ui.py", line 249, in main    curses.wrapper(run_iotop, options)  File "/usr/lib64/python2.5/curses/wrapper.py", line 44, in wrapper    return func(stdscr, *args, **kwds)  File "/src/iotop/iotop/iotop/ui.py", line 205, in run_iotop    ui.run()  File "/src/iotop/iotop/iotop/ui.py", line 95, in run    self.process_list.duration)  File "/src/iotop/iotop/iotop/ui.py", line 198, in refresh_display    self.win.addstr(i + 2, 0, lines[i].encode('utf-8'))
+	_curses.error: addstr() returned ERR
+
+2008-11-16  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/ui.py: Also keep only 2 decimal digits when printing bytes
+	per second
+
+2008-09-07  Guillaume Chazarain <guichaz@gmail.com>
+
+	* NEWS, iotop/version.py: Version bump and mention that -P is now
+	fully implemented
+
+2008-09-07  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop.1, iotop/ui.py: Clarify -p help text, and cosmetically add a
+	terminating '.'.
+
+2008-09-07  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop.1: iotop is a mix of top(1) and vmstat(1)
+
+2008-09-07  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop.1, iotop/data.py: Precisely document required kernel options
+	http://bugs.debian.org/497360
+
+2008-09-06  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/data.py: Reimplement -P without using the half implemented
+	TASKSTATS_CMD_ATTR_TGID
+
+2008-09-06  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/data.py, iotop/ui.py: Cleanup: introduce a Stats class to
+	aggregate the useful output from taskstats insteaf of using a dict.
+
+2008-08-18  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/data.py: It seems the Name: field can sometimes be empty.
+	http://bugs.debian.org/492568
+
+2008-08-18  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/data.py: Cosmetic
+
+2008-07-07  Guillaume Chazarain <guichaz@gmail.com>
+
+	* NEWS, iotop/version.py: The new features list is not that long
+
+2008-06-24  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/data.py: Also handle invalid UTF-8
+
+2008-06-23  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/ui.py: Unlike insstr, addstr is picky about lines wider than
+	the terminal.
+
+2008-06-23  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/data.py, iotop/ui.py: Try harder at handling UTF-8
+
+2008-06-18  Guillaume Chazarain <guichaz@gmail.com>
+
+	* NEWS, THANKS, iotop/data.py, iotop/ui.py: UTF-8 strings are now
+	correctly handled.
+
+2008-06-18  Guillaume Chazarain <guichaz@gmail.com>
+
+	* NEWS, iotop/version.py: Bump version
+
+2008-05-28  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop.1: Fix for
+
+	http://lintian.debian.org/reports/tags/hyphen-used-as-minus-sign.html
+
+2008-05-23  Guillaume Chazarain <guichaz@gmail.com>
+
+	* MANIFEST.in, install-rpm.sh, setup.cfg, setup.py: Package the man
+	page
+
+2008-05-22  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/ui.py: Reordered the option like in the man page, as it's a
+	more sensible ordering
+
+2008-05-22  Guillaume Chazarain <guichaz@gmail.com>
+
+	* THANKS, iotop.1: Added a man page
+
+2008-05-22  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/ui.py: Safer color terminal handling
+
+2008-05-22  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/ui.py: Stop flickering during refresh
+
+2008-05-22  Guillaume Chazarain <guichaz@gmail.com>
+
+	* NEWS, iotop/data.py, iotop/ui.py: Added workaround for missing
+	ac_etime in TASKSTATS_CMD_ATTR_TGID
+
+2008-04-20  Guillaume Chazarain <guichaz@gmail.com>
+
+	* NEWS: Typo
+
+2008-04-20  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/ui.py: Document the 'o' key.
+
+2008-04-20  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/ui.py: Consistency in the grammar
+
+2008-04-20  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop/ui.py: Filter processes to display before trimming them to
+	avoid removing processes that would be displayed after the trimming.
+	For example, sorting by PID could place I/O active processes at the
+	end, but we don't want to delete them as they would be shown anyway
+	is -o is used.
+
+2008-04-06  Guillaume Chazarain <guichaz@gmail.com>
+
+	* NEWS, iotop/ui.py: Typing 'p' dynamically toggle the --only option
+
+2008-03-20  Guillaume Chazarain <guichaz@gmail.com>
+
+	* bin/iotop: Detect unsuccessful attempts at running an uninstalled
+	iotop
+
+2008-03-14  Guillaume Chazarain <guichaz@gmail.com>
+
+	* iotop.py, run-iotop: Let's use the obvious filename
+
+2008-03-10  Guillaume Chazarain <guichaz@gmail.com>
+
+	* release.sh: Remove blank line
+
+2008-03-10  Guillaume Chazarain <guichaz@gmail.com>
+
+	* release.sh: Added release script
+
+2008-03-09  Guillaume Chazarain <guichaz@yahoo.fr>
+
+	* MANIFEST.in, bin/iotop, setup.cfg, setup.py: Added packaging
+	information
+
+2008-03-09  Guillaume Chazarain <guichaz@yahoo.fr>
+
+	* iotop/ui.py, iotop/version.py: Extracted out version number
+
+2008-03-09  Guillaume Chazarain <guichaz@yahoo.fr>
+
+	* COPYING: Added GPLv2 COPYING file
+
+2008-03-09  Guillaume Chazarain <guichaz@yahoo.fr>
+
+	* THANKS: Added THANKS file
+
+2008-03-09  Guillaume Chazarain <guichaz@yahoo.fr>
+
+	* .gitignore: Ignore byte compiled files
+
+2008-03-09  Guillaume Chazarain <guichaz@yahoo.fr>
+
+	* NEWS: Added NEWS file
+
+2008-03-09  Guillaume Chazarain <guichaz@yahoo.fr>
+
+	* genetlink.py, iotop.py, iotop/__init__.py, iotop/data.py,
+	iotop/genetlink.py, iotop/netlink.py, iotop/ui.py, netlink.py,
+	run-iotop: Code reorganization
+
+2008-03-05  Guillaume Chazarain <guichaz@yahoo.fr>
+
+	* genetlink.py, iotop.py, netlink.py: Instead of copy/pasting
+	pynl80211 in iotop.py, keep it in separate files
+
+2008-03-05  Guillaume Chazarain <guichaz@yahoo.fr>
+
+	* iotop.py: Update e-mail and copyright information
+
+2008-03-05  Guillaume Chazarain <guichaz@yahoo.fr>
+
+	* iotop.py: Reading the cmdline of a dead process raises an
+	exception too.  Reported by Roland Kletzing <devzero@web.de>
+
+2008-03-02  Guillaume Chazarain <guichaz@yahoo.fr>
+
+	* iotop.py: Skip the dirname only when the cmdline starts with an
+	absolute path
+
+2008-01-20  Guillaume Chazarain <guichaz@yahoo.fr>
+
+	* iotop.py: Fix the typo with the right correction this time
+
+2008-01-20  Guillaume Chazarain <guichaz@yahoo.fr>
+
+	* iotop.py: Simplify help generation
+
+2008-01-18  Guillaume Chazarain <guichaz@yahoo.fr>
+
+	* iotop.py: Bump version
+
+2008-01-18  Guillaume Chazarain <guichaz@yahoo.fr>
+
+	* iotop.py: Removed embedded history comments as it is now in git.
+
+2008-01-18  Guillaume Chazarain <guichaz@yahoo.fr>
+
+	* iotop.py: Added --only as suggested by Iain Lea <iain@bricbrac.de>
+
+2008-01-18  Guillaume Chazarain <guichaz@yahoo.fr>
+
+	* iotop.py: Fix typo, reported by Iain Lea <iain@bricbrac.de>
+
+2007-12-19  Guillaume Chazarain <guichaz@yahoo.fr>
+
+	* iotop.py: Tolerate misconfigured terminals
+
+2007-09-30  Guillaume Chazarain <guichaz@yahoo.fr>
+
+	* iotop.py: Fixed -b
+
+2007-08-26  Guillaume Chazarain <guichaz@yahoo.fr>
+
+	* iotop.py: Document taskstats bug:
+	http://lkml.org/lkml/2007/8/2/185
+
+2007-08-25  Guillaume Chazarain <guichaz@yahoo.fr>
+
+	* iotop.py: Handle terminal resizing
+
+2007-08-25  Guillaume Chazarain <guichaz@yahoo.fr>
+
+	* iotop.py: More accurate cutting of the command line
+
+2007-08-19  Guillaume Chazarain <guichaz@yahoo.fr>
+
+	* iotop.py: handle empty process list
+
+2007-08-19  Guillaume Chazarain <guichaz@yahoo.fr>
+
+	* iotop.py: Fix "-P -p NOT_A_TGID", optimize -p
+
+2007-08-13  Guillaume Chazarain <guichaz@yahoo.fr>
+
+	* iotop.py: Handle short replies, and fix bandwidth calculation when
+	delay != 1s
+
+2007-07-23  Guillaume Chazarain <guichaz@yahoo.fr>
+
+	* iotop.py: Added support for taskstats version > 4 in iotop.py
+
+2007-07-15  Guillaume Chazarain <guichaz@yahoo.fr>
+
+	* Initial import of iotop
+

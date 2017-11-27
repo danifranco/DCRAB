@@ -1,0 +1,79 @@
+0.6
+~~~
+o Clean up the terminal on exit
+o Stop busy looping on exit in certain conditions
+o Restored UTF-8 support with python2
+o Fixed install scripts to install to sbin/ instead of bin/
+o Releases are now gpg signed with key "4096R/4D23A27E 2013-05-26"
+
+0.5
+~~~
+o Adapt the display to the maximum pid width
+o Include both total and actual disk bandwidth in the summary
+o Conversion to Python 3
+o Installation to sbin instead of bin
+
+0.4.4
+~~~~~
+o Cosmetic fixes, including a better error message when missing root
+credentials
+
+0.4.3
+~~~~~
+o Fixed netlink message parsing to accept alignement padding
+o Force UTF-8 output even if the locale is misconfigured
+o Changed the semantic of 'a' to show stats since iotop was started
+
+0.4.2
+~~~~~
+o Workaround for an ncurses bug where UTF-8 strings are misprinted
+o Added ioprio support for the armel and hppa architectures
+o Fix possible incompatibility with linux-2.6.37 on 64 bit systems
+o Do not crash when the locale is incorrectly configured
+
+0.4.1
+~~~~~
+o Portability fix
+o Better reporting of missing requirements
+
+0.4
+~~~
+o Compatibility with python2.4 using the ctypes module
+o Stopped using setuptools in favor of straight distutils
+
+0.3.2
+~~~~~
+o Split long command lines in the middle instead of cutting them at the end
+o Added a heuristic to detect kernels without CONFIG_TASK_DELAY_ACCT
+o The I/O nice of a process/thread can be changed with the 'i' key
+
+0.3.1
+~~~~~
+o Fixed the ioprio syscall detection when running on i386/x86_64
+o Fixed interaction between --accumulated and --only
+o Fixed column sorting with --accumulated
+
+0.3
+~~~
+o -P is now fully implemented and is dynamically toggled with 'p'
+o Show the I/O priority
+o Added the --accumulated, --kilobytes, --time and --quiet options
+
+0.2.1
+~~~~~
+o UTF-8 strings are now correctly handled
+
+0.2
+~~~
+
+o Misconfigured terminals (TERM=xterm-color) are tolerated
+o Added the --only option to only show processes or threads actually doing I/O
+o Typing 'o' dynamically toggles the --only option
+o Cosmetic fixes as well as minor bug fixes
+o Re-organized code to import vanilla pynl80211
+o Added workaround KERNBUG display in -P
+
+0.1
+~~~
+
+o First release
