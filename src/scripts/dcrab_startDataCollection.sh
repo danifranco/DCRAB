@@ -42,16 +42,15 @@ write_initial_values
 # Determines the main processes of the job and initializes html file first time 
 dcrab_determine_main_process 
 
+sleep $DCRAB_COLLECT_TIME
 
 ###############
 ## MAIN LOOP ##
 ###############
-loopNumber=1
+loopNumber=0
 updates=0
 while [ 1 ]; do
-	# Sleep to the next data collection
-	sleep $DCRAB_COLLECT_TIME
-	
+	loopNumber=$((loopNumber + 1))	
 	echo "H: $node_hostname - loop $loopNumber" 
 
 	# Update and collect data
@@ -60,14 +59,21 @@ while [ 1 ]; do
 	# Insert collected data in the main .html page
 	write_data 
 
-	# To finish DCRAB if the main process has finished. This avoids DCRAB continues running if
+	# Sleep to the next data collection
+        sleep $DCRAB_COLLECT_TIME
+		
+	# Finish DCRAB if the main process has finished. This avoids DCRAB continues running if
 	# the scheduler kills the job before the execution of 'dcrab finish'
 	kill -0 $DCRAB_FIRST_MAIN_PROCESS_PID >> /dev/null 2>&1
 	if [ $? -ne 0 ]; then
 		echo "DCRAB terminated. First main process '$DCRAB_FIRST_MAIN_PROCESS_NAME, PID: $DCRAB_FIRST_MAIN_PROCESS_PID' has been killed"
-		break;
+		echo "DCRAB stop"
+		break
 	fi
-
-	loopNumber=$((loopNumber + 1))
+	
+	# Finish if the report directory has been removed or moved 	
+	if [ ! -d "$DCRAB_REPORT_DIR" ]; then
+		echo "$node_hostname: DCRAB directory has been deleted or moved. DCRAB stop." >> $DCRAB_WORKDIR/DCRAB_ERROR_$node_hostname_$DCRAB_JOB_ID
+		break
+	fi
 done
-
