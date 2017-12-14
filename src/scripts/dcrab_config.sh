@@ -86,8 +86,8 @@ dcrab_generate_html (){
 		printf "\n"  >> $DCRAB_HTML
                 printf "%s \n" "]);" >> $DCRAB_HTML
 	
-		# DISK
-		printf "%s \n" "var disk_data_$node = google.visualization.arrayToDataTable([" >> $DCRAB_HTML
+		# PROCESSESIO
+		printf "%s \n" "var processesIO_data_$node = google.visualization.arrayToDataTable([" >> $DCRAB_HTML
                 printf "%s \n" "['Execution Time (s)', 'Read', 'Write']," >> $DCRAB_HTML
                 printf "\n"  >> $DCRAB_HTML
                 printf "%s \n" "]);" >> $DCRAB_HTML
@@ -164,9 +164,9 @@ dcrab_generate_html (){
         printf "%s \n" "chartArea: {  width: \"70%\", height: \"80%\" }," >> $DCRAB_HTML
         printf "%s \n" "};" >> $DCRAB_HTML
 	
-	# DISK
-        printf "%s \n" "var disk_options = {  " >> $DCRAB_HTML
-        printf "%s \n" "title : 'Disk I/O Stats (lscratch)', " >> $DCRAB_HTML
+	# PROCESSESIO
+        printf "%s \n" "var processesIO_options = {  " >> $DCRAB_HTML
+        printf "%s \n" "title : 'Processes I/O Stats', " >> $DCRAB_HTML
         printf "%s \n" "vAxis: {title: 'MB/s'}, " >> $DCRAB_HTML
         printf "%s \n" "hAxis: {title: 'Time (s)'}, " >> $DCRAB_HTML
         printf "%s \n" "width: $plot_width,  " >> $DCRAB_HTML
@@ -224,9 +224,9 @@ dcrab_generate_html (){
                 printf "%s \n" "var ib_chart_$node = new google.visualization.LineChart(document.getElementById('plot_ib_$node'));"  >> $DCRAB_HTML
                 printf "%s \n" "ib_chart_$node.draw(ib_data_$node, ib_options);  " >> $DCRAB_HTML
 	
-		# DISK
-                printf "%s \n" "var disk_chart_$node = new google.visualization.AreaChart(document.getElementById('plot_disk_$node'));"  >> $DCRAB_HTML
-                printf "%s \n" "disk_chart_$node.draw(disk_data_$node, disk_options);  " >> $DCRAB_HTML
+		# PROCESSESIO
+                printf "%s \n" "var processesIO_chart_$node = new google.visualization.AreaChart(document.getElementById('plot_processesIO_$node'));"  >> $DCRAB_HTML
+                printf "%s \n" "processesIO_chart_$node.draw(processesIO_data_$node, processesIO_options);  " >> $DCRAB_HTML
 	
 		# NFS
                 printf "%s \n" "var nfs_chart_$node = new google.visualization.AreaChart(document.getElementById('plot_nfs_$node'));"  >> $DCRAB_HTML
@@ -453,7 +453,35 @@ dcrab_generate_html (){
         printf "%s \n" "</div>" >> $DCRAB_HTML
 	printf "%s \n" "<br><br><br>" >> $DCRAB_HTML
 
-        #IB plots
+	# PROCESSESIO plots
+	printf "%s \n" "<div class=\"overflowDivs\">" >> $DCRAB_HTML
+	i=1
+        while [ $i -le $DCRAB_NNODES ]; do
+                printf "%s \n" "<div class=\"inline\">" >> $DCRAB_HTML
+                printf "%s \n" "<table><tr><td>" >> $DCRAB_HTML
+                printf "%s \n" "<div style=\"width: 1100px;\" class=\"header\">$(echo $DCRAB_NODES | cut -d' ' -f $i)</div>" >> $DCRAB_HTML
+                printf "%s \n" "</td></tr>" >> $DCRAB_HTML
+                printf "%s \n" "<tr><td>" >> $DCRAB_HTML
+                printf "%s \n" "<div class=\"plot inline\" id='plot_processesIO_$(echo $DCRAB_NODES_MOD | cut -d' ' -f$i)'></div>" >> $DCRAB_HTML
+                printf "%s \n" "<div style=\"border: 0px; margin-left: 75px;\" class=\"plot inline\">" >> $DCRAB_HTML
+                printf "%s \n" "<div class=\"text\">" >> $DCRAB_HTML
+                printf "%s \n" "<table id=\"textmem2\">" >> $DCRAB_HTML
+                printf "%s \n" "<tr style=\"border: 0px;\"><td><b><u>Total Read</u></b>:</td></tr>" >> $DCRAB_HTML
+                printf "%s \n" "<tr style=\"border: 0px;\"><td>0 MB</td></tr>" >> $DCRAB_HTML
+                printf "%s \n" "<tr style=\"border: 0px;\"><td><b><u>Total Write</u></b>:</td></tr>" >> $DCRAB_HTML
+                printf "%s \n" "<tr style=\"border: 0px;\"><td>0 MB</td></tr>" >> $DCRAB_HTML
+                printf "%s \n" "</table>" >> $DCRAB_HTML
+                printf "%s \n" "</div>" >> $DCRAB_HTML
+                printf "%s \n" "</div>" >> $DCRAB_HTML
+                printf "%s \n" "</td></tr>" >> $DCRAB_HTML
+                printf "%s \n" "</table>" >> $DCRAB_HTML
+                printf "%s \n" "</div>" >> $DCRAB_HTML
+                i=$((i+1))
+        done
+        printf "%s \n" "</div>" >> $DCRAB_HTML
+        printf "%s \n" "<br><br><br>" >> $DCRAB_HTML
+
+        # IB plots
         printf "%s \n" "<div class=\"overflowDivs\">" >> $DCRAB_HTML
         printf "%s \n" "<div class=\"text rcorners inline warningText\" >" >> $DCRAB_HTML
         printf "%s \n" "<center><b>" >> $DCRAB_HTML
@@ -476,34 +504,6 @@ dcrab_generate_html (){
                 printf "%s \n" "</td></tr>" >> $DCRAB_HTML
                 printf "%s \n" "<tr><td>" >> $DCRAB_HTML
                 printf "%s \n" "<div class=\"plot\" id='plot_ib_$(echo $DCRAB_NODES_MOD | cut -d' ' -f$i)'></div>" >> $DCRAB_HTML
-                printf "%s \n" "</td></tr>" >> $DCRAB_HTML
-                printf "%s \n" "</table>" >> $DCRAB_HTML
-                printf "%s \n" "</div>" >> $DCRAB_HTML
-                i=$((i+1))
-        done
-        printf "%s \n" "</div>" >> $DCRAB_HTML
-	printf "%s \n" "<br><br><br>" >> $DCRAB_HTML
-
-	# Disk plots
-	printf "%s \n" "<div class=\"overflowDivs\">" >> $DCRAB_HTML
-	i=1
-        while [ $i -le $DCRAB_NNODES ]; do
-                printf "%s \n" "<div class=\"inline\">" >> $DCRAB_HTML
-                printf "%s \n" "<table><tr><td>" >> $DCRAB_HTML
-                printf "%s \n" "<div style=\"width: 1100px;\" class=\"header\">$(echo $DCRAB_NODES | cut -d' ' -f $i)</div>" >> $DCRAB_HTML
-                printf "%s \n" "</td></tr>" >> $DCRAB_HTML
-                printf "%s \n" "<tr><td>" >> $DCRAB_HTML
-                printf "%s \n" "<div class=\"plot inline\" id='plot_disk_$(echo $DCRAB_NODES_MOD | cut -d' ' -f$i)'></div>" >> $DCRAB_HTML
-                printf "%s \n" "<div style=\"border: 0px; margin-left: 75px;\" class=\"plot inline\">" >> $DCRAB_HTML
-                printf "%s \n" "<div class=\"text\">" >> $DCRAB_HTML
-                printf "%s \n" "<table id=\"textmem2\">" >> $DCRAB_HTML
-                printf "%s \n" "<tr style=\"border: 0px;\"><td><b><u>Total Read</u></b>:</td></tr>" >> $DCRAB_HTML
-                printf "%s \n" "<tr style=\"border: 0px;\"><td>0 MB</td></tr>" >> $DCRAB_HTML
-                printf "%s \n" "<tr style=\"border: 0px;\"><td><b><u>Total Write</u></b>:</td></tr>" >> $DCRAB_HTML
-                printf "%s \n" "<tr style=\"border: 0px;\"><td>0 MB</td></tr>" >> $DCRAB_HTML
-                printf "%s \n" "</table>" >> $DCRAB_HTML
-                printf "%s \n" "</div>" >> $DCRAB_HTML
-                printf "%s \n" "</div>" >> $DCRAB_HTML
                 printf "%s \n" "</td></tr>" >> $DCRAB_HTML
                 printf "%s \n" "</table>" >> $DCRAB_HTML
                 printf "%s \n" "</div>" >> $DCRAB_HTML
@@ -552,8 +552,6 @@ dcrab_generate_html (){
         done
         printf "%s \n" "</div>" >> $DCRAB_HTML
         printf "%s \n" "<br><br><br>" >> $DCRAB_HTML
-
-
 	
 	# Foot
         printf "%s \n" "<div id='foot'>" >> $DCRAB_HTML
