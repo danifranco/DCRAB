@@ -44,7 +44,7 @@ dcrab_generate_html (){
 	printf "%s \n" "<script type=\"text/javascript\"> " >> $DCRAB_HTML
 
 	# Load packages and callbacks for plot functions
-	printf "%s \n" "google.charts.load('current', {'packages':['corechart']}); " >> $DCRAB_HTML
+	printf "%s \n" "google.charts.load('current', {'packages':['corechart', 'bar']}); " >> $DCRAB_HTML
         printf "%s \n" "google.charts.setOnLoadCallback(plot_all); " >> $DCRAB_HTML
 
 	################# Plot function #################
@@ -86,7 +86,7 @@ dcrab_generate_html (){
 		printf "\n"  >> $DCRAB_HTML
                 printf "%s \n" "]);" >> $DCRAB_HTML
 	
-		# PROCESSESIO
+		# PROCESSES-IO
 		printf "%s \n" "var processesIO_data_$node = google.visualization.arrayToDataTable([" >> $DCRAB_HTML
                 printf "%s \n" "['Execution Time (s)', 'Read', 'Write']," >> $DCRAB_HTML
                 printf "\n"  >> $DCRAB_HTML
@@ -95,6 +95,12 @@ dcrab_generate_html (){
 		# NFS	
                 printf "%s \n" "var nfs_data_$node = google.visualization.arrayToDataTable([" >> $DCRAB_HTML
                 printf "%s \n" "['Execution Time (s)', 'Read', 'Write']," >> $DCRAB_HTML
+                printf "\n"  >> $DCRAB_HTML
+                printf "%s \n" "]);" >> $DCRAB_HTML
+		
+		# DISK
+		printf "%s \n" "var disk_data_$node = google.visualization.arrayToDataTable([" >> $DCRAB_HTML
+		printf "\n"  >> $DCRAB_HTML
                 printf "\n"  >> $DCRAB_HTML
                 printf "%s \n" "]);" >> $DCRAB_HTML
 	done
@@ -164,7 +170,7 @@ dcrab_generate_html (){
         printf "%s \n" "chartArea: {  width: \"70%\", height: \"80%\" }," >> $DCRAB_HTML
         printf "%s \n" "};" >> $DCRAB_HTML
 	
-	# PROCESSESIO
+	# PROCESSES-IO
         printf "%s \n" "var processesIO_options = {  " >> $DCRAB_HTML
         printf "%s \n" "title : 'Processes I/O Stats', " >> $DCRAB_HTML
         printf "%s \n" "vAxis: {title: 'MB/s'}, " >> $DCRAB_HTML
@@ -188,6 +194,21 @@ dcrab_generate_html (){
         printf "%s \n" "axes: {  " >> $DCRAB_HTML
         printf "%s \n" "x: {  " >> $DCRAB_HTML
         printf "%s \n" "0: {side: 'top'}  " >> $DCRAB_HTML
+        printf "%s \n" "}  " >> $DCRAB_HTML
+        printf "%s \n" "},  " >> $DCRAB_HTML
+        printf "%s \n" "};  " >> $DCRAB_HTML
+	
+	# DISK
+        printf "%s \n" "var disk_options = {  " >> $DCRAB_HTML
+        printf "%s \n" "title : 'Local disks I/O Stats (lscratch)', " >> $DCRAB_HTML
+        printf "%s \n" "vAxis: {title: 'MB/s'}, " >> $DCRAB_HTML
+        printf "%s \n" "hAxis: {title: 'Devices'}, " >> $DCRAB_HTML
+ 	printf "%s \n" "chartArea: {  width: \"70%\", height: \"80%\" }," >> $DCRAB_HTML
+        printf "%s \n" "width: $plot_width,  " >> $DCRAB_HTML
+        printf "%s \n" "height: $plot_height,  " >> $DCRAB_HTML
+        printf "%s \n" "axes: {  " >> $DCRAB_HTML
+        printf "%s \n" "x: {  " >> $DCRAB_HTML
+        printf "%s \n" "0: {side: 'bottom'}  " >> $DCRAB_HTML
         printf "%s \n" "}  " >> $DCRAB_HTML
         printf "%s \n" "},  " >> $DCRAB_HTML
         printf "%s \n" "};  " >> $DCRAB_HTML
@@ -231,7 +252,11 @@ dcrab_generate_html (){
 		# NFS
                 printf "%s \n" "var nfs_chart_$node = new google.visualization.AreaChart(document.getElementById('plot_nfs_$node'));"  >> $DCRAB_HTML
                 printf "%s \n" "nfs_chart_$node.draw(nfs_data_$node, nfs_options);  " >> $DCRAB_HTML
-        done
+		
+		# DISK
+                printf "%s \n" "var disk_chart_$node = new google.visualization.ColumnChart(document.getElementById('plot_disk_$node'));"  >> $DCRAB_HTML
+                printf "%s \n" "disk_chart_$node.draw(disk_data_$node, disk_options);  " >> $DCRAB_HTML        
+	done
 
 	if [ "$DCRAB_NNODES" -gt 1 ]; then
 		printf "%s \n" "var total_mem_chart = new google.visualization.PieChart(document.getElementById('plot_total_mem'));" >> $DCRAB_HTML
@@ -473,6 +498,37 @@ dcrab_generate_html (){
                 printf "%s \n" "</table>" >> $DCRAB_HTML
                 printf "%s \n" "</div>" >> $DCRAB_HTML
                 printf "%s \n" "</div>" >> $DCRAB_HTML
+                printf "%s \n" "</td></tr>" >> $DCRAB_HTML
+                printf "%s \n" "</table>" >> $DCRAB_HTML
+                printf "%s \n" "</div>" >> $DCRAB_HTML
+                i=$((i+1))
+        done
+        printf "%s \n" "</div>" >> $DCRAB_HTML
+        printf "%s \n" "<br><br><br>" >> $DCRAB_HTML
+
+        # DISK plots
+        printf "%s \n" "<div class=\"overflowDivs\">" >> $DCRAB_HTML
+	printf "%s \n" "<div class=\"text rcorners inline warningText\" >" >> $DCRAB_HTML
+        printf "%s \n" "<center><b>" >> $DCRAB_HTML
+        printf "%s \n" "-- WARNING --<br>" >> $DCRAB_HTML
+        printf "%s \n" "Disk charts are generated<br>" >> $DCRAB_HTML
+        printf "%s \n" "with general statistics of the disk<br>" >> $DCRAB_HTML
+        printf "%s \n" "usage during the execution. This <br>" >> $DCRAB_HTML
+        printf "%s \n" "means that is not considering only<br>" >> $DCRAB_HTML
+        printf "%s \n" "your job disk usage but the whole node.<br>" >> $DCRAB_HTML
+        printf "%s \n" "So keep in mind when analizing the<br>" >> $DCRAB_HTML
+        printf "%s \n" "chart because maybe can be another<br>" >> $DCRAB_HTML
+        printf "%s \n" "job using the lscratch <br>" >> $DCRAB_HTML
+        printf "%s \n" "</b></center>" >> $DCRAB_HTML
+        printf "%s \n" "</div>" >> $DCRAB_HTML
+        i=1
+	while [ $i -le $DCRAB_NNODES ]; do
+                printf "%s \n" "<div class=\"inline\">" >> $DCRAB_HTML
+                printf "%s \n" "<table><tr><td>" >> $DCRAB_HTML
+                printf "%s \n" "<div class=\"header\">$(echo $DCRAB_NODES | cut -d' ' -f $i)</div>" >> $DCRAB_HTML
+                printf "%s \n" "</td></tr>" >> $DCRAB_HTML
+                printf "%s \n" "<tr><td>" >> $DCRAB_HTML
+                printf "%s \n" "<div class=\"plot\" id='plot_disk_$(echo $DCRAB_NODES_MOD | cut -d' ' -f$i)'></div>" >> $DCRAB_HTML
                 printf "%s \n" "</td></tr>" >> $DCRAB_HTML
                 printf "%s \n" "</table>" >> $DCRAB_HTML
                 printf "%s \n" "</div>" >> $DCRAB_HTML

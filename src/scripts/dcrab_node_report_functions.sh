@@ -83,7 +83,6 @@ init_variables () {
 	cpu_addColumn_inject_line=$((addColumn_data_line + 1))
 	cpu_threshold="5.0"
 	updates=0
-        declare -a upd_proc_name
 
 	# MEM
 	mem_data=""
@@ -189,13 +188,46 @@ init_variables () {
         nfs_total_write_value="MB"
         nfs_last_total_read_value="MB"
         nfs_last_total_write_value="MB"
-	
+
+	# DISK
+	IFS=$'\n'
+	disk_cont=0
+	disk_data_firstLine_string="['Devices', 'Read', 'Write'],"
+	# Obtain disk devices
+	for line in $(lsblk | grep -v "─" | grep "sd"); do
+                disk_cont=$((disk_cont + 1))
+                disk_names[$disk_cont]=$(echo "$line" | awk '{print $1}')
+        done
+
+	# Initialize the first values 
+        for line in $(cat /proc/diskstats); do
+		local aux_device=$(echo "$line" | awk '{print $3}')
+                found=0
+                i=0
+                while [ "$i" -le "$disk_cont" ]; do
+                        i=$((i+1))
+                        if [ "${disk_names[$i]}" == "$aux_device" ]; then
+                                found=1
+                                break
+                        fi
+                done
+                if [ "$found" -eq 1 ];then
+			# The information obtained are the sectors read so we must multiply it by 512 to obtain the bytes
+			disk_first_read_value[$i]=$(echo "$line" | awk '{print $6}')
+			disk_first_write_value[$i]=$(echo "$line" | awk '{print $10}')
+                fi
+        done
+        disk_data=""
+        disk_data_line=$(grep -n -m 1 "var disk_data_$node_hostname_mod" $DCRAB_HTML | cut -f1 -d:)
+        disk_data_firstLine=$((disk_data_line + 1))
+	disk_data_line=$((disk_data_line + 2))
+
 }
 
 write_initial_values () {
 	j=0	
 	while [ 1 ]; do
-		if ( set -o noclobber; echo "$node_hostname" > "$DCRAB_LOCK_FILE") 2> /dev/null; then
+		if ( set -o noclobber; echo "$node_hostname" > "$DCRAB_LOCK_FILE"); then
 			sed -i "$mem_piePlot1_nodeMemory_line"'s|\([0-9]\) GB|'"$node_total_mem"' GB|' $DCRAB_HTML 
 	                sed -i "$mem_piePlot1_requestedMemory_line"'s|\([0-9]\) GB|'"$DCRAB_REQ_MEM"' GB|' $DCRAB_HTML
 			sed -i "$reqTime_text_line"'s|00:00:00:00|'"$DCRAB_REQ_TIME"'|' $DCRAB_HTML 
@@ -206,7 +238,7 @@ write_initial_values () {
 			# Exit while
 			break
 		else
-		        echo "Lock Exists: $DCRAB_LOCK_FILE owned by $(cat $DCRAB_LOCK_FILE)"
+		        echo "File $DCRAB_LOCK_FILE locked" 
 			j=$((j+1))
 		fi
 			
@@ -225,7 +257,7 @@ write_initial_values () {
 	if [ "$DCRAB_NODE_NUMBER" -eq 0 ] && [ "$DCRAB_NNODES" -gt 1 ]; then
 		j=0
 		while [ 1 ]; do
-        	        if ( set -o noclobber; echo "$node_hostname" > "$DCRAB_LOCK_FILE") 2> /dev/null; then
+        	        if ( set -o noclobber; echo "$node_hostname" > "$DCRAB_LOCK_FILE"); then
 	                        sed -i "$mem_total_plot_requested_text_line"'s|\([0-9]*[.]*[0-9]*\) GB</td></tr>|'"$DCRAB_REQ_MEM"' GB</td></tr>|' $DCRAB_HTML
 
 	                        # Remove lock file
@@ -234,7 +266,7 @@ write_initial_values () {
 	                        # Exit while
         	                break
         	        else
-                        	echo "Lock Exists: $DCRAB_LOCK_FILE owned by $(cat $DCRAB_LOCK_FILE)"
+                        	echo "File $DCRAB_LOCK_FILE locked"
 				j=$((j + 1))
                 	fi
 			
@@ -249,6 +281,32 @@ write_initial_values () {
 	       	        sleep 0.5
 	        done
 	fi
+
+	# Insert devices in disk chart
+	while [ 1 ]; do
+        	if ( set -o noclobber; echo "$node_hostname" > "$DCRAB_LOCK_FILE"); then
+                	sed -i "$disk_data_firstLine"'s|^|'"$disk_data_firstLine_string"'|' $DCRAB_HTML
+
+                        # Remove lock file
+                        rm -f "$DCRAB_LOCK_FILE"
+
+                        # Exit while
+                        break
+                else
+                        echo "File $DCRAB_LOCK_FILE locked"
+                        j=$((j + 1))
+                fi
+
+                # To avoid block in the loop when the report directory has been deleted or moved 
+                if [ "$j" -ge "$DCRAB_LOOP_BEFORE_CRASH" ]; then
+ 	               echo "$node_hostname: DCRAB directory has been deleted or moved. DCRAB stop." >> $DCRAB_WORKDIR/DCRAB_ERROR_$node_hostname_$DCRAB_JOB_ID
+                       exit 1
+                fi
+
+                # Sleep a bit to take the lock in the next loop
+                echo "Sleeping for the lock ..."
+                sleep 0.5
+        done
 }
 
 write_data () {
@@ -258,7 +316,7 @@ write_data () {
                 for i in $( seq 0 $((updates -1)) ); do
 			j=0
 			while [ 1 ]; do
-	                        if ( set -o noclobber; echo "$node_hostname" > "$DCRAB_LOCK_FILE") 2> /dev/null; then
+	                        if ( set -o noclobber; echo "$node_hostname" > "$DCRAB_LOCK_FILE"); then
         	                        sed -i "$cpu_addRow_inject_line"'s|\[\([0-9]*\),|\[\1, ,|g' $DCRAB_HTML
 					sed -i "$cpu_addColumn_inject_line""s|^|cpu_data_$node_hostname_mod.addColumn('number', '${upd_proc_name[$i]}'); |" $DCRAB_HTML
 
@@ -268,7 +326,7 @@ write_data () {
         	                        # Exit while
 	                                break
 	                        else
-        	                        echo "Lock Exists: $DCRAB_LOCK_FILE owned by $(cat $DCRAB_LOCK_FILE)"
+        	                        echo "File $DCRAB_LOCK_FILE locked"
 					j=$((j+1))
 	                        fi
 
@@ -290,7 +348,7 @@ write_data () {
 	if [ "$DCRAB_NODE_NUMBER" -eq 0 ] && [ "$DCRAB_NNODES" -gt 1 ]; then
 		j=0
 		while [ 1 ]; do
-	               	if ( set -o noclobber; echo "$node_hostname" > "$DCRAB_LOCK_FILE") 2> /dev/null; then
+	               	if ( set -o noclobber; echo "$node_hostname" > "$DCRAB_LOCK_FILE"); then
         	                sed -i "$memUnUsed_total_plot_line"'s|\([0-9]*[.]*[0-9]*\)\]|'"$total_notUtilizedMem"'\]|' $DCRAB_HTML
                 	        sed -i "$memUsed_total_plot_line"'s|\([0-9]*[.]*[0-9]*\)\]|'"$total_utilizedMem"'\]|' $DCRAB_HTML
                         	sed -i "$mem_total_plot_VmRSS_text_line"'s|\([0-9]*[.]*[0-9]*\) GB</td></tr>|'"$total_max_vmRSS"' GB</td></tr>|' $DCRAB_HTML
@@ -302,7 +360,7 @@ write_data () {
                                 # Exit while
                                 break
                         else
-                                echo "Lock Exists: $DCRAB_LOCK_FILE owned by $(cat $DCRAB_LOCK_FILE)"
+                                echo "File $DCRAB_LOCK_FILE locked"
 				j=$((j+1))
                         fi
 			
@@ -319,7 +377,7 @@ write_data () {
 	        if [ "$exceeded" -eq 1 ] && [ "$changed" -eq 0 ]; then
 			j=0
 			while [ 1 ]; do
-                                if ( set -o noclobber; echo "$node_hostname" > "$DCRAB_LOCK_FILE") 2> /dev/null; then
+                                if ( set -o noclobber; echo "$node_hostname" > "$DCRAB_LOCK_FILE"); then
                                         sed -i "$mem_total_options_color_line"'s/#3366CC/#ff0000/' $DCRAB_HTML
 
                                         # Remove lock file
@@ -328,7 +386,7 @@ write_data () {
                                         # Exit while
                                         break
                                 else
-                                        echo "Lock Exists: $DCRAB_LOCK_FILE owned by $(cat $DCRAB_LOCK_FILE)"	
+                                        echo "File $DCRAB_LOCK_FILE locked"	
 					j=$((j+1))
                                 fi
 				
@@ -351,7 +409,7 @@ write_data () {
 	if [ "$DCRAB_NODE_NUMBER" -eq 0 ]; then
 		j=0
 	        while [ 1 ]; do
-	                if ( set -o noclobber; echo "$node_hostname" > "$DCRAB_LOCK_FILE") 2> /dev/null; then
+	                if ( set -o noclobber; echo "$node_hostname" > "$DCRAB_LOCK_FILE"); then
 				sed -i "$elapsedTime_text_line"'s|\([0-9]*:[0-9]*:[0-9]*:[0-9]*\)|'"$DCRAB_ELAPSED_TIME_TEXT"'|' $DCRAB_HTML
 				sed -i "$elapsedTime_plot_line"'s|\([0-9]*[.]*[0-9]*\)\]|'"$DCRAB_ELAPSED_TIME_VALUE"'\]|' $DCRAB_HTML
                                 sed -i "$remainingTime_plot_line"'s|\([0-9]*[.]*[0-9]*\)\]|'"$DCRAB_REMAINING_TIME_VALUE"'\]|' $DCRAB_HTML
@@ -362,7 +420,7 @@ write_data () {
         	                # Exit while
                                 break
                         else
-	                        echo "Lock Exists: $DCRAB_LOCK_FILE owned by $(cat $DCRAB_LOCK_FILE)"
+	                        echo "File $DCRAB_LOCK_FILE locked"
 				j=$((j+1))
                         fi
 
@@ -377,10 +435,11 @@ write_data () {
                         sleep 0.5
                 done
         fi	
+
         # Write data 
 	j=0
 	while [ 1 ]; do
-                if ( set -o noclobber; echo "$node_hostname" > "$DCRAB_LOCK_FILE") 2> /dev/null; then
+                if ( set -o noclobber; echo "$node_hostname" > "$DCRAB_LOCK_FILE"); then
 			### CPU ###
 	                sed -i "$cpu_addRow_inject_line"'s/.*/&'"$cpu_data"'/' $DCRAB_HTML
 
@@ -403,6 +462,9 @@ write_data () {
                         sed -i "$nfs_data_line"'s/.*/&'"$nfs_data"'/' $DCRAB_HTML
                         sed -i "$nfs_total_read_line"'s|\([0-9]*[.]*[0-9]*\) '"$nfs_last_total_read_value"'</td></tr>|'"$nfs_total_read_reduced $nfs_total_read_value"'</td></tr>|' $DCRAB_HTML
                         sed -i "$nfs_total_write_line"'s|\([0-9]*[.]*[0-9]*\) '"$nfs_last_total_write_value"'</td></tr>|'"$nfs_total_write_reduced $nfs_total_write_value"'</td></tr>|' $DCRAB_HTML
+		
+			# DISK
+			sed -i "$disk_data_line"'s/.*/'"$disk_data"'/' $DCRAB_HTML
 
                 	# Remove lock file
 		        rm -f "$DCRAB_LOCK_FILE"
@@ -410,7 +472,7 @@ write_data () {
         	        # Exit while
                 	break
                 else
-        	        echo "Lock Exists: $DCRAB_LOCK_FILE owned by $(cat $DCRAB_LOCK_FILE)"
+        	        echo "File $DCRAB_LOCK_FILE locked"
 			j=$((j+1))
                 fi
 
@@ -547,7 +609,6 @@ dcrab_collect_processesIO_data () {
 	#	
 	case $1 in 
 	0)
-		
 		# Store the data of all the processes	 
 	        for line in $(cat $DCRAB_JOB_PROCESSES_FILE); do
 
@@ -593,7 +654,6 @@ dcrab_collect_processesIO_data () {
 	                        [[ "$new_wchar" == "" ]] && new_wchar=0
 
 				if [ "$last_rchar" == "" ]; then
-					echo "A"
 					echo "$pid $new_rchar $new_wchar" >> $DCRAB_PROCESSES_IO_FILE 
 				
 					processesIO_total_read=$(echo "$processesIO_total_read + $new_rchar" | bc)
@@ -602,7 +662,6 @@ dcrab_collect_processesIO_data () {
 	                                processesIO_total_write=$(echo "$processesIO_total_write + $new_wchar" | bc )
 	                                processesIO_partial_write=$(echo "$processesIO_partial_write + $new_wchar" | bc )				
 				else
-					echo "B"
 					lineNumber=$(cat $DCRAB_PROCESSES_IO_FILE | grep -n "^$pid " | awk '{print $1}' | cut -d':' -f1)
 					sed -i "$lineNumber"'s/'"$pid $last_rchar $last_wchar"'/'"$pid $new_rchar $new_wchar"'/' $DCRAB_PROCESSES_IO_FILE
 	
@@ -655,11 +714,6 @@ dcrab_collect_processesIO_data () {
 	esac
 }
 
-dcrab_collect_disk_data () {
-	echo " "
-
-}
-
 dcrab_collect_nfs_data () {
 
 	nfs_new_read=$(mountstats --nfs $nfs_mount_path | grep "applications read" | grep "via read(2)" | awk '{print $3}' )
@@ -706,6 +760,36 @@ dcrab_collect_nfs_data () {
 		
 	nfs_read=$nfs_new_read
 	nfs_write=$nfs_new_write
+}
+
+dcrab_collect_disk_data () {
+
+	# Collect IO disk stats
+	while read line; do
+		aux_device=$(echo "$line" | awk '{print $3}')	
+		found=0
+		i=0
+		while [ "$i" -le "$disk_cont" ]; do
+			i=$((i+1))
+			if [ "${disk_names[$i]}" == "$aux_device" ]; then
+				found=1
+				break
+			fi
+		done
+		if [ "$found" -eq 1 ]; then
+			echo "FOUND - line: $line"
+			cat /proc/diskstats
+			disk_read_value[$i]=$(echo " $(echo "$line" | awk '{print $6}') - ${disk_first_read_value[$i]}" | bc)
+			disk_write_value[$i]=$(echo "$(echo "$line" | awk '{print $10}') - ${disk_first_write_value[$i]}" | bc)
+			
+			local aux1=$(echo "((${disk_read_value[$i]} * 512 )/1024 )/1024" | bc)
+			local aux2=$(echo "((${disk_write_value[$i]} * 512 )/1024 )/1024" | bc)
+				
+			disk_data="$disk_data ['${disk_names[$i]}', $aux1, $aux2],"	
+			
+			echo "D: $disk_data"
+		fi	
+	done < <(cat /proc/diskstats)
 }
 
 dcrab_collect_beegfs_data () {
@@ -845,6 +929,9 @@ dcrab_determine_main_process () {
 	# PROCESSES_IO data
 	dcrab_collect_processesIO_data 0
 
+	# DISK data
+	dcrab_collect_disk_data
+
 	write_data 	
 }
 
@@ -868,6 +955,8 @@ dcrab_update_data () {
 	processesIO_data="[$DCRAB_DIFF_TIMESTAMP,"
 	# NFS data
 	nfs_data="[$DCRAB_DIFF_TIMESTAMP,"
+	# DISK data
+	disk_data=""
 
         # Collect the data
 	ps axo stat,euid,ruid,sess,ppid,pid,pcpu,comm,command | sed 's|\s\s*| |g' | awk '{if ($2 == '"$DCRAB_USER_ID"'){print}}' | grep -v " $DCRAB_DCRAB_PID " > $DCRAB_USER_PROCESSES_FILE
@@ -996,6 +1085,9 @@ dcrab_update_data () {
 	
 	# NFS data
 	dcrab_collect_nfs_data
+
+        # DISK data
+        dcrab_collect_disk_data
 }
 
 

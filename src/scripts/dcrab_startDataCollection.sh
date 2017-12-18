@@ -50,6 +50,7 @@ sleep $DCRAB_COLLECT_TIME
 loopNumber=0
 updates=0
 while [ 1 ]; do
+
 	loopNumber=$((loopNumber + 1))	
 	echo "H: $node_hostname - loop $loopNumber" 
 
