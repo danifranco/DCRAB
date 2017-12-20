@@ -1,13 +1,12 @@
 #!/bin/bash
 # DCRAB SOFTWARE
-# Version: 1.0
+# Version: 2.0
 # Autor: CC-staff
 # Donostia International Physics Center
 #
 # ===============================================================================================================
 #
-# This script is the core of the monitorization of the nodes. Is used in 'dcrab_start_data_collection' function 
-# inside 'scripts/dcrab_config.sh' file.
+# This script is the core of the monitorization of the nodes
 #
 # Arguments:
 #
@@ -31,13 +30,15 @@ source "$1"
 cd $DCRAB_WORKDIR
 
 # Source modules
-source $DCRAB_BIN/scripts/dcrab_node_report_functions.sh
+source $DCRAB_BIN/scripts/dcrab_node_monitoring_funtions.sh
+source $DCRAB_BIN/scripts/dcrab_finalize.sh
+source $DCRAB_BIN/scripts/dcrab_report_functions.sh
 
 # Initialize variables
-init_variables $2
+dcrab_node_monitor_init_variables $2
 
 # Write first values in the main html report 
-write_initial_values
+dcrab_write_initial_values
 
 # Determines the main processes of the job and initializes html file first time 
 dcrab_determine_main_process 
@@ -58,7 +59,7 @@ while [ 1 ]; do
 	dcrab_update_data 
 
 	# Insert collected data in the main .html page
-	write_data 
+	dcrab_write_data 
 
 	# Sleep to the next data collection
         sleep $DCRAB_COLLECT_TIME

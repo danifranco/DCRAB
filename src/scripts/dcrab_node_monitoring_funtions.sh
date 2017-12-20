@@ -1,19 +1,24 @@
 #!/bin/bash
 # DCRAB SOFTWARE
-# Version: 1.0
+# Version: 2.0
 # Autor: CC-staff
 # Donostia International Physics Center
 #
 # ===============================================================================================================
 #
-# This script contains the necessary functions for the monitorization in the nodes. Used in the core script
-# of the nodes 'scripts/dcrab_startDataCollection.sh'.
+# This script contains the necessary functions for the monitorization in the nodes
 #
 # Do NOT execute manually. DCRAB will use it automatically.
 #
 # ===============================================================================================================
 
-init_variables () {
+
+#
+# Initializes necessary variables 
+# Arguments:
+#	1- Int --> The number of the node (0 is the main node, the rest of the numbers are considered as 'slave' nodes)
+#
+dcrab_node_monitor_init_variables () {
 
 	# Host
 	DCRAB_NODE_NUMBER=$1
@@ -221,282 +226,12 @@ init_variables () {
         disk_data_line=$(grep -n -m 1 "var disk_data_$node_hostname_mod" $DCRAB_HTML | cut -f1 -d:)
         disk_data_firstLine=$((disk_data_line + 1))
 	disk_data_line=$((disk_data_line + 2))
-
 }
 
-dcrab_check_exit () {
-		
-	case $1 in 
-	0)	
-		# To avoid block in the loop when the number of attemps is greater than a certain value 
-	        if [ "$j" -ge "$DCRAB_LOOP_BEFORE_CRASH" ]; then
-	        	echo "ERROR in $node_hostname: too many attemps of locking the main html report" >> $DCRAB_WORKDIR/DCRAB_ERROR_$node_hostname_$DCRAB_JOB_ID
-			echo "DCRAB stop" >> $DCRAB_WORKDIR/DCRAB_ERROR_"$node_hostname"_"$DCRAB_JOB_ID"
-	                exit 1
-	        # Finish if the report directory has been removed or moved
-	        elif [ ! -d "$DCRAB_REPORT_DIR" ]; then
-	                echo "ERROR in $node_hostname: DCRAB directory has been deleted or moved" >> $DCRAB_WORKDIR/DCRAB_ERROR_$node_hostname_$DCRAB_JOB_ID
-		        echo "DCRAB stop" >> $DCRAB_WORKDIR/DCRAB_ERROR_"$node_hostname"_"$DCRAB_JOB_ID"
-	                exit 2
-	        fi
-	;;
-	1)
-		# Finish DCRAB if the main process has finished. This avoids DCRAB continues running if
-	        # the scheduler kills the job before the execution of 'dcrab finish'
-		kill -0 $DCRAB_FIRST_MAIN_PROCESS_PID >> /dev/null 2>&1
-	        if [ $? -ne 0 ]; then
-	                echo "DCRAB terminated: first main process '$DCRAB_FIRST_MAIN_PROCESS_NAME, PID: $DCRAB_FIRST_MAIN_PROCESS_PID' has been killed"
-	                echo "DCRAB stop" 
-	                exit 0
-		# Finish if the report directory has been removed or moved
-	        elif [ ! -d "$DCRAB_REPORT_DIR" ]; then
-                        echo "ERROR in $node_hostname: DCRAB directory has been deleted or moved" >> $DCRAB_WORKDIR/DCRAB_ERROR_$node_hostname_$DCRAB_JOB_ID
-                        echo "DCRAB stop" >> $DCRAB_WORKDIR/DCRAB_ERROR_"$node_hostname"_"$DCRAB_JOB_ID"
-                        exit 2
-		fi
-	;;
-	esac
-}
 
-write_initial_values () {
-	j=0	
-	while [ 1 ]; do
-		if ( set -o noclobber; echo "$node_hostname" > "$DCRAB_LOCK_FILE") 2> /dev/null; then
-			sed -i "$mem_piePlot1_nodeMemory_line"'s|\([0-9]\) GB|'"$node_total_mem"' GB|' $DCRAB_HTML 
-	                sed -i "$mem_piePlot1_requestedMemory_line"'s|\([0-9]\) GB|'"$DCRAB_REQ_MEM"' GB|' $DCRAB_HTML
-			sed -i "$reqTime_text_line"'s|00:00:00:00|'"$DCRAB_REQ_TIME"'|' $DCRAB_HTML 
-
-		        # Remove lock file
-		        rm -f "$DCRAB_LOCK_FILE"
-				
-			# Exit while
-			break
-		else
-		        echo "File $DCRAB_LOCK_FILE locked" 
-			j=$((j+1))
-		fi
-		
-		dcrab_check_exit 0
-	
-		# Sleep a bit to take the lock in the next loop
-		echo "Sleeping for the lock ..."
-		sleep 1
-	done
-
-	# Modify total pie chart text
-	if [ "$DCRAB_NODE_NUMBER" -eq 0 ] && [ "$DCRAB_NNODES" -gt 1 ]; then
-		j=0
-		while [ 1 ]; do
-        	        if ( set -o noclobber; echo "$node_hostname" > "$DCRAB_LOCK_FILE") 2> /dev/null; then
-	                        sed -i "$mem_total_plot_requested_text_line"'s|\([0-9]*[.]*[0-9]*\) GB</td></tr>|'"$DCRAB_REQ_MEM"' GB</td></tr>|' $DCRAB_HTML
-
-	                        # Remove lock file
-	                        rm -f "$DCRAB_LOCK_FILE"
-
-	                        # Exit while
-        	                break
-        	        else
-                        	echo "File $DCRAB_LOCK_FILE locked"
-				j=$((j + 1))
-                	fi
-			
-			# To avoid block in the loop 
-			dcrab_check_exit 0
-
-	                # Sleep a bit to take the lock in the next loop
-			echo "Sleeping for the lock ..."
-	       	        sleep 1
-	        done
-	fi
-
-	# Insert devices in disk chart
-	while [ 1 ]; do
-        	if ( set -o noclobber; echo "$node_hostname" > "$DCRAB_LOCK_FILE") 2> /dev/null; then
-                	sed -i "$disk_data_firstLine"'s|^|'"$disk_data_firstLine_string"'|' $DCRAB_HTML
-
-                        # Remove lock file
-                        rm -f "$DCRAB_LOCK_FILE"
-
-                        # Exit while
-                        break
-                else
-                        echo "File $DCRAB_LOCK_FILE locked"
-                        j=$((j + 1))
-                fi
-
-		# To avoid block in the loop 
-                dcrab_check_exit 0
-
-                # Sleep a bit to take the lock in the next loop
-                echo "Sleeping for the lock ..."
-                sleep 1
-        done
-}
-
-write_data () {
-	### CPU specific change ###
-        # Update the plot to insert new processes
-        if [ "$updates" -gt 0 ]; then
-                for i in $( seq 0 $((updates -1)) ); do
-			j=0
-			while [ 1 ]; do
-	                        if ( set -o noclobber; echo "$node_hostname" > "$DCRAB_LOCK_FILE") 2> /dev/null; then
-        	                        sed -i "$cpu_addRow_inject_line"'s|\[\([0-9]*\),|\[\1, ,|g' $DCRAB_HTML
-					sed -i "$cpu_addColumn_inject_line""s|^|cpu_data_$node_hostname_mod.addColumn('number', '${upd_proc_name[$i]}'); |" $DCRAB_HTML
-
-	                                # Remove lock file
-	                                rm -f "$DCRAB_LOCK_FILE"
-
-        	                        # Exit while
-	                                break
-	                        else
-        	                        echo "File $DCRAB_LOCK_FILE locked"
-					j=$((j+1))
-	                        fi
-
-				# To avoid block in the loop 
-	                        dcrab_check_exit 0
-
-	                        # Sleep a bit to take the lock in the next loop
-				echo "Sleeping for the lock ..."
-                        	sleep 1
-                	done
-                done
-        fi
-
-	### MEM specific change ###
-	# The main node must make the changes in the total memory plot
-	if [ "$DCRAB_NODE_NUMBER" -eq 0 ] && [ "$DCRAB_NNODES" -gt 1 ]; then
-		j=0
-		while [ 1 ]; do
-	               	if ( set -o noclobber; echo "$node_hostname" > "$DCRAB_LOCK_FILE") 2> /dev/null; then
-        	                sed -i "$memUnUsed_total_plot_line"'s|\([0-9]*[.]*[0-9]*\)\]|'"$total_notUtilizedMem"'\]|' $DCRAB_HTML
-                	        sed -i "$memUsed_total_plot_line"'s|\([0-9]*[.]*[0-9]*\)\]|'"$total_utilizedMem"'\]|' $DCRAB_HTML
-                        	sed -i "$mem_total_plot_VmRSS_text_line"'s|\([0-9]*[.]*[0-9]*\) GB</td></tr>|'"$total_max_vmRSS"' GB</td></tr>|' $DCRAB_HTML
-	                        sed -i "$mem_total_plot_VmSize_text_line"'s|\([0-9]*[.]*[0-9]*\) GB</td></tr>|'"$total_max_vmSize"' GB</td></tr>|' $DCRAB_HTML
-
-                                # Remove lock file
-                                rm -f "$DCRAB_LOCK_FILE"
-
-                                # Exit while
-                                break
-                        else
-                                echo "File $DCRAB_LOCK_FILE locked"
-				j=$((j+1))
-                        fi
-			
-                        # To avoid block in the loop 
-                        dcrab_check_exit 0
-
-                        # Sleep a bit to take the lock in the next loop
-			echo "Sleeping for the lock ..."
-                        sleep 1
-                done
-	        if [ "$exceeded" -eq 1 ] && [ "$changed" -eq 0 ]; then
-			j=0
-			while [ 1 ]; do
-                                if ( set -o noclobber; echo "$node_hostname" > "$DCRAB_LOCK_FILE") 2> /dev/null; then
-                                        sed -i "$mem_total_options_color_line"'s/#3366CC/#ff0000/' $DCRAB_HTML
-
-                                        # Remove lock file
-                                        rm -f "$DCRAB_LOCK_FILE"
-
-                                        # Exit while
-                                        break
-                                else
-                                        echo "File $DCRAB_LOCK_FILE locked"	
-					j=$((j+1))
-                                fi
-				
-                                # To avoid block in the loop 
-                                dcrab_check_exit 0
-
-                                # Sleep a bit to take the lock in the next loop
-				echo "Sleeping for the lock ..."
-                                sleep 1
-                        done
-	                exceeded=0
-	                changed=1
-	        fi
-	fi
-
-	### Time specific change ###
-	if [ "$DCRAB_NODE_NUMBER" -eq 0 ]; then
-		j=0
-	        while [ 1 ]; do
-	                if ( set -o noclobber; echo "$node_hostname" > "$DCRAB_LOCK_FILE") 2> /dev/null; then
-				sed -i "$elapsedTime_text_line"'s|\([0-9]*:[0-9]*:[0-9]*:[0-9]*\)|'"$DCRAB_ELAPSED_TIME_TEXT"'|' $DCRAB_HTML
-				sed -i "$elapsedTime_plot_line"'s|\([0-9]*[.]*[0-9]*\)\]|'"$DCRAB_ELAPSED_TIME_VALUE"'\]|' $DCRAB_HTML
-                                sed -i "$remainingTime_plot_line"'s|\([0-9]*[.]*[0-9]*\)\]|'"$DCRAB_REMAINING_TIME_VALUE"'\]|' $DCRAB_HTML
-
-                                # Remove lock file
-                                rm -f "$DCRAB_LOCK_FILE"
-
-        	                # Exit while
-                                break
-                        else
-	                        echo "File $DCRAB_LOCK_FILE locked"
-				j=$((j+1))
-                        fi
-
-                        # To avoid block in the loop 
-                        dcrab_check_exit 0
-
-                        # Sleep a bit to take the lock in the next loop
-                        echo "Sleeping for the lock ..."
-                        sleep 1
-                done
-        fi	
-
-        # Write data 
-	j=0
-	while [ 1 ]; do
-                if ( set -o noclobber; echo "$node_hostname" > "$DCRAB_LOCK_FILE") 2> /dev/null; then
-			### CPU ###
-	                sed -i "$cpu_addRow_inject_line"'s/.*/&'"$cpu_data"'/' $DCRAB_HTML
-
-	                ### MEM ###
-	                sed -i "$mem_addRow_inject_line"'s/.*/&'"$mem_data"'/' $DCRAB_HTML
-	                sed -i "$memUnUsed_addRow_inject_line"'s|\([0-9]*[.]*[0-9]*\)\]|'"$notUtilizedMem"'\]|' $DCRAB_HTML
-	                sed -i "$memUsed_addRow_inject_line"'s|\([0-9]*[.]*[0-9]*\)\]|'"$utilizedMem"'\]|' $DCRAB_HTML
-	                sed -i "$mem_piePlot1_VmRSS_text_line"'s|\([0-9]*[.]*[0-9]*\) GB</td></tr>|'"$max_RSS_size"' GB</td></tr>|' $DCRAB_HTML
-	                sed -i "$mem_piePlot1_VmSize_text_line"'s|\([0-9]*[.]*[0-9]*\) GB</td></tr>|'"$max_vmSize"' GB</td></tr>|' $DCRAB_HTML
-
-        	        # IB 
-	                sed -i "$ib_addRow_inject_line"'s/.*/&'"$ib_data"'/' $DCRAB_HTML
-			
-			# PROCESSES_IO
-			sed -i "$processesIO_data_line"'s/.*/&'"$processesIO_data"'/' $DCRAB_HTML
-			sed -i "$processesIO_total_read_line"'s|\([0-9]*[.]*[0-9]*\) '"$processesIO_last_total_read_value"'</td></tr>|'"$processesIO_total_read_reduced $processesIO_total_read_value"'</td></tr>|' $DCRAB_HTML
-			sed -i "$processesIO_total_write_line"'s|\([0-9]*[.]*[0-9]*\) '"$processesIO_last_total_write_value"'</td></tr>|'"$processesIO_total_write_reduced $processesIO_total_write_value"'</td></tr>|' $DCRAB_HTML
-			
-                        # NFS
-                        sed -i "$nfs_data_line"'s/.*/&'"$nfs_data"'/' $DCRAB_HTML
-                        sed -i "$nfs_total_read_line"'s|\([0-9]*[.]*[0-9]*\) '"$nfs_last_total_read_value"'</td></tr>|'"$nfs_total_read_reduced $nfs_total_read_value"'</td></tr>|' $DCRAB_HTML
-                        sed -i "$nfs_total_write_line"'s|\([0-9]*[.]*[0-9]*\) '"$nfs_last_total_write_value"'</td></tr>|'"$nfs_total_write_reduced $nfs_total_write_value"'</td></tr>|' $DCRAB_HTML
-		
-			# DISK
-			sed -i "$disk_data_line"'s/.*/'"$disk_data"'/' $DCRAB_HTML
-
-                	# Remove lock file
-		        rm -f "$DCRAB_LOCK_FILE"
-
-        	        # Exit while
-                	break
-                else
-        	        echo "File $DCRAB_LOCK_FILE locked"
-			j=$((j+1))
-                fi
-
-                # To avoid block in the loop 
-                dcrab_check_exit 0
-
-                # Sleep a bit to take the lock in the next loop
-		echo "Sleeping for the lock ..."
-	        sleep 1
-        done
-}
-
+#
+# Collects memory data 
+#
 dcrab_collect_mem_data () {
 
 	# Store the data of all the processes 
@@ -568,6 +303,10 @@ dcrab_collect_mem_data () {
 	mem_data="$mem_data""$node_total_mem, $DCRAB_REQ_MEM, $max_RSS_size, $vmSize, $vmRSS ],"
 }
 
+
+#
+# Collects Infiniband statistics of the node 
+#
 dcrab_collect_ib_data () {
 
         new_ib_xmit_pck_value=$(cat $DCRAB_IB_XMIT_PACK)
@@ -587,6 +326,10 @@ dcrab_collect_ib_data () {
 	ib_rcv_data_value=$new_ib_rcv_data_value
 }
 
+
+#
+# Collects the time elapsed of the job and formts it 
+#
 dcrab_format_time () {
 	
 	DCRAB_ELAPSED_TIME_TEXT=""
@@ -611,6 +354,10 @@ dcrab_format_time () {
 	fi
 }
 
+
+#
+# Collects the IO made by the processes involved in the execution
+#
 dcrab_collect_processesIO_data () {
 
 	#
@@ -723,6 +470,10 @@ dcrab_collect_processesIO_data () {
 	esac
 }
 
+
+#
+# Collects the NFS IO made by the node 
+#
 dcrab_collect_nfs_data () {
 
 	nfs_new_read=$(mountstats --nfs $nfs_mount_path | grep "applications read" | grep "via read(2)" | awk '{print $3}' )
@@ -771,6 +522,10 @@ dcrab_collect_nfs_data () {
 	nfs_write=$nfs_new_write
 }
 
+
+#
+# Collects IO made in the node disks
+#
 dcrab_collect_disk_data () {
 
 	# Collect IO disk stats
@@ -797,10 +552,19 @@ dcrab_collect_disk_data () {
 	done < <(cat /proc/diskstats)
 }
 
+
+#
+# Collects Beegfs statistics (no created yet)
+#
 dcrab_collect_beegfs_data () {
 	echo " "
 }
 
+
+#
+# Determines the main processes of the job which will be used to find the rest of the processes involved in the execution (because they will main processes childs).
+# Also initializes the first time the html report.
+#
 dcrab_determine_main_process () {
 
         # CPU
@@ -937,9 +701,14 @@ dcrab_determine_main_process () {
 	# DISK data
 	dcrab_collect_disk_data
 
-	write_data 	
+	dcrab_write_data 	
 }
 
+
+#
+# The main funtion to collect data every loop. Collect different information per process and sometimes of the entire node.
+# Also checks if there are new processes involved in the calculation and adds them onto the charts. 
+#
 dcrab_update_data () {
 	
         # Init. variables

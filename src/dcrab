@@ -1,12 +1,12 @@
 #!/bin/bash
 # DCRAB SOFTWARE
-# Version: 1.0
+# Version: 2.0
 # Autor: CC-staff
 # Donostia International Physics Center
 #
 # ===============================================================================================================
 #
-# DCRAB main script which will start or finish the monitorization
+# DCRAB main script 
 #
 # ===============================================================================================================
 
@@ -14,11 +14,14 @@
 # Check if binary path is defined
 if [ -z "$DCRAB_BIN" ]; then
     echo "ERROR: DCRAB_BIN undefined"
-    exit
+    exit 
 fi
 
 # Configuration functions
 source $DCRAB_BIN/scripts/dcrab_config.sh
+
+# Report functions
+source $DCRAB_BIN/scripts/dcrab_report_functions.sh
 
 # Check arguments
 case "$1" in
@@ -28,21 +31,18 @@ case "$1" in
 		# Check which scheduler use the system
 		dcrab_check_scheduler
 
+		# Init environment
 		dcrab_init_variables
 
  		# Move to working directory
                 cd $DCRAB_WORKDIR
-	
-		# Create report and log directories 
 		mkdir -p $DCRAB_REPORT_DIR/log
 
                 # Initialize log report of the main node
 		echo "--- DCRAB main-node: `hostname` log ---" >> $DCRAB_LOG_DIR/dcrab.log
 
-        	# Initialize dcrab report
-		dcrab_start_report_files >> $DCRAB_LOG_DIR/dcrab.log 2>&1 
-
-		export DCRAB_START_TIMESTAMP=`date +"%s"`
+		# Create report files
+		dcrab_create_report_files >> $DCRAB_LOG_DIR/dcrab.log 2>&1 
 
 		# Launch processes in each node to collect data
 		dcrab_start_data_collection  >> $DCRAB_LOG_DIR/dcrab.log 2>&1
@@ -67,6 +67,9 @@ case "$1" in
 		echo "--- End DCRAB output (finish fase) ---"
             	;;
 
+	version)
+		cat $DCRAB_BIN/../config/version
+		;;
         *)
 		echo "DCRAB report help"
 		echo "Developed by DIPC Fundation, CC-staff"
@@ -74,8 +77,9 @@ case "$1" in
                 echo $"Usage: $0 {start|finish}"
 		echo ""
 		echo "Summary:"
-		echo "    * start 		| starts DCRAB report"
-		echo "    * finish 		| finalize data collection and DCRAB processes"
+		echo "    * start          | starts DCRAB report"
+		echo "    * finish         | finalize data collection and DCRAB processes"
+		echo "    * version        | displays DCRAB version"
 		echo ""
             	exit 1
 esac

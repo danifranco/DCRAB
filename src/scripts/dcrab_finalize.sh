@@ -1,18 +1,21 @@
 #!/bin/bash
 # DCRAB SOFTWARE
-# Version: 1.0
+# Version: 2.0
 # Autor: CC-staff
 # Donostia International Physics Center
 #
 # ===============================================================================================================
 #
-# This script contains the functions to be done in the finalization of DCRAB. Used in DCRAB main script.
+# This script contains the functions to stop DCRAB
 #
 # Do NOT execute manually. DCRAB will use it automatically.
 #
 # ===============================================================================================================
 
 
+#
+# Stops DCRAB monitoring script in the nodes involved in the execution
+#
 dcrab_stop_remote_processes () {
 	# Kill remote remora processes running in background
 	i=0
@@ -25,4 +28,61 @@ dcrab_stop_remote_processes () {
 	        ssh -f $node "$COMMAND"
 	        i=$((i+1))
 	done
+}
+
+
+#
+# Checks exit status in different situations
+# Arguments:
+#	1- Int --> With '0' checks exit conditions while the script tries to take the lock 
+#		   With '1' checks exit conditions for the main loop of the monitoring script in the nodes  
+#
+dcrab_check_exit () {
+
+        case $1 in
+        0)
+                # To avoid block in the loop when the number of attemps is greater than a certain value 
+                if [ "$j" -ge "$DCRAB_LOOP_BEFORE_CRASH" ]; then
+                        echo "ERROR in $node_hostname: too many attemps of locking the main html report" >> $DCRAB_WORKDIR/DCRAB_ERROR_$node_hostname_$DCRAB_JOB_ID
+                        echo "DCRAB stop" >> $DCRAB_WORKDIR/DCRAB_ERROR_"$node_hostname"_"$DCRAB_JOB_ID"
+                        exit 1
+                # Finish if the report directory has been removed or moved
+                elif [ ! -d "$DCRAB_REPORT_DIR" ]; then
+                        echo "ERROR in $node_hostname: DCRAB directory has been deleted or moved" >> $DCRAB_WORKDIR/DCRAB_ERROR_$node_hostname_$DCRAB_JOB_ID
+                        echo "DCRAB stop" >> $DCRAB_WORKDIR/DCRAB_ERROR_"$node_hostname"_"$DCRAB_JOB_ID"
+                        exit 2
+                fi
+        ;;
+        1)
+                # Finish DCRAB if the main process has finished. This avoids DCRAB continues running if
+                # the scheduler kills the job before the execution of 'dcrab finish'
+                kill -0 $DCRAB_FIRST_MAIN_PROCESS_PID >> /dev/null 2>&1
+                if [ $? -ne 0 ]; then
+                        echo "DCRAB terminated: first main process '$DCRAB_FIRST_MAIN_PROCESS_NAME, PID: $DCRAB_FIRST_MAIN_PROCESS_PID' has been killed"
+                        echo "DCRAB stop" 
+                        exit 0
+                # Finish if the report directory has been removed or moved
+                elif [ ! -d "$DCRAB_REPORT_DIR" ]; then
+                        echo "ERROR in $node_hostname: DCRAB directory has been deleted or moved" >> $DCRAB_WORKDIR/DCRAB_ERROR_$node_hostname_$DCRAB_JOB_ID
+                        echo "DCRAB stop" >> $DCRAB_WORKDIR/DCRAB_ERROR_"$node_hostname"_"$DCRAB_JOB_ID"
+                        exit 2
+                fi
+        ;;
+        esac
+}
+
+
+#
+# Stops DCRAB execution
+#
+dcrab_finalize () {
+
+        # Restore environment
+        source $DCRAB_REPORT_DIR/aux/env.txt
+
+        # Load finalize functions
+        source $DCRAB_BIN/scripts/dcrab_finalize.sh
+
+        # Stop DCRAB processes  
+        dcrab_stop_remote_processes
 }
