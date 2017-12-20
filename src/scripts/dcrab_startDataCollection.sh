@@ -62,19 +62,7 @@ while [ 1 ]; do
 
 	# Sleep to the next data collection
         sleep $DCRAB_COLLECT_TIME
-		
-	# Finish DCRAB if the main process has finished. This avoids DCRAB continues running if
-	# the scheduler kills the job before the execution of 'dcrab finish'
-	kill -0 $DCRAB_FIRST_MAIN_PROCESS_PID >> /dev/null 2>&1
-	if [ $? -ne 0 ]; then
-		echo "DCRAB terminated. First main process '$DCRAB_FIRST_MAIN_PROCESS_NAME, PID: $DCRAB_FIRST_MAIN_PROCESS_PID' has been killed"
-		echo "DCRAB stop"
-		break
-	fi
 	
-	# Finish if the report directory has been removed or moved 	
-	if [ ! -d "$DCRAB_REPORT_DIR" ]; then
-		echo "$node_hostname: DCRAB directory has been deleted or moved. DCRAB stop." >> $DCRAB_WORKDIR/DCRAB_ERROR_$node_hostname_$DCRAB_JOB_ID
-		break
-	fi
+	# To avoid block in the loop 
+        dcrab_check_exit 1
 done

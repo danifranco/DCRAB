@@ -790,6 +790,6 @@ dcrab_init_variables () {
 	export DCRAB_USER_ID=`id -u $USER`
 	export DCRAB_HTML=$DCRAB_REPORT_DIR/dcrab_report.html
 	export DCRAB_HOST_OS=$(cat /etc/*release | head -1 | awk '{print $1}')
-	export DCRAB_LOCK_FILE=$DCRAB_REPORT_DIR/aux/.dcrab.lockfile
+	export DCRAB_LOCK_FILE=$DCRAB_REPORT_DIR/aux/dcrab.lockfile
 }
 
