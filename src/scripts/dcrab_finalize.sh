@@ -80,9 +80,6 @@ dcrab_finalize () {
         # Restore environment
         source $DCRAB_REPORT_DIR/aux/env.txt
 
-        # Load finalize functions
-        source $DCRAB_BIN/scripts/dcrab_finalize.sh
-
         # Stop DCRAB processes  
         dcrab_stop_remote_processes
 }

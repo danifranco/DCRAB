@@ -17,16 +17,14 @@ if [ -z "$DCRAB_BIN" ]; then
     exit 
 fi
 
-# Configuration functions
-source $DCRAB_BIN/scripts/dcrab_config.sh
-
-# Report functions
-source $DCRAB_BIN/scripts/dcrab_report_functions.sh
-
 # Check arguments
 case "$1" in
 	start)
 		echo "--- Start DCRAB output (start fase) ---"
+
+		# Load necessary functions
+		source $DCRAB_BIN/scripts/dcrab_config.sh
+		source $DCRAB_BIN/scripts/dcrab_report_functions.sh
 
 		# Check which scheduler use the system
 		dcrab_check_scheduler
@@ -52,6 +50,10 @@ case "$1" in
 	finish)
 		echo "--- Start DCRAB output (finish fase) ---"
 		
+		# Load necessary functions
+	        source $DCRAB_BIN/scripts/dcrab_finalize.sh
+		source $DCRAB_BIN/scripts/dcrab_config.sh
+
 		# Check which scheduler use the system
                 dcrab_check_scheduler
 
@@ -74,7 +76,7 @@ case "$1" in
 		echo "DCRAB report help"
 		echo "Developed by DIPC Fundation, CC-staff"
 		echo ""
-                echo $"Usage: $0 {start|finish}"
+                echo $"Usage: $0 {start|finish|version}"
 		echo ""
 		echo "Summary:"
 		echo "    * start          | starts DCRAB report"
