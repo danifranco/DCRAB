@@ -43,13 +43,13 @@ dcrab_check_exit () {
         0)
                 # To avoid block in the loop when the number of attemps is greater than a certain value 
                 if [ "$j" -ge "$DCRAB_LOOP_BEFORE_CRASH" ]; then
-                        echo "ERROR in $node_hostname: too many attemps of locking the main html report" >> $DCRAB_WORKDIR/DCRAB_ERROR_$node_hostname_$DCRAB_JOB_ID
-                        echo "DCRAB stop" >> $DCRAB_WORKDIR/DCRAB_ERROR_"$node_hostname"_"$DCRAB_JOB_ID"
+                        echo "ERROR in $DCRAB_NODE_HOSTNAME: too many attemps of locking the main html report" >> $DCRAB_WORKDIR/DCRAB_ERROR_$DCRAB_NODE_HOSTNAME_$DCRAB_JOB_ID
+                        echo "DCRAB stop" >> $DCRAB_WORKDIR/DCRAB_ERROR_"$DCRAB_NODE_HOSTNAME"_"$DCRAB_JOB_ID"
                         exit 1
                 # Finish if the report directory has been removed or moved
                 elif [ ! -d "$DCRAB_REPORT_DIR" ]; then
-                        echo "ERROR in $node_hostname: DCRAB directory has been deleted or moved" >> $DCRAB_WORKDIR/DCRAB_ERROR_$node_hostname_$DCRAB_JOB_ID
-                        echo "DCRAB stop" >> $DCRAB_WORKDIR/DCRAB_ERROR_"$node_hostname"_"$DCRAB_JOB_ID"
+                        echo "ERROR in $DCRAB_NODE_HOSTNAME: DCRAB directory has been deleted or moved" >> $DCRAB_WORKDIR/DCRAB_ERROR_$DCRAB_NODE_HOSTNAME_$DCRAB_JOB_ID
+                        echo "DCRAB stop" >> $DCRAB_WORKDIR/DCRAB_ERROR_"$DCRAB_NODE_HOSTNAME"_"$DCRAB_JOB_ID"
                         exit 2
                 fi
         ;;
@@ -63,8 +63,8 @@ dcrab_check_exit () {
                         exit 0
                 # Finish if the report directory has been removed or moved
                 elif [ ! -d "$DCRAB_REPORT_DIR" ]; then
-                        echo "ERROR in $node_hostname: DCRAB directory has been deleted or moved" >> $DCRAB_WORKDIR/DCRAB_ERROR_$node_hostname_$DCRAB_JOB_ID
-                        echo "DCRAB stop" >> $DCRAB_WORKDIR/DCRAB_ERROR_"$node_hostname"_"$DCRAB_JOB_ID"
+                        echo "ERROR in $DCRAB_NODE_HOSTNAME: DCRAB directory has been deleted or moved" >> $DCRAB_WORKDIR/DCRAB_ERROR_$DCRAB_NODE_HOSTNAME_$DCRAB_JOB_ID
+                        echo "DCRAB stop" >> $DCRAB_WORKDIR/DCRAB_ERROR_"$DCRAB_NODE_HOSTNAME"_"$DCRAB_JOB_ID"
                         exit 2
                 fi
         ;;

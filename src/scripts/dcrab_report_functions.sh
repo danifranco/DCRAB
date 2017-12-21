@@ -19,10 +19,10 @@
 dcrab_write_initial_values () {
         j=0
         while [ 1 ]; do
-                if ( set -o noclobber; echo "$node_hostname" > "$DCRAB_LOCK_FILE") 2> /dev/null; then
-                        sed -i "$mem_piePlot1_nodeMemory_line"'s|\([0-9]\) GB|'"$node_total_mem"' GB|' $DCRAB_HTML
-                        sed -i "$mem_piePlot1_requestedMemory_line"'s|\([0-9]\) GB|'"$DCRAB_REQ_MEM"' GB|' $DCRAB_HTML
-                        sed -i "$reqTime_text_line"'s|00:00:00:00|'"$DCRAB_REQ_TIME"'|' $DCRAB_HTML
+                if ( set -o noclobber; echo "$DCRAB_NODE_HOSTNAME" > "$DCRAB_LOCK_FILE") 2> /dev/null; then
+                        sed -i "$DCRAB_MEM3_L1"'s|\([0-9]\) GB|'"$DCRAB_NODE_TOTAL_MEM"' GB|' $DCRAB_HTML
+                        sed -i "$DCRAB_MEM3_L2"'s|\([0-9]\) GB|'"$DCRAB_REQ_MEM"' GB|' $DCRAB_HTML
+                        sed -i "$DCRAB_TIME_L2"'s|00:00:00:00|'"$DCRAB_REQ_TIME"'|' $DCRAB_HTML
 
                         # Remove lock file
                         rm -f "$DCRAB_LOCK_FILE"
@@ -45,8 +45,8 @@ dcrab_write_initial_values () {
         if [ "$DCRAB_NODE_NUMBER" -eq 0 ] && [ "$DCRAB_NNODES" -gt 1 ]; then
                 j=0
                 while [ 1 ]; do
-                        if ( set -o noclobber; echo "$node_hostname" > "$DCRAB_LOCK_FILE") 2> /dev/null; then
-                                sed -i "$mem_total_plot_requested_text_line"'s|\([0-9]*[.]*[0-9]*\) GB</td></tr>|'"$DCRAB_REQ_MEM"' GB</td></tr>|' $DCRAB_HTML
+                        if ( set -o noclobber; echo "$DCRAB_NODE_HOSTNAME" > "$DCRAB_LOCK_FILE") 2> /dev/null; then
+                                sed -i "$DCRAB_MEM_TOTAL_TEXT_L1"'s|\([0-9]*[.]*[0-9]*\) GB</td></tr>|'"$DCRAB_REQ_MEM"' GB</td></tr>|' $DCRAB_HTML
 
                                 # Remove lock file
                                 rm -f "$DCRAB_LOCK_FILE"
@@ -69,8 +69,8 @@ dcrab_write_initial_values () {
 
         # Insert devices in disk chart
         while [ 1 ]; do
-                if ( set -o noclobber; echo "$node_hostname" > "$DCRAB_LOCK_FILE") 2> /dev/null; then
-                        sed -i "$disk_data_firstLine"'s|^|'"$disk_data_firstLine_string"'|' $DCRAB_HTML
+                if ( set -o noclobber; echo "$DCRAB_NODE_HOSTNAME" > "$DCRAB_LOCK_FILE") 2> /dev/null; then
+                        sed -i "$DCRAB_DISK_L1"'s|^|'"$DCRAB_DISK_L1_STRING"'|' $DCRAB_HTML
 
                         # Remove lock file
                         rm -f "$DCRAB_LOCK_FILE"
@@ -98,13 +98,13 @@ dcrab_write_initial_values () {
 dcrab_write_data () {
         ### CPU specific change ###
         # Update the plot to insert new processes
-        if [ "$updates" -gt 0 ]; then
-                for i in $( seq 0 $((updates -1)) ); do
+        if [ "$DCRAB_CPU_UPDATES" -gt 0 ]; then
+                for i in $( seq 0 $((DCRAB_CPU_UPDATES -1)) ); do
                         j=0
                         while [ 1 ]; do
-                                if ( set -o noclobber; echo "$node_hostname" > "$DCRAB_LOCK_FILE") 2> /dev/null; then
-                                        sed -i "$cpu_addRow_inject_line"'s|\[\([0-9]*\),|\[\1, ,|g' $DCRAB_HTML
-                                        sed -i "$cpu_addColumn_inject_line""s|^|cpu_data_$node_hostname_mod.addColumn('number', '${upd_proc_name[$i]}'); |" $DCRAB_HTML
+                                if ( set -o noclobber; echo "$DCRAB_NODE_HOSTNAME" > "$DCRAB_LOCK_FILE") 2> /dev/null; then
+					sed -i "$DCRAB_CPU_L1""s|^|cpu_data_$DCRAB_NODE_HOSTNAME_MOD.addColumn('number', '${DCRAB_CPU_UPD_PROC_NAME[$i]}'); |" $DCRAB_HTML
+                                        sed -i "$DCRAB_CPU_L2"'s|\[\([0-9]*\),|\[\1, ,|g' $DCRAB_HTML
 
                                         # Remove lock file
                                         rm -f "$DCRAB_LOCK_FILE"
@@ -131,11 +131,11 @@ dcrab_write_data () {
         if [ "$DCRAB_NODE_NUMBER" -eq 0 ] && [ "$DCRAB_NNODES" -gt 1 ]; then
                 j=0
                 while [ 1 ]; do
-                        if ( set -o noclobber; echo "$node_hostname" > "$DCRAB_LOCK_FILE") 2> /dev/null; then
-                                sed -i "$memUnUsed_total_plot_line"'s|\([0-9]*[.]*[0-9]*\)\]|'"$total_notUtilizedMem"'\]|' $DCRAB_HTML
-                                sed -i "$memUsed_total_plot_line"'s|\([0-9]*[.]*[0-9]*\)\]|'"$total_utilizedMem"'\]|' $DCRAB_HTML
-                                sed -i "$mem_total_plot_VmRSS_text_line"'s|\([0-9]*[.]*[0-9]*\) GB</td></tr>|'"$total_max_vmRSS"' GB</td></tr>|' $DCRAB_HTML
-                                sed -i "$mem_total_plot_VmSize_text_line"'s|\([0-9]*[.]*[0-9]*\) GB</td></tr>|'"$total_max_vmSize"' GB</td></tr>|' $DCRAB_HTML
+                        if ( set -o noclobber; echo "$DCRAB_NODE_HOSTNAME" > "$DCRAB_LOCK_FILE") 2> /dev/null; then
+                                sed -i "$DCRAB_MEM_TOTAL_L2"'s|\([0-9]*[.]*[0-9]*\)\]|'"$total_notUtilizedMem"'\]|' $DCRAB_HTML
+                                sed -i "$DCRAB_MEM_TOTAL_L1"'s|\([0-9]*[.]*[0-9]*\)\]|'"$total_utilizedMem"'\]|' $DCRAB_HTML
+                                sed -i "$DCRAB_MEM_TOTAL_TEXT_L2"'s|\([0-9]*[.]*[0-9]*\) GB</td></tr>|'"$DCRAB_MEM_TOTAL_MAX_VMRSS"' GB</td></tr>|' $DCRAB_HTML
+                                sed -i "$DCRAB_MEM_TOTAL_TEXT_L3"'s|\([0-9]*[.]*[0-9]*\) GB</td></tr>|'"$DCRAB_MEM_TOTAL_VMSIZE"' GB</td></tr>|' $DCRAB_HTML
 
                                 # Remove lock file
                                 rm -f "$DCRAB_LOCK_FILE"
@@ -157,8 +157,8 @@ dcrab_write_data () {
                  if [ "$exceeded" -eq 1 ] && [ "$changed" -eq 0 ]; then
                         j=0
                         while [ 1 ]; do
-                                if ( set -o noclobber; echo "$node_hostname" > "$DCRAB_LOCK_FILE") 2> /dev/null; then
-                                        sed -i "$mem_total_options_color_line"'s/#3366CC/#ff0000/' $DCRAB_HTML
+                                if ( set -o noclobber; echo "$DCRAB_NODE_HOSTNAME" > "$DCRAB_LOCK_FILE") 2> /dev/null; then
+                                        sed -i "$DCRAB_MEM_TOTAL_COLOR_BASELINE"'s/#3366CC/#ff0000/' $DCRAB_HTML
 
                                         # Remove lock file
                                         rm -f "$DCRAB_LOCK_FILE"
@@ -186,8 +186,8 @@ dcrab_write_data () {
         if [ "$DCRAB_NODE_NUMBER" -eq 0 ]; then
                 j=0
                 while [ 1 ]; do
-                        if ( set -o noclobber; echo "$node_hostname" > "$DCRAB_LOCK_FILE") 2> /dev/null; then
-                                sed -i "$elapsedTime_text_line"'s|\([0-9]*:[0-9]*:[0-9]*:[0-9]*\)|'"$DCRAB_ELAPSED_TIME_TEXT"'|' $DCRAB_HTML
+                        if ( set -o noclobber; echo "$DCRAB_NODE_HOSTNAME" > "$DCRAB_LOCK_FILE") 2> /dev/null; then
+                                sed -i "$DCRAB_TIME_L1"'s|\([0-9]*:[0-9]*:[0-9]*:[0-9]*\)|'"$DCRAB_ELAPSED_TIME_TEXT"'|' $DCRAB_HTML
                                 sed -i "$elapsedTime_plot_line"'s|\([0-9]*[.]*[0-9]*\)\]|'"$DCRAB_ELAPSED_TIME_VALUE"'\]|' $DCRAB_HTML
                                 sed -i "$remainingTime_plot_line"'s|\([0-9]*[.]*[0-9]*\)\]|'"$DCRAB_REMAINING_TIME_VALUE"'\]|' $DCRAB_HTML
 
@@ -213,32 +213,32 @@ dcrab_write_data () {
         # Write data 
         j=0
         while [ 1 ]; do
-                if ( set -o noclobber; echo "$node_hostname" > "$DCRAB_LOCK_FILE") 2> /dev/null; then
+                if ( set -o noclobber; echo "$DCRAB_NODE_HOSTNAME" > "$DCRAB_LOCK_FILE") 2> /dev/null; then
                         ### CPU ###
-                        sed -i "$cpu_addRow_inject_line"'s/.*/&'"$cpu_data"'/' $DCRAB_HTML
+                        sed -i "$DCRAB_CPU_L2"'s/.*/&'"$DCRAB_CPU_DATA"'/' $DCRAB_HTML
 
                         ### MEM ###
-                        sed -i "$mem_addRow_inject_line"'s/.*/&'"$mem_data"'/' $DCRAB_HTML
-                        sed -i "$memUnUsed_addRow_inject_line"'s|\([0-9]*[.]*[0-9]*\)\]|'"$notUtilizedMem"'\]|' $DCRAB_HTML
-                        sed -i "$memUsed_addRow_inject_line"'s|\([0-9]*[.]*[0-9]*\)\]|'"$utilizedMem"'\]|' $DCRAB_HTML
-                        sed -i "$mem_piePlot1_VmRSS_text_line"'s|\([0-9]*[.]*[0-9]*\) GB</td></tr>|'"$max_RSS_size"' GB</td></tr>|' $DCRAB_HTML
-                        sed -i "$mem_piePlot1_VmSize_text_line"'s|\([0-9]*[.]*[0-9]*\) GB</td></tr>|'"$max_vmSize"' GB</td></tr>|' $DCRAB_HTML
+                        sed -i "$DCRAB_MEM1_L1"'s/.*/&'"$DCRAB_MEM_DATA"'/' $DCRAB_HTML
+                        sed -i "$DCRAB_MEM2_L2"'s|\([0-9]*[.]*[0-9]*\)\]|'"$notUtilizedMem"'\]|' $DCRAB_HTML
+                        sed -i "$DCRAB_MEM2_L1"'s|\([0-9]*[.]*[0-9]*\)\]|'"$utilizedMem"'\]|' $DCRAB_HTML
+                        sed -i "$DCRAB_MEM3_L3"'s|\([0-9]*[.]*[0-9]*\) GB</td></tr>|'"$max_RSS_size"' GB</td></tr>|' $DCRAB_HTML
+                        sed -i "$DCRAB_MEM3_L4"'s|\([0-9]*[.]*[0-9]*\) GB</td></tr>|'"$DCRAB_MEM3_VMSIZE"' GB</td></tr>|' $DCRAB_HTML
 
                         # IB 
-                        sed -i "$ib_addRow_inject_line"'s/.*/&'"$ib_data"'/' $DCRAB_HTML
+                        sed -i "$DCRAB_IB_L1"'s/.*/&'"$DCRAB_IB_DATA"'/' $DCRAB_HTML
 
                         # PROCESSES_IO
-                        sed -i "$processesIO_data_line"'s/.*/&'"$processesIO_data"'/' $DCRAB_HTML
-                        sed -i "$processesIO_total_read_line"'s|\([0-9]*[.]*[0-9]*\) '"$processesIO_last_total_read_value"'</td></tr>|'"$processesIO_total_read_reduced $processesIO_total_read_value"'</td></tr>|' $DCRAB_HTML
-                        sed -i "$processesIO_total_write_line"'s|\([0-9]*[.]*[0-9]*\) '"$processesIO_last_total_write_value"'</td></tr>|'"$processesIO_total_write_reduced $processesIO_total_write_value"'</td></tr>|' $DCRAB_HTML
+                        sed -i "$DCRAB_PROCESSESIO_L1"'s/.*/&'"$DCRAB_PROCESSESIO_DATA"'/' $DCRAB_HTML
+                        sed -i "$DCRAB_PROCESSESIO_TEXT_L1"'s|\([0-9]*[.]*[0-9]*\) '"$DCRAB_PROCESSESIO_TOTAL_LAST_READ_STRING"'</td></tr>|'"$DCRAB_PROCESSESIO_TOTAL_READ_REDUCED $DCRAB_PROCESSESIO_TOTAL_READ_STRING"'</td></tr>|' $DCRAB_HTML
+                        sed -i "$DCRAB_PROCESSESIO_TEXT_L2"'s|\([0-9]*[.]*[0-9]*\) '"$DCRAB_PROCESSESIO_TOTAL_LAST_WRITE_STRING"'</td></tr>|'"$DCRAB_PROCESSESIO_TOTAL_WRITE_REDUCED $DCRAB_PROCESSESIO_TOTAL_WRITE_STRING"'</td></tr>|' $DCRAB_HTML
 
                         # NFS
-                        sed -i "$nfs_data_line"'s/.*/&'"$nfs_data"'/' $DCRAB_HTML
-                        sed -i "$nfs_total_read_line"'s|\([0-9]*[.]*[0-9]*\) '"$nfs_last_total_read_value"'</td></tr>|'"$nfs_total_read_reduced $nfs_total_read_value"'</td></tr>|' $DCRAB_HTML
-                        sed -i "$nfs_total_write_line"'s|\([0-9]*[.]*[0-9]*\) '"$nfs_last_total_write_value"'</td></tr>|'"$nfs_total_write_reduced $nfs_total_write_value"'</td></tr>|' $DCRAB_HTML
+                        sed -i "$DCRAB_NFS_L1"'s/.*/&'"$DCRAB_NFS_DATA"'/' $DCRAB_HTML
+                        sed -i "$DCRAB_NFS_TEXT_L1"'s|\([0-9]*[.]*[0-9]*\) '"$DCRAB_NFS_TOTAL_LAST_READ_STRING"'</td></tr>|'"$DCRAB_NFS_TOTAL_READ_REDUCED $DCRAB_NFS_TOTAL_READ_STRING"'</td></tr>|' $DCRAB_HTML
+                        sed -i "$DCRAB_NFS_TEXT_L2"'s|\([0-9]*[.]*[0-9]*\) '"$DCRAB_NFS_TOTAL_LAST_WRITE_STRING"'</td></tr>|'"$DCRAB_NFS_TOTAL_WRITE_REDUCED $DCRAB_NFS_TOTAL_WRITE_STRING"'</td></tr>|' $DCRAB_HTML
 
                         # DISK
-                        sed -i "$disk_data_line"'s/.*/'"$disk_data"'/' $DCRAB_HTML
+                        sed -i "$DCRAB_DISK_L2"'s/.*/'"$disk_data"'/' $DCRAB_HTML
 
                         # Remove lock file
                         rm -f "$DCRAB_LOCK_FILE"
@@ -285,21 +285,11 @@ dcrab_generate_html () {
         # Data of each nodes
         for node in $DCRAB_NODES_MOD
         do
-                # Init plot variables
-                printf "%s \n" "var cpu_data_$node = new google.visualization.DataTable(); " >> $DCRAB_HTML
-                printf "%s \n" "cpu_data_$node.addColumn('number', 'Execution Time (s)');" >> $DCRAB_HTML
-                printf "%s \n" "var ib_data_$node = new google.visualization.DataTable(); " >> $DCRAB_HTML
-
-                # Space to insert data 
-                printf "%s \n" "/* $node addColumn space */" >> $DCRAB_HTML
-                printf "\n" >> $DCRAB_HTML
-                printf "%s \n" "/* $node addRow space */" >> $DCRAB_HTML
-
                 # CPU
-                printf "%s \n" "var cpu_$node = [" >> $DCRAB_HTML
+		printf "%s \n" "var cpu_$node = google.visualization.arrayToDataTable(["
+		printf "%s \n" "['Execution Time (s)']"
                 printf "\n"  >> $DCRAB_HTML
-                printf "%s \n" "];" >> $DCRAB_HTML
-                printf "%s \n" "cpu_data_$node.addRows(cpu_$node);" >> $DCRAB_HTML
+                printf "%s \n" "]);" >> $DCRAB_HTML
 
                 # MEM
                 printf "%s \n" "var mem1_$node = google.visualization.arrayToDataTable([" >> $DCRAB_HTML

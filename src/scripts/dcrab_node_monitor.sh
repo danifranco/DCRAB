@@ -53,7 +53,7 @@ updates=0
 while [ 1 ]; do
 
 	loopNumber=$((loopNumber + 1))	
-	echo "H: $node_hostname - loop $loopNumber" 
+	echo "H: $DCRAB_NODE_MONITOR - loop $loopNumber" 
 
 	# Update and collect data
 	dcrab_update_data 

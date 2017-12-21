@@ -23,8 +23,9 @@ dcrab_node_monitor_init_variables () {
 	# Host
 	DCRAB_NODE_NUMBER=$1
 	DCRAB_DCRAB_PID=$$
-	node_hostname=`hostname`
-	node_hostname_mod=`echo $node_hostname | sed 's|-||g'`
+	DCRAB_NODE_HOSTNAME=`hostname`
+	DCRAB_NODE_HOSTNAME_MOD=`echo $DCRAB_NODE_HOSTNAME | sed 's|-||g'`
+	DCRAB_NODE_TOTAL_MEM=`free -g | grep "Mem" | awk ' {printf $2}'`
 
 	# TIME 
 	DCRAB_WAIT_TIME_CONTROL=180 # 3 minutes
@@ -34,11 +35,11 @@ dcrab_node_monitor_init_variables () {
 	DCRAB_LOOP_BEFORE_CRASH=50
 
 	# Files and directories	
-	DCRAB_USER_PROCESSES_FILE=$DCRAB_REPORT_DIR/data/$node_hostname/user_processes
-	DCRAB_JOB_PROCESSES_FILE=$DCRAB_REPORT_DIR/data/$node_hostname/job_processes
-	DCRAB_JOB_CANDIDATE_PROCESSES_FILE=$DCRAB_REPORT_DIR/data/$node_hostname/job_candidate_processes
-	DCRAB_MEM_FILE=$DCRAB_REPORT_DIR/data/$node_hostname/mem
-	DCRAB_TOTAL_MEM_FILE=$DCRAB_REPORT_DIR/aux/mem/$node_hostname.txt
+	DCRAB_USER_PROCESSES_FILE=$DCRAB_REPORT_DIR/data/$DCRAB_NODE_HOSTNAME/user_processes
+	DCRAB_JOB_PROCESSES_FILE=$DCRAB_REPORT_DIR/data/$DCRAB_NODE_HOSTNAME/job_processes
+	DCRAB_JOB_CANDIDATE_PROCESSES_FILE=$DCRAB_REPORT_DIR/data/$DCRAB_NODE_HOSTNAME/job_candidate_processes
+	DCRAB_MEM_FILE=$DCRAB_REPORT_DIR/data/$DCRAB_NODE_HOSTNAME/mem
+	DCRAB_TOTAL_MEM_FILE=$DCRAB_REPORT_DIR/aux/mem/$DCRAB_NODE_HOSTNAME.txt
 	DCRAB_TOTAL_MEM_DIR=$DCRAB_REPORT_DIR/aux/mem/
 	if [ -d "/sys/class/infiniband/mlx5_0/ports/1/counters_ext/" ]; then
 		DCRAB_IB_BASE_DIR=/sys/class/infiniband/mlx5_0/ports/1/counters_ext
@@ -65,7 +66,7 @@ dcrab_node_monitor_init_variables () {
                 DCRAB_IB_RCV_PACK=$DCRAB_IB_BASE_DIR/port_rcv_packets_64
                 DCRAB_IB_RCV_DATA=$DCRAB_IB_BASE_DIR/port_rcv_data_64
 	fi
-	DCRAB_PROCESSES_IO_FILE=$DCRAB_REPORT_DIR/data/$node_hostname/processesIO
+	DCRAB_PROCESSES_IO_FILE=$DCRAB_REPORT_DIR/data/$DCRAB_NODE_HOSTNAME/processesIO
 
 	# PIDs
         DCRAB_MAIN_PIDS=0
@@ -78,72 +79,72 @@ dcrab_node_monitor_init_variables () {
         DCRAB_CONTROL_PORT_MAIN_NODE="none1"
         DCRAB_CONTROL_PORT_OTHER_NODE="none2"
 	
-	# Data insert lines
-	addRow_data_line=`grep -n -m 1 "\/\* $node_hostname_mod addRow space \*\/" $DCRAB_HTML | cut -f1 -d:`
-	addColumn_data_line=`grep -n -m 1 "\/\* $node_hostname_mod addColumn space \*\/" $DCRAB_HTML | cut -f1 -d:`
-	
 	# CPU
-	cpu_data=""
-	cpu_addRow_inject_line=$((addRow_data_line + 2))
-	cpu_addColumn_inject_line=$((addColumn_data_line + 1))
-	cpu_threshold="5.0"
-	updates=0
+	DCRAB_CPU_DATA=""
+	DCRAB_CPU_BASELINE=$(grep -n -m 1 "var cpu_$DCRAB_NODE_HOSTNAME_MOD" $DCRAB_HTML | cut -f1 -d:)		
+	DCRAB_CPU_L1=$((DCRAB_CPU_BASELINE + 1))
+	DCRAB_CPU_L2=$((DCRAB_CPU_BASELINE + 2))
+	DCRAB_CPU_THRESHOLD="5.0"
+	DCRAB_CPU_UPDATES=0
 
 	# MEM
-	mem_data=""
-	node_total_mem=`free -g | grep "Mem" | awk ' {printf $2}'`
-	# Area chart
-	mem_addRow_inject_line=$((addRow_data_line + 7))
-	# Pie chart
-	memUsed_addRow_inject_line=$((addRow_data_line + 11))
-	memUnUsed_addRow_inject_line=$((addRow_data_line + 12))
+	DCRAB_MEM_DATA=""
+	DCRAB_MEM1_BASELINE=$(grep -n -m 1 "var mem1_$DCRAB_NODE_HOSTNAME_MOD" $DCRAB_HTML | cut -f1 -d:)
+	DCRAB_MEM1_L1=$((DCRAB_MEM1_BASELINE + 2))
+	DCRAB_MEM2_BASELINE=$(grep -n -m 1 "var mem2_$DCRAB_NODE_HOSTNAME_MOD" $DCRAB_HTML | cut -f1 -d:)
+        DCRAB_MEM2_L1=$((DCRAB_MEM2_BASELINE + 2))
+	DCRAB_MEM2_L2=$((DCRAB_MEM2_BASELINE + 3))
 	# Total pie chart
 	if [ "$DCRAB_NODE_NUMBER" -eq 0 ] && [ "$DCRAB_NNODES" -gt 1 ]; then
-	        mem_total_plot_line=$(grep -n -m 1 "var total_mem" $DCRAB_HTML | cut -f1 -d:)
-	        memUsed_total_plot_line=$((mem_total_plot_line + 2))
-	        memUnUsed_total_plot_line=$((mem_total_plot_line + 3))
+		DCRAB_MEM_TOTAL_BASELINE=$(grep -n -m 1 "var total_mem" $DCRAB_HTML | cut -f1 -d:)
+		DCRAB_MEM_TOTAL_L1=$((DCRAB_MEM_TOTAL_BASELINE + 2))
+		DCRAB_MEM_TOTAL_L2=$((DCRAB_MEM_TOTAL_BASELINE + 3))
 	
-	        mem_total_plot_text_line=$(grep -n -m 1 "id='plot_total_mem'" $DCRAB_HTML | cut -f1 -d:)
-	        mem_total_plot_requested_text_line=$((mem_total_plot_text_line + 4))
-	        mem_total_plot_VmRSS_text_line=$((mem_total_plot_text_line + 5))
-	        mem_total_plot_VmSize_text_line=$((mem_total_plot_text_line + 6))
+		DCRAB_MEM_TOTAL_TEXT_BASELINE=$(grep -n -m 1 "id='plot_total_mem'" $DCRAB_HTML | cut -f1 -d:)
+		DCRAB_MEM_TOTAL_TEXT_L1=$((DCRAB_MEM_TOTAL_TEXT_BASELINE + 4))
+		DCRAB_MEM_TOTAL_TEXT_L2=$((DCRAB_MEM_TOTAL_TEXT_BASELINE + 5))
+		DCRAB_MEM_TOTAL_TEXT_L3=$((DCRAB_MEM_TOTAL_TEXT_BASELINE + 6))
 	
-	        mem_total_options_color_line=$(grep -n -m 1 "var total_mem_options" $DCRAB_HTML | cut -f1 -d:)
-	        mem_total_options_color_line=$((mem_total_options_color_line + 4))
+		DCRAB_MEM_TOTAL_COLOR_BASELINE=$(grep -n -m 1 "var total_mem_options" $DCRAB_HTML | cut -f1 -d:)
+		DCRAB_MEM_TOTAL_COLOR_BASELINE=$((DCRAB_MEM_TOTAL_COLOR_BASELINE + 4))
 
-		total_max_vmSize=0
-	        total_max_vmRSS=0
-        	total_vmSize=0
-	        total_vmRSS=0
-		exceeded=0
-	        changed=0
-
+		DCRAB_MEM_TOTAL_MAX_VMSIZE=0
+		DCRAB_MEM_TOTAL_MAX_VMRSS=0
+		DCRAB_MEM_TOTAL_VMSIZE=0
+		DCRAB_MEM_TOTAL_VMRSS=0
+		DCRAB_MEM_TOTAL_EXCEEDED=0
 	fi
 	# Pie table text
-	mem_piePlot1_div_line=$(grep -n -m 1 "id='plot1_mem_$node_hostname_mod" $DCRAB_HTML | cut -f1 -d:)
-	mem_piePlot1_nodeMemory_line=$((mem_piePlot1_div_line + 4))
-	mem_piePlot1_requestedMemory_line=$((mem_piePlot1_div_line + 5))
-	mem_piePlot1_VmRSS_text_line=$((mem_piePlot1_div_line + 6))
-	mem_piePlot1_VmSize_text_line=$((mem_piePlot1_div_line + 7))
-        max_RSS_size=0
-        max_vmSize=0
+	DCRAB_MEM3_BASELINE=$(grep -n -m 1 "id='plot1_mem_$DCRAB_NODE_HOSTNAME_MOD" $DCRAB_HTML | cut -f1 -d:)
+	DCRAB_MEM3_L1=$((DCRAB_MEM3_BASELINE + 4))
+	DCRAB_MEM3_L2=$((DCRAB_MEM3_BASELINE + 5))
+	DCRAB_MEM3_L3=$((DCRAB_MEM3_BASELINE + 6))
+	DCRAB_MEM3_L4=$((DCRAB_MEM3_BASELINE + 7))
+	DCRAB_MEM3_MAX_VMRSS=0
+	DCRAB_MEM3_VMSIZE=0
 
 	# IB
-        ib_data=""
-        ib_addRow_inject_line=$((addRow_data_line + 16))
-	ib_xmit_pck_value=$(cat $DCRAB_IB_XMIT_PACK)
-        ib_xmit_data_value=$(cat $DCRAB_IB_XMIT_DATA)
-        ib_rcv_pck_value=$(cat $DCRAB_IB_RCV_PACK)
-        ib_rcv_data_value=$(cat $DCRAB_IB_RCV_DATA)
+	DCRAB_IB_DATA=""
+	DCRAB_IB_BASELINE=$(grep -n -m 1 "var ib_data_$DCRAB_NODE_HOSTNAME_MOD" $DCRAB_HTML | cut -f1 -d:)
+	DCRAB_IB_L1=$((DCRAB_IB_BASELINE + 2))
+	DCRAB_IB_XMIT_PCK_VALUE=$(cat $DCRAB_IB_XMIT_PACK)
+	DCRAB_IB_XMIT_DATA_VALUE=$(cat $DCRAB_IB_XMIT_DATA)
+	DCRAB_IB_RCV_PCK_VALUE=$(cat $DCRAB_IB_RCV_PACK)
+	DCRAB_IB_RCV_DATA_VALUE=$(cat $DCRAB_IB_RCV_DATA)
+	DCRAB_IB_NEW_XMIT_PCK_VALUE=0
+	DCRAB_IB_NEW_XMIT_DATA_VALUE=0
+	DCRAB_IB_NEW_RCV_PCK_VALUE=0
+	DCRAB_IB_NEW_RCV_DATA_VALUE=0
 	
 	# TIME
-	time_data_line=$(grep -n -m 1 "var time_data" $DCRAB_HTML | cut -f1 -d:)
-	elapsedTime_plot_line=$((time_data_line + 2))
-        remainingTime_plot_line=$((time_data_line + 3))
-	time_data_text=$(grep -n -m 1 "Elapsed Time (DD:HH:MM:SS)" $DCRAB_HTML | cut -f1 -d:)
-	elapsedTime_text_line=$((time_data_text + 1))
-	reqTime_text_line=$((time_data_text + 3))
+	DCRAB_TIME_BASELINE=$(grep -n -m 1 "var time_data" $DCRAB_HTML | cut -f1 -d:)
+	DCRAB_TIME_L1=$((DCRAB_TIME_BASELINE + 2))
+	DCRAB_TIME_L2=$((DCRAB_TIME_BASELINE + 3))
+	DCRAB_TIME_TEXT_BASELINE=$(grep -n -m 1 "Elapsed Time (DD:HH:MM:SS)" $DCRAB_HTML | cut -f1 -d:)
+	DCRAB_TIME_L1=$((DCRAB_TIME_TEXT_BASELINE + 1))
+        DCRAB_TIME_L2=$((DCRAB_TIME_TEXT_BASELINE + 3)) 
 	DCRAB_ELAPSED_TIME_TEXT="00:00:00:00"	
+	# Time format 	
 	local h=$(echo "$DCRAB_REQ_CPUT" | cut -d':' -f1)
 	local m=$(echo "$DCRAB_REQ_CPUT" | cut -d':' -f2)
 	local s=$(echo "$DCRAB_REQ_CPUT" | cut -d':' -f3)
@@ -163,69 +164,75 @@ dcrab_node_monitor_init_variables () {
 	[[ "$time_req_per_node" -gt 9 ]] && DCRAB_REQ_TIME="$DCRAB_REQ_TIME:$time_req_per_node" || DCRAB_REQ_TIME="$DCRAB_REQ_TIME:0$time_req_per_node"
 
 	# PROCESSES_IO
-	processesIO_data=""
-	processesIO_total_read=0
-	processesIO_total_write=0
-	processesIO_total_read_reduced=0
-	processesIO_total_write_reduced=0
-	processesIO_total_read_value="MB"
-	processesIO_total_write_value="MB"
-	processesIO_last_total_read_value="MB"
-	processesIO_last_total_write_value="MB"
-	processesIO_data_line=$(grep -n -m 1 "var processesIO_data_$node_hostname_mod" $DCRAB_HTML | cut -f1 -d:)
-	processesIO_data_line=$((processesIO_data_line + 2))
-	processesIO_text_baseline=$(grep -n -m 1 "id='plot_processesIO_$node_hostname_mod" $DCRAB_HTML | cut -f1 -d:)
-	processesIO_total_read_line=$((processesIO_text_baseline + 5))
-	processesIO_total_write_line=$((processesIO_text_baseline + 7))	
+	DCRAB_PROCESSESIO_DATA=""
+	DCRAB_PROCESSESIO_TOTAL_READ=0
+	DCRAB_PROCESSESIO_TOTAL_WRITE=0
+	DCRAB_PROCESSESIO_PARTIAL_READ=0
+	DCRAB_PROCESSESIO_PARTIAL_WRITE=0
+	DCRAB_PROCESSESIO_TOTAL_READ_REDUCED=0
+	DCRAB_PROCESSESIO_TOTAL_WRITE_REDUCED=0
+	DCRAB_PROCESSESIO_TOTAL_READ_STRING="MB"
+	DCRAB_PROCESSESIO_TOTAL_WRITE_STRING="MB"
+	DCRAB_PROCESSESIO_TOTAL_LAST_READ_STRING="MB"
+	DCRAB_PROCESSESIO_TOTAL_LAST_WRITE_STRING="MB"
+	DCRAB_PROCESSESIO_BASELINE=$(grep -n -m 1 "var processesIO_data_$DCRAB_NODE_HOSTNAME_MOD" $DCRAB_HTML | cut -f1 -d:)
+	DCRAB_PROCESSESIO_L1=$((DCRAB_PROCESSESIO_BASELINE + 2))
+	DCRAB_PROCESSESIO_TEXT_BASELINE=$(grep -n -m 1 "id='plot_processesIO_$DCRAB_NODE_HOSTNAME_MOD" $DCRAB_HTML | cut -f1 -d:)
+	DCRAB_PROCESSESIO_TEXT_L1=$((DCRAB_PROCESSESIO_TEXT_BASELINE + 5))
+	DCRAB_PROCESSESIO_TEXT_L2=$((DCRAB_PROCESSESIO_TEXT_BASELINE + 7))
 	
 	# NFS
-	nfs_mount_path="/home"
-	nfs_data_line=$(grep -n -m 1 "var nfs_data_$node_hostname_mod" $DCRAB_HTML | cut -f1 -d:)
-        nfs_data_line=$((nfs_data_line + 2))
-	nfs_text_baseline=$(grep -n -m 1 "id='plot_nfs_$node_hostname_mod" $DCRAB_HTML | cut -f1 -d:)
-        nfs_total_read_line=$((nfs_text_baseline + 5))
-        nfs_total_write_line=$((nfs_text_baseline + 7))
-        nfs_read=$(mountstats --nfs $nfs_mount_path | grep "applications read" | grep "via read(2)" | awk '{print $3}' )
-        nfs_write=$(mountstats --nfs $nfs_mount_path | grep "applications wrote" | grep "via write(2)" | awk '{print $3}' )
-	nfs_total_read=0
-	nfs_total_write=0
-	nfs_total_read_value="MB"
-        nfs_total_write_value="MB"
-        nfs_last_total_read_value="MB"
-        nfs_last_total_write_value="MB"
+	DCRAB_NFS_DATA=""
+	DCRAB_NFS_MOUNT_PATH="/home"
+	DCRAB_NFS_BASELINE=$(grep -n -m 1 "var nfs_data_$DCRAB_NODE_HOSTNAME_MOD" $DCRAB_HTML | cut -f1 -d:)
+	DCRAB_NFS_L1=$((DCRAB_NFS_BASELINE + 2))
+	DCRAB_NFS_TEXT_BASELINE=$(grep -n -m 1 "id='plot_nfs_$DCRAB_NODE_HOSTNAME_MOD" $DCRAB_HTML | cut -f1 -d:)
+	DCRAB_NFS_TEXT_L1=$((DCRAB_NFS_TEXT_BASELINE + 5))
+	DCRAB_NFS_TEXT_L2=$((DCRAB_NFS_TEXT_BASELINE + 7))
+	DCRAB_NFS_READ=$(mountstats --nfs $DCRAB_NFS_MOUNT_PATH | grep "applications read" | grep "via read(2)" | awk '{print $3}')
+	DCRAB_NFS_WRITE=$(mountstats --nfs $DCRAB_NFS_MOUNT_PATH | grep "applications wrote" | grep "via write(2)" | awk '{print $3}')
+	DCRAB_NFS_NEW_READ=0
+	DCRAB_NFS_NEW_WRITE=0
+	DCRAB_NFS_TOTAL_READ=0	
+	DCRAB_NFS_TOTAL_WRITE=0	
+	DCRAB_NFS_TOTAL_READ_REDUCED=0
+	DCRAB_NFS_TOTAL_WRITE_REDUCED=0
+	DCRAB_NFS_TOTAL_READ_STRING="MB"
+        DCRAB_NFS_TOTAL_WRITE_STRING="MB"
+        DCRAB_NFS_TOTAL_LAST_READ_STRING="MB"
+        DCRAB_NFS_TOTAL_LAST_WRITE_STRING="MB"
 
 	# DISK
 	IFS=$'\n'
-	disk_cont=0
-	disk_data_firstLine_string="['Devices', 'Read', 'Write'],"
+	DCRAB_DISK_DATA=""
+	DCRAB_DISK_CONT=0
+	DCRAB_DISK_BASELINE=$(grep -n -m 1 "var disk_data_$DCRAB_NODE_HOSTNAME_MOD" $DCRAB_HTML | cut -f1 -d:)
+        DCRAB_DISK_L1=$((DCRAB_DISK_BASELINE + 1))
+        DCRAB_DISK_L2=$((DCRAB_DISK_BASELINE + 2))
+	DCRAB_DISK_L1_STRING="['Devices', 'Read', 'Write'],"
 	# Obtain disk devices
 	for line in $(lsblk | grep -v "─" | grep "sd"); do
-                disk_cont=$((disk_cont + 1))
-                disk_names[$disk_cont]=$(echo "$line" | awk '{print $1}')
+                DCRAB_DISK_CONT=$((DCRAB_DISK_CONT + 1))
+                DCRAB_DISK_NAMES[$DCRAB_DISK_CONT]=$(echo "$line" | awk '{print $1}')
         done
-
-	# Initialize the first values 
+	# Initialize the first values of the disk
         for line in $(cat /proc/diskstats); do
 		local aux_device=$(echo "$line" | awk '{print $3}')
                 found=0
                 i=0
-                while [ "$i" -le "$disk_cont" ]; do
+                while [ "$i" -le "$DCRAB_DISK_CONT" ]; do
                         i=$((i+1))
-                        if [ "${disk_names[$i]}" == "$aux_device" ]; then
+                        if [ "${DCRAB_DISK_NAMES[$i]}" == "$aux_device" ]; then
                                 found=1
                                 break
                         fi
                 done
                 if [ "$found" -eq 1 ];then
 			# The information obtained are the sectors read so we must multiply it by 512 to obtain the bytes
-			disk_first_read_value[$i]=$(echo "$line" | awk '{print $6}')
-			disk_first_write_value[$i]=$(echo "$line" | awk '{print $10}')
+			DCRAB_DISK_FIRST_READ_VALUE[$i]=$(echo "$line" | awk '{print $6}')
+			DCRAB_DISK_FIRST_WRITE_VALUE[$i]=$(echo "$line" | awk '{print $10}')
                 fi
         done
-        disk_data=""
-        disk_data_line=$(grep -n -m 1 "var disk_data_$node_hostname_mod" $DCRAB_HTML | cut -f1 -d:)
-        disk_data_firstLine=$((disk_data_line + 1))
-	disk_data_line=$((disk_data_line + 2))
 }
 
 
@@ -243,16 +250,16 @@ dcrab_collect_mem_data () {
 	vmSize=$(printf "%.3f\n" "$vmSize") # 3 decimmals only
 	vmRSS=$(grep VmRSS $DCRAB_MEM_FILE | awk '{sum+=$2} END {print sum/1024/1024}')
 	vmRSS=$(printf "%.3f\n" "$vmRSS") # 3 decimmals only
-	if [ $(echo "$vmRSS > $max_RSS_size" | bc) -eq 1 ]; then
-        	max_RSS_size=$vmRSS
+	if [ $(echo "$vmRSS > $DCRAB_MEM3_MAX_VMRSS" | bc) -eq 1 ]; then
+        	DCRAB_MEM3_MAX_VMRSS=$vmRSS
 	fi
-	if [ $(echo "$vmSize > $max_vmSize" | bc) -eq 1 ]; then
-                max_vmSize=$vmSize
+	if [ $(echo "$vmSize > $DCRAB_MEM3_VMSIZE" | bc) -eq 1 ]; then
+                DCRAB_MEM3_VMSIZE=$vmSize
         fi
 
 	# Check if exceeds memory requested. The job may be killed by the scheduler.
-        if [ $(echo "$max_RSS_size < $DCRAB_REQ_MEM" | bc) -eq 1 ]; then
-                utilizedMem=`echo "scale=3; ($max_RSS_size * 100)/$DCRAB_REQ_MEM" | bc `
+        if [ $(echo "$DCRAB_MEM3_MAX_VMRSS < $DCRAB_REQ_MEM" | bc) -eq 1 ]; then
+                utilizedMem=`echo "scale=3; ($DCRAB_MEM3_MAX_VMRSS * 100)/$DCRAB_REQ_MEM" | bc `
                 notUtilizedMem=`echo "scale=3; 100 - $utilizedMem" | bc `
         else    
                 notUtilizedMem=0
@@ -261,8 +268,8 @@ dcrab_collect_mem_data () {
 
 	if [ "$DCRAB_NNODES" -gt 1 ]; then
 		if [ "$DCRAB_NODE_NUMBER" -eq 0 ]; then
-			total_vmRSS=0
-			total_vmSize=0
+			DCRAB_MEM_TOTAL_VMRSS=0
+			DCRAB_MEM_TOTAL_VMSIZE=0
 			
 			echo "$vmRSS $vmSize" > $DCRAB_TOTAL_MEM_FILE
 
@@ -271,27 +278,27 @@ dcrab_collect_mem_data () {
 			# future we could use when adding support for other schedulers 
 			#for file in $DCRAB_TOTAL_MEM_DIR/*
 			#do
-			#	total_vmRSS=$(echo "$total_vmRSS + $(cat $file | awk '{print $1}')" | bc)
-			#	total_vmSize=$(echo "$total_vmSize + $(cat $file | awk '{print $2}')" | bc)
+			#	DCRAB_MEM_TOTAL_VMRSS=$(echo "$DCRAB_MEM_TOTAL_VMRSS + $(cat $file | awk '{print $1}')" | bc)
+			#	DCRAB_MEM_TOTAL_VMSIZE=$(echo "$DCRAB_MEM_TOTAL_VMSIZE + $(cat $file | awk '{print $2}')" | bc)
 			#done
-			total_vmRSS=$(cat $DCRAB_TOTAL_MEM_FILE | awk '{print $1}')
-			total_vmSize=$(cat $DCRAB_TOTAL_MEM_FILE | awk '{print $2}')
+			DCRAB_MEM_TOTAL_VMRSS=$(cat $DCRAB_TOTAL_MEM_FILE | awk '{print $1}')
+			DCRAB_MEM_TOTAL_VMSIZE=$(cat $DCRAB_TOTAL_MEM_FILE | awk '{print $2}')
 			
 		
-			if [ $(echo "$total_vmSize > $total_max_vmSize" | bc) -eq 1 ]; then
-		                total_max_vmSize=$total_vmSize
+			if [ $(echo "$DCRAB_MEM_TOTAL_VMSIZE > $DCRAB_MEM_TOTAL_MAX_VMSIZE" | bc) -eq 1 ]; then
+		                DCRAB_MEM_TOTAL_MAX_VMSIZE=$DCRAB_MEM_TOTAL_VMSIZE
 		        fi
-			if [ $(echo "$total_vmRSS > $total_max_vmRSS" | bc) -eq 1 ]; then
-		                total_max_vmRSS=$total_vmRSS
+			if [ $(echo "$DCRAB_MEM_TOTAL_VMRSS > $DCRAB_MEM_TOTAL_MAX_VMRSS" | bc) -eq 1 ]; then
+		                DCRAB_MEM_TOTAL_MAX_VMRSS=$DCRAB_MEM_TOTAL_VMRSS
 		        fi	
 			
-			if [ $(echo "$total_max_vmRSS < $DCRAB_REQ_MEM" | bc) -eq 1 ]; then
-				total_utilizedMem=`echo "scale=3; ($total_max_vmRSS * 100)/$DCRAB_REQ_MEM" | bc `
+			if [ $(echo "$DCRAB_MEM_TOTAL_MAX_VMRSS < $DCRAB_REQ_MEM" | bc) -eq 1 ]; then
+				total_utilizedMem=`echo "scale=3; ($DCRAB_MEM_TOTAL_MAX_VMRSS * 100)/$DCRAB_REQ_MEM" | bc `
 				total_notUtilizedMem=`echo "scale=3; 100 - $total_utilizedMem" | bc `
 			else
 				total_utilizedMem=100
 				total_notUtilizedMem=0
-				exceeded=1		
+				DCRAB_MEM_TOTAL_EXCEEDED=1		
 			fi
 			
 		else
@@ -300,7 +307,7 @@ dcrab_collect_mem_data () {
 	fi
 
 	# Construct mem data string
-	mem_data="$mem_data""$node_total_mem, $DCRAB_REQ_MEM, $max_RSS_size, $vmSize, $vmRSS ],"
+	DCRAB_MEM_DATA="$DCRAB_MEM_DATA""$DCRAB_NODE_TOTAL_MEM, $DCRAB_REQ_MEM, $DCRAB_MEM3_MAX_VMRSS, $vmSize, $vmRSS ],"
 }
 
 
@@ -309,21 +316,21 @@ dcrab_collect_mem_data () {
 #
 dcrab_collect_ib_data () {
 
-        new_ib_xmit_pck_value=$(cat $DCRAB_IB_XMIT_PACK)
-	new_ib_rcv_pck_value=$(cat $DCRAB_IB_RCV_PACK)	
-        new_ib_xmit_data_value=$(cat $DCRAB_IB_XMIT_DATA)
-        new_ib_rcv_data_value=$(cat $DCRAB_IB_RCV_DATA)
+        DCRAB_IB_NEW_XMIT_PCK_VALUE=$(cat $DCRAB_IB_XMIT_PACK)
+	DCRAB_IB_NEW_RCV_PCK_VALUE=$(cat $DCRAB_IB_RCV_PACK)	
+        DCRAB_IB_NEW_XMIT_DATA_VALUE=$(cat $DCRAB_IB_XMIT_DATA)
+        DCRAB_IB_NEW_RCV_DATA_VALUE=$(cat $DCRAB_IB_RCV_DATA)
 
-	local aux1=$( echo "($new_ib_xmit_data_value - $ib_xmit_data_value) / 1024" | bc )
-	local aux2=$( echo "($new_ib_rcv_data_value - $ib_rcv_data_value) / 1024" | bc )
+	local aux1=$( echo "($DCRAB_IB_NEW_XMIT_DATA_VALUE - $DCRAB_IB_XMIT_DATA_VALUE) / 1024" | bc )
+	local aux2=$( echo "($DCRAB_IB_NEW_RCV_DATA_VALUE - $DCRAB_IB_RCV_DATA_VALUE) / 1024" | bc )
 
 	# Construct ib data
-	ib_data="$ib_data"" $((new_ib_xmit_pck_value - ib_xmit_pck_value)), $((new_ib_rcv_pck_value - ib_rcv_pck_value)), $aux1, $aux2 ],"
+	DCRAB_IB_DATA="$DCRAB_IB_DATA"" $((DCRAB_IB_NEW_XMIT_PCK_VALUE - DCRAB_IB_XMIT_PCK_VALUE)), $((DCRAB_IB_NEW_RCV_PCK_VALUE - DCRAB_IB_RCV_PCK_VALUE)), $aux1, $aux2 ],"
 
-	ib_xmit_pck_value=$new_ib_xmit_pck_value
-	ib_xmit_data_value=$new_ib_xmit_data_value
-	ib_rcv_pck_value=$new_ib_rcv_pck_value
-	ib_rcv_data_value=$new_ib_rcv_data_value
+	DCRAB_IB_XMIT_PCK_VALUE=$DCRAB_IB_NEW_XMIT_PCK_VALUE
+	DCRAB_IB_XMIT_DATA_VALUE=$DCRAB_IB_NEW_XMIT_DATA_VALUE
+	DCRAB_IB_RCV_PCK_VALUE=$DCRAB_IB_NEW_RCV_PCK_VALUE
+	DCRAB_IB_RCV_DATA_VALUE=$DCRAB_IB_NEW_RCV_DATA_VALUE
 }
 
 
@@ -346,8 +353,8 @@ dcrab_format_time () {
         [[ "$timeStamp" -gt 9 ]] && DCRAB_ELAPSED_TIME_TEXT="$DCRAB_ELAPSED_TIME_TEXT:$timeStamp" || DCRAB_ELAPSED_TIME_TEXT="$DCRAB_ELAPSED_TIME_TEXT:0$timeStamp"
 
 	if [ $(echo "$DCRAB_DIFF_TIMESTAMP < $DCRAB_REQ_TIME_PER_NODE" | bc) -eq 1 ]; then
-		DCRAB_ELAPSED_TIME_VALUE=$( echo "scale=3; ($DCRAB_DIFF_TIMESTAMP * 100 ) / $DCRAB_REQ_TIME_PER_NODE " | bc )	
-		DCRAB_REMAINING_TIME_VALUE=$( echo "scale=3; 100 - $DCRAB_ELAPSED_TIME_VALUE" | bc)
+		DCRAB_ELAPSED_TIME_VALUE=$(echo "scale=3; ($DCRAB_DIFF_TIMESTAMP * 100 ) / $DCRAB_REQ_TIME_PER_NODE " | bc)	
+		DCRAB_REMAINING_TIME_VALUE=$(echo "scale=3; 100 - $DCRAB_ELAPSED_TIME_VALUE" | bc)
 	else
 		DCRAB_ELAPSED_TIME_VALUE=100
                 DCRAB_REMAINING_TIME_VALUE=0
@@ -377,8 +384,8 @@ dcrab_collect_processesIO_data () {
 				[[ "$new_rchar" == "" ]] && new_rchar=0
 		                [[ "$new_wchar" == "" ]] && new_wchar=0	
 	
-				processesIO_total_read=$new_rchar
-				processesIO_total_write=$new_wchar
+				DCRAB_PROCESSESIO_TOTAL_READ=$new_rchar
+				DCRAB_PROCESSESIO_TOTAL_WRITE=$new_wchar
 			fi
 		done
 	
@@ -387,11 +394,11 @@ dcrab_collect_processesIO_data () {
 		fi		
 	
 		# Construct data fot the plot
-	        processesIO_data="$processesIO_data""0, 0],"
+	        DCRAB_PROCESSESIO_DATA="$DCRAB_PROCESSESIO_DATA""0, 0],"
 	;;
 	1)
-		processesIO_partial_read=0
-		processesIO_partial_write=0
+		DCRAB_PROCESSESIO_PARTIAL_READ=0
+		DCRAB_PROCESSESIO_PARTIAL_WRITE=0
 		last_rchar=""
 		last_wchar=""
 	        for line in $(cat $DCRAB_JOB_PROCESSES_FILE); do
@@ -412,58 +419,58 @@ dcrab_collect_processesIO_data () {
 				if [ "$last_rchar" == "" ]; then
 					echo "$pid $new_rchar $new_wchar" >> $DCRAB_PROCESSES_IO_FILE 
 				
-					processesIO_total_read=$(echo "$processesIO_total_read + $new_rchar" | bc)
-	                                processesIO_partial_read=$(echo "$processesIO_partial_read + $new_rchar" | bc)
+					DCRAB_PROCESSESIO_TOTAL_READ=$(echo "$DCRAB_PROCESSESIO_TOTAL_READ + $new_rchar" | bc)
+	                                DCRAB_PROCESSESIO_PARTIAL_READ=$(echo "$DCRAB_PROCESSESIO_PARTIAL_READ + $new_rchar" | bc)
 	
-	                                processesIO_total_write=$(echo "$processesIO_total_write + $new_wchar" | bc )
-	                                processesIO_partial_write=$(echo "$processesIO_partial_write + $new_wchar" | bc )				
+	                                DCRAB_PROCESSESIO_TOTAL_WRITE=$(echo "$DCRAB_PROCESSESIO_TOTAL_WRITE + $new_wchar" | bc )
+	                                DCRAB_PROCESSESIO_PARTIAL_WRITE=$(echo "$DCRAB_PROCESSESIO_PARTIAL_WRITE + $new_wchar" | bc )				
 				else
 					lineNumber=$(cat $DCRAB_PROCESSES_IO_FILE | grep -n "^$pid " | awk '{print $1}' | cut -d':' -f1)
 					sed -i "$lineNumber"'s/'"$pid $last_rchar $last_wchar"'/'"$pid $new_rchar $new_wchar"'/' $DCRAB_PROCESSES_IO_FILE
 	
-					processesIO_total_read=$(echo "$processesIO_total_read + $new_rchar - $last_rchar"  | bc)
-	                                processesIO_partial_read=$(echo "$processesIO_partial_read + $new_rchar - $last_rchar" | bc)
+					DCRAB_PROCESSESIO_TOTAL_READ=$(echo "$DCRAB_PROCESSESIO_TOTAL_READ + $new_rchar - $last_rchar"  | bc)
+	                                DCRAB_PROCESSESIO_PARTIAL_READ=$(echo "$DCRAB_PROCESSESIO_PARTIAL_READ + $new_rchar - $last_rchar" | bc)
 	
-	                                processesIO_total_write=$(echo "$processesIO_total_write + $new_wchar - $last_wchar" | bc)
-	                                processesIO_partial_write=$(echo "$processesIO_partial_write + $new_wchar - $last_wchar" | bc)
+	                                DCRAB_PROCESSESIO_TOTAL_WRITE=$(echo "$DCRAB_PROCESSESIO_TOTAL_WRITE + $new_wchar - $last_wchar" | bc)
+	                                DCRAB_PROCESSESIO_PARTIAL_WRITE=$(echo "$DCRAB_PROCESSESIO_PARTIAL_WRITE + $new_wchar - $last_wchar" | bc)
 				fi
 			fi
 		done
 
-		local aux1=$( echo "scale=3; (($processesIO_partial_read / 1024) / 1024) / $DCRAB_DIFF_PARTIAL"  | bc )
-		local aux2=$( echo "scale=3; (($processesIO_partial_write / 1024) / 1024) / $DCRAB_DIFF_PARTIAL"  | bc )
+		local aux1=$( echo "scale=3; (($DCRAB_PROCESSESIO_PARTIAL_READ / 1024) / 1024) / $DCRAB_DIFF_PARTIAL"  | bc )
+		local aux2=$( echo "scale=3; (($DCRAB_PROCESSESIO_PARTIAL_WRITE / 1024) / 1024) / $DCRAB_DIFF_PARTIAL"  | bc )
 	
 		# Construct data for the plot
-		processesIO_data="$processesIO_data"" $aux1, $aux2 ],"
+		DCRAB_PROCESSESIO_DATA="$DCRAB_PROCESSESIO_DATA"" $aux1, $aux2 ],"
 	
 		# Construct data for the read text value
-		processesIO_last_total_read_value=$processesIO_total_read_value
-		case $processesIO_total_read_value in 
+		DCRAB_PROCESSESIO_TOTAL_LAST_READ_STRING=$DCRAB_PROCESSESIO_TOTAL_READ_STRING
+		case $DCRAB_PROCESSESIO_TOTAL_READ_STRING in 
 		"MB")
-			processesIO_total_read_reduced=$(echo "scale=4; ($processesIO_total_read /1024) /1024" | bc)
-			if [ $(echo "$processesIO_total_read_reduced >= 1024" | bc)  -eq 1 ]; then
-				processesIO_total_read_reduced=$(echo "scale=4; $processesIO_total_read_reduced / 1024 " | bc )
-	                	processesIO_total_read_value="GB"
+			DCRAB_PROCESSESIO_TOTAL_READ_REDUCED=$(echo "scale=4; ($DCRAB_PROCESSESIO_TOTAL_READ /1024) /1024" | bc)
+			if [ $(echo "$DCRAB_PROCESSESIO_TOTAL_READ_REDUCED >= 1024" | bc)  -eq 1 ]; then
+				DCRAB_PROCESSESIO_TOTAL_READ_REDUCED=$(echo "scale=4; $DCRAB_PROCESSESIO_TOTAL_READ_REDUCED / 1024 " | bc )
+	                	DCRAB_PROCESSESIO_TOTAL_READ_STRING="GB"
 			fi
-			[[ "${processesIO_total_read_reduced:0:1}" == "." ]] && processesIO_total_read_reduced="0""$processesIO_total_read_reduced"
+			[[ "${DCRAB_PROCESSESIO_TOTAL_READ_REDUCED:0:1}" == "." ]] && DCRAB_PROCESSESIO_TOTAL_READ_REDUCED="0""$DCRAB_PROCESSESIO_TOTAL_READ_REDUCED"
 		;;
 		"GB")
-			processesIO_total_read_reduced=$(echo "scale=4; (($processesIO_total_read /1024) /1024 ) /1024" | bc)
+			DCRAB_PROCESSESIO_TOTAL_READ_REDUCED=$(echo "scale=4; (($DCRAB_PROCESSESIO_TOTAL_READ /1024) /1024 ) /1024" | bc)
 		;;
 		esac
 		# Construct data for the write text value
-	        processesIO_last_total_write_value=$processesIO_total_write_value
-	        case $processesIO_total_write_value in
+	        DCRAB_PROCESSESIO_TOTAL_LAST_WRITE_STRING=$DCRAB_PROCESSESIO_TOTAL_WRITE_STRING
+	        case $DCRAB_PROCESSESIO_TOTAL_WRITE_STRING in
 	        "MB")
-	                processesIO_total_write_reduced=$(echo "scale=4; ($processesIO_total_write /1024) /1024" | bc)
-			if [ $(echo "$processesIO_total_write_reduced >= 1024" | bc)  -eq 1 ]; then
-	                        processesIO_total_write_reduced=$(echo "scale=4; $processesIO_total_write_reduced / 1024 " | bc )
-	                        processesIO_total_write_value="GB"
+	                DCRAB_PROCESSESIO_TOTAL_WRITE_REDUCED=$(echo "scale=4; ($DCRAB_PROCESSESIO_TOTAL_WRITE /1024) /1024" | bc)
+			if [ $(echo "$DCRAB_PROCESSESIO_TOTAL_WRITE_REDUCED >= 1024" | bc)  -eq 1 ]; then
+	                        DCRAB_PROCESSESIO_TOTAL_WRITE_REDUCED=$(echo "scale=4; $DCRAB_PROCESSESIO_TOTAL_WRITE_REDUCED / 1024 " | bc )
+	                        DCRAB_PROCESSESIO_TOTAL_WRITE_STRING="GB"
 	                fi
-			[[ "${processesIO_total_write_reduced:0:1}" == "." ]] && processesIO_total_write_reduced="0""$processesIO_total_write_reduced"
+			[[ "${DCRAB_PROCESSESIO_TOTAL_WRITE_REDUCED:0:1}" == "." ]] && DCRAB_PROCESSESIO_TOTAL_WRITE_REDUCED="0""$DCRAB_PROCESSESIO_TOTAL_WRITE_REDUCED"
 		;;
 	        "GB")
-	                processesIO_total_write_reduced=$(echo "scale=4; (($processesIO_total_write /1024) /1024 ) /1024" | bc)
+	                DCRAB_PROCESSESIO_TOTAL_WRITE_REDUCED=$(echo "scale=4; (($DCRAB_PROCESSESIO_TOTAL_WRITE /1024) /1024 ) /1024" | bc)
 	        ;;
 	        esac
 	;;
@@ -476,50 +483,48 @@ dcrab_collect_processesIO_data () {
 #
 dcrab_collect_nfs_data () {
 
-	nfs_new_read=$(mountstats --nfs $nfs_mount_path | grep "applications read" | grep "via read(2)" | awk '{print $3}' )
-	nfs_new_write=$(mountstats --nfs $nfs_mount_path | grep "applications wrote" | grep "via write(2)" | awk '{print $3}' )
-	nfs_total_read=$(( nfs_total_read + nfs_new_read - nfs_read ))
-	nfs_total_write=$(( nfs_total_write + nfs_new_write - nfs_write ))
+	DCRAB_NFS_NEW_READ=$(mountstats --nfs $DCRAB_NFS_MOUNT_PATH | grep "applications read" | grep "via read(2)" | awk '{print $3}' )
+	DCRAB_NFS_NEW_WRITE=$(mountstats --nfs $DCRAB_NFS_MOUNT_PATH | grep "applications wrote" | grep "via write(2)" | awk '{print $3}' )
+	DCRAB_NFS_TOTAL_READ=$((DCRAB_NFS_TOTAL_READ + DCRAB_NFS_NEW_READ - DCRAB_NFS_READ))
+	DCRAB_NFS_TOTAL_WRITE=$((DCRAB_NFS_TOTAL_WRITE + DCRAB_NFS_NEW_WRITE - DCRAB_NFS_WRITE))
 
 	# Construct data for the read text value
-        nfs_last_total_read_value=$nfs_total_read_value
-        case $nfs_total_read_value in
+        DCRAB_NFS_TOTAL_LAST_READ_STRING=$DCRAB_NFS_TOTAL_READ_STRING
+        case $DCRAB_NFS_TOTAL_READ_STRING in
         "MB")
-		nfs_total_read_reduced=$(echo "scale=4; ($nfs_total_read / 1024) / 1024" | bc)
-		if [ $(echo "$nfs_total_read_reduced >= 1024" | bc)  -eq 1 ]; then
-                                nfs_total_read_reduced=$(echo "scale=4; $nfs_total_read_reduced / 1024 " | bc )
-                                nfs_total_read_value="GB"
+		DCRAB_NFS_TOTAL_READ_REDUCED=$(echo "scale=4; ($DCRAB_NFS_TOTAL_READ / 1024) / 1024" | bc)
+		if [ $(echo "$DCRAB_NFS_TOTAL_READ_REDUCED >= 1024" | bc)  -eq 1 ]; then
+                                DCRAB_NFS_TOTAL_READ_REDUCED=$(echo "scale=4; $DCRAB_NFS_TOTAL_READ_REDUCED / 1024 " | bc )
+                                DCRAB_NFS_TOTAL_READ_STRING="GB"
                         fi
-                [[ "${nfs_total_read_reduced:0:1}" == "." ]] && nfs_total_read_reduced="0""$nfs_total_read_reduced"
 	;;
 	"GB")
-	        nfs_total_read_reduced=$(echo "scale=4; (($nfs_total_read /1024) /1024 ) /1024" | bc)
+	        DCRAB_NFS_TOTAL_READ_REDUCED=$(echo "scale=4; (($DCRAB_NFS_TOTAL_READ /1024) /1024 ) /1024" | bc)
 	;;
 	esac
 	# Construct data for the write text value
-        nfs_last_total_write_value=$nfs_total_write_value
-        case $nfs_total_write_value in
+        DCRAB_NFS_TOTAL_LAST_WRITE_STRING=$DCRAB_NFS_TOTAL_WRITE_STRING
+        case $DCRAB_NFS_TOTAL_WRITE_STRING in
         "MB")
-        	nfs_total_write_reduced=$(echo "scale=4; ($nfs_total_write /1024) /1024" | bc)
-                if [ $(echo "$nfs_total_write_reduced >= 1024" | bc)  -eq 1 ]; then
-                	nfs_total_write_reduced=$(echo "scale=4; $nfs_total_write_reduced / 1024 " | bc )
-                        nfs_total_write_value="GB"
+        	DCRAB_NFS_TOTAL_WRITE_REDUCED=$(echo "scale=4; ($DCRAB_NFS_TOTAL_WRITE /1024) /1024" | bc)
+                if [ $(echo "$DCRAB_NFS_TOTAL_WRITE_REDUCED >= 1024" | bc)  -eq 1 ]; then
+                	DCRAB_NFS_TOTAL_WRITE_REDUCED=$(echo "scale=4; $DCRAB_NFS_TOTAL_WRITE_REDUCED / 1024 " | bc )
+                        DCRAB_NFS_TOTAL_WRITE_STRING="GB"
                 fi
-                [[ "${nfs_total_write_reduced:0:1}" == "." ]] && nfs_total_write_reduced="0""$nfs_total_write_reduced"
         ;;
         "GB")
-                nfs_total_write_reduced=$(echo "scale=4; (($nfs_total_write /1024) /1024 ) /1024" | bc)
+                DCRAB_NFS_TOTAL_WRITE_REDUCED=$(echo "scale=4; (($DCRAB_NFS_TOTAL_WRITE /1024) /1024 ) /1024" | bc)
         ;;
         esac
 
-	local aux1=$(echo "scale=4; ((($nfs_new_read - $nfs_read) / 1024 ) / 1024 ) / $DCRAB_DIFF_PARTIAL" | bc)
-	local aux2=$(echo "scale=4; ((($nfs_new_write - $nfs_write) / 1024 ) / 1024 ) / $DCRAB_DIFF_PARTIAL" | bc)
+	local aux1=$(echo "scale=4; ((($DCRAB_NFS_NEW_READ - $DCRAB_NFS_READ) / 1024 ) / 1024 ) / $DCRAB_DIFF_PARTIAL" | bc)
+	local aux2=$(echo "scale=4; ((($DCRAB_NFS_NEW_WRITE - $DCRAB_NFS_WRITE) / 1024 ) / 1024 ) / $DCRAB_DIFF_PARTIAL" | bc)
 
 	# Construct NFS data
-	nfs_data="$nfs_data""$aux1, $aux2],"
+	DCRAB_NFS_DATA="$DCRAB_NFS_DATA""$aux1, $aux2],"
 		
-	nfs_read=$nfs_new_read
-	nfs_write=$nfs_new_write
+	DCRAB_NFS_READ=$DCRAB_NFS_NEW_READ
+	DCRAB_NFS_WRITE=$DCRAB_NFS_NEW_WRITE
 }
 
 
@@ -533,21 +538,21 @@ dcrab_collect_disk_data () {
 		aux_device=$(echo "$line" | awk '{print $3}')	
 		found=0
 		i=0
-		while [ "$i" -le "$disk_cont" ]; do
+		while [ "$i" -le "$DCRAB_DISK_CONT" ]; do
 			i=$((i+1))
-			if [ "${disk_names[$i]}" == "$aux_device" ]; then
+			if [ "${DCRAB_DISK_NAMES[$i]}" == "$aux_device" ]; then
 				found=1
 				break
 			fi
 		done
 		if [ "$found" -eq 1 ]; then
-			disk_read_value[$i]=$(echo " $(echo "$line" | awk '{print $6}') - ${disk_first_read_value[$i]}" | bc)
-			disk_write_value[$i]=$(echo "$(echo "$line" | awk '{print $10}') - ${disk_first_write_value[$i]}" | bc)
+			DCRAB_DISK_READ_VALUE[$i]=$(echo " $(echo "$line" | awk '{print $6}') - ${DCRAB_DISK_FIRST_READ_VALUE[$i]}" | bc)
+			DCRAB_DISK_WRITE_VALUE[$i]=$(echo "$(echo "$line" | awk '{print $10}') - ${DCRAB_DISK_FIRST_WRITE_VALUE[$i]}" | bc)
 			
-			local aux1=$(echo "((${disk_read_value[$i]} * 512 )/1024 )/1024" | bc)
-			local aux2=$(echo "((${disk_write_value[$i]} * 512 )/1024 )/1024" | bc)
+			local aux1=$(echo "((${DCRAB_DISK_READ_VALUE[$i]} * 512 )/1024 )/1024" | bc)
+			local aux2=$(echo "((${DCRAB_DISK_WRITE_VALUE[$i]} * 512 )/1024 )/1024" | bc)
 				
-			disk_data="$disk_data ['${disk_names[$i]}', $aux1, $aux2],"	
+			DCRAB_DISK_DATA="$DCRAB_DISK_DATA ['${DCRAB_DISK_NAMES[$i]}', $aux1, $aux2],"	
 		fi	
 	done < <(cat /proc/diskstats)
 }
@@ -568,15 +573,15 @@ dcrab_collect_beegfs_data () {
 dcrab_determine_main_process () {
 
         # CPU
-        cpu_data="0,"
+        DCRAB_CPU_DATA="0,"
 	# MEM
-	mem_data="[0,"	
+	DCRAB_MEM_DATA="[0,"	
 	# IB
-	ib_data="[0,"
+	DCRAB_IB_DATA="[0,"
 	# PROCESSES_IO
-	processesIO_data="[0,"
+	DCRAB_PROCESSESIO_DATA="[0,"
 	# NFS
-	nfs_data="[0, 0, 0],"
+	DCRAB_NFS_DATA="[0, 0, 0],"
 
 	# MAIN NODE
 	if [ "$DCRAB_NODE_NUMBER" -eq 0 ]; then
@@ -622,7 +627,7 @@ dcrab_determine_main_process () {
 	        IFS=$'\n'; i=0
 		DCRAB_CONTROL_PORT_MAIN_NODE=$(cat $DCRAB_REPORT_DIR/aux/control_port.txt)
 		while [ "$DCRAB_CONTROL_PORT_MAIN_NODE" != "$DCRAB_CONTROL_PORT_OTHER_NODE" ]; do
-			echo "Waiting until the process in the node $node_hostname start" 
+			echo "Waiting until the process in the node $DCRAB_NODE_HOSTNAME start" 
 	
 	                i=$((i + 1))
 
@@ -641,7 +646,7 @@ dcrab_determine_main_process () {
 				fi
 			done
 		done
-		echo "Processes in node $node_hostname started with '$DCRAB_CONTROL_PORT_OTHER_NODE' control port"
+		echo "Processes in node $DCRAB_NODE_HOSTNAME started with '$DCRAB_CONTROL_PORT_OTHER_NODE' control port"
 	fi
 
         # Initialize data file
@@ -651,15 +656,15 @@ dcrab_determine_main_process () {
                 pid=$(echo "$line" | awk '{print $6}')
                 cpu=$(echo "$line" | awk '{print $7}')
                 commandName=$(echo "$line" | awk '{print $8}')
-		if [ $(echo "$cpu > $cpu_threshold" | bc) -eq 1 ]; then
+		if [ $(echo "$cpu > $DCRAB_CPU_THRESHOLD" | bc) -eq 1 ]; then
 			# Save in the data file
         	        echo "$pid $commandName" >> $DCRAB_JOB_PROCESSES_FILE
 		
 			# CPU data
-	                upd_proc_name[$updates]=$commandName
-        	        cpu_data="$cpu_data $cpu,"
+	                DCRAB_CPU_UPD_PROC_NAME[$DCRAB_CPU_UPDATES]=$commandName
+        	        DCRAB_CPU_DATA="$DCRAB_CPU_DATA $cpu,"
 
-	                updates=$((updates + 1))
+	                DCRAB_CPU_UPDATES=$((DCRAB_CPU_UPDATES + 1))
 		fi
 
 		# If it is the control process the main node must store it. Needed for multinode statistics. 
@@ -675,10 +680,10 @@ dcrab_determine_main_process () {
 		echo "$DCRAB_FIRST_MAIN_PROCESS_PID $DCRAB_FIRST_MAIN_PROCESS_NAME" > $DCRAB_JOB_PROCESSES_FILE
 
 		# CPU data
-                upd_proc_name[$updates]=$commandName
-                cpu_data="$cpu_data $cpu,"
+                DCRAB_CPU_UPD_PROC_NAME[$DCRAB_CPU_UPDATES]=$commandName
+                DCRAB_CPU_DATA="$DCRAB_CPU_DATA $cpu,"
 
-		updates=$((updates + 1))
+		DCRAB_CPU_UPDATES=$((DCRAB_CPU_UPDATES + 1))
 	fi	
 
         # Get time
@@ -686,8 +691,8 @@ dcrab_determine_main_process () {
 	DCRAB_M3_TIMESTAMP=$DCRAB_M1_TIMESTAMP
 
         # CPU data. Remove the last comma
-        cpu_data=${cpu_data%,*}
-        cpu_data="[$cpu_data ],"
+        DCRAB_CPU_DATA=${DCRAB_CPU_DATA%,*}
+        DCRAB_CPU_DATA="[$DCRAB_CPU_DATA ],"
 
 	# MEM data
 	dcrab_collect_mem_data
@@ -712,7 +717,7 @@ dcrab_determine_main_process () {
 dcrab_update_data () {
 	
         # Init. variables
-        updates=0
+        DCRAB_CPU_UPDATES=0
         IFS=$'\n'
         DCRAB_M2_TIMESTAMP=`date +"%s"`
         DCRAB_DIFF_TIMESTAMP=$((DCRAB_M2_TIMESTAMP - DCRAB_M1_TIMESTAMP))
@@ -720,17 +725,17 @@ dcrab_update_data () {
 	DCRAB_M3_TIMESTAMP=$DCRAB_M2_TIMESTAMP
 
         # CPU data      
-        cpu_data="$DCRAB_DIFF_TIMESTAMP,"
+        DCRAB_CPU_DATA="$DCRAB_DIFF_TIMESTAMP,"
         # MEM data
-        mem_data="[$DCRAB_DIFF_TIMESTAMP,"
+        DCRAB_MEM_DATA="[$DCRAB_DIFF_TIMESTAMP,"
 	# IB data
-	ib_data="[$DCRAB_DIFF_TIMESTAMP,"
+	DCRAB_IB_DATA="[$DCRAB_DIFF_TIMESTAMP,"
 	# PROCESSES_IO data
-	processesIO_data="[$DCRAB_DIFF_TIMESTAMP,"
+	DCRAB_PROCESSESIO_DATA="[$DCRAB_DIFF_TIMESTAMP,"
 	# NFS data
-	nfs_data="[$DCRAB_DIFF_TIMESTAMP,"
+	DCRAB_NFS_DATA="[$DCRAB_DIFF_TIMESTAMP,"
 	# DISK data
-	disk_data=""
+	DCRAB_DISK_DATA=""
 
         # Collect the data
 	ps axo stat,euid,ruid,sess,ppid,pid,pcpu,comm,command | sed 's|\s\s*| |g' | awk '{if ($2 == '"$DCRAB_USER_ID"'){print}}' | grep -v " $DCRAB_DCRAB_PID " > $DCRAB_USER_PROCESSES_FILE
@@ -802,7 +807,7 @@ dcrab_update_data () {
                         cpu=" "
                 fi
                 # CPU data
-                cpu_data="$cpu_data $cpu,"
+                DCRAB_CPU_DATA="$DCRAB_CPU_DATA $cpu,"
                 i=$((i + 1))
 		auxLine=""
         done
@@ -814,14 +819,14 @@ dcrab_update_data () {
 	        cpu=$(echo "$line" | awk '{print $7}')
 	        commandName=$(echo "$line" | awk '{print $8}')
 	
-		if [ $(echo "$cpu > $cpu_threshold" | bc) -eq 1 ]; then
+		if [ $(echo "$cpu > $DCRAB_CPU_THRESHOLD" | bc) -eq 1 ]; then
 			sed -i '1s|^|'"$pid $commandName"'\n|' $DCRAB_JOB_PROCESSES_FILE
-	                upd_proc_name[$updates]=$commandName	
+	                DCRAB_CPU_UPD_PROC_NAME[$DCRAB_CPU_UPDATES]=$commandName	
 			
 			# CPU data
-	                cpu_data=`echo $cpu_data | sed "s|^$DCRAB_DIFF_TIMESTAMP,|$DCRAB_DIFF_TIMESTAMP, $cpu,|"`
+	                DCRAB_CPU_DATA=`echo $DCRAB_CPU_DATA | sed "s|^$DCRAB_DIFF_TIMESTAMP,|$DCRAB_DIFF_TIMESTAMP, $cpu,|"`
 				
-			updates=$((updates + 1))
+			DCRAB_CPU_UPDATES=$((DCRAB_CPU_UPDATES + 1))
 		fi
 
 		# If the new process is the control process. Needed for multinode statistics.
@@ -833,15 +838,15 @@ dcrab_update_data () {
         done
 
 	# CPU data
-        # To avoid cpu_data termine like '0, ]', which means that the last process has been terminated, and will cause an error in the plot 
+        # To avoid DCRAB_CPU_DATA termine like '0, ]', which means that the last process has been terminated, and will cause an error in the plot 
         # So we put a 0 value instead of the ' ' (space) character 
         if [ $((lastEmptyValue + 1)) -eq $i ]; then
-                cpu_data=${cpu_data%,*}
-                cpu_data="$cpu_data""0,"
+                DCRAB_CPU_DATA=${DCRAB_CPU_DATA%,*}
+                DCRAB_CPU_DATA="$DCRAB_CPU_DATA""0,"
         fi
         # Remove the last comma
-        cpu_data=${cpu_data%,*}
-        cpu_data="[$cpu_data],"
+        DCRAB_CPU_DATA=${DCRAB_CPU_DATA%,*}
+        DCRAB_CPU_DATA="[$DCRAB_CPU_DATA],"
 	
         # MEM data
         dcrab_collect_mem_data
