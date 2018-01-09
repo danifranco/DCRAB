@@ -1,0 +1,773 @@
+<!--1--> 
+<html> 
+<head><title>DCRAB REPORT</title> 
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>  
+<script type="text/javascript">  
+google.charts.load('current', {'packages':['corechart', 'bar']});  
+google.charts.setOnLoadCallback(plot_all);  
+function plot_all() {  
+var cpu_atlas168 = google.visualization.arrayToDataTable([ 
+['Execution Time (s)', 'pw.x', 'pw.x', 'pw.x', 'pw.x', 'pw.x', 'pw.x', 'pw.x', 'pw.x', 'pw.x', 'pw.x', 'pw.x', 'pw.x', 'dcrab'], 
+[0, , , , , , , , , , , , ,  10.0 ],[10, 83.3, 83.8, 83.4, 83.3, 83.7, 83.5, 83.6, 84.1, 84.1, 84.0, 84.0, 83.7,  0],[26, 93.5, 93.7, 93.5, 93.5, 93.7, 93.6, 93.6, 93.9, 93.9, 93.8, 93.8, 93.7,  0],[37, 95.5, 95.6, 95.5, 95.5, 95.6, 95.5, 95.5, 95.7, 95.7, 95.7, 95.6, 95.6,  0],[48, 96.5, 96.6, 96.5, 96.5, 96.6, 96.5, 96.6, 96.7, 96.7, 96.6, 96.6, 96.6,  0],[59, 97.3, 97.4, 97.3, 97.3, 97.4, 97.3, 97.4, 97.4, 97.5, 97.4, 97.4, 97.4,  0],[70, 97.9, 98.0, 97.9, 97.9, 98.0, 97.9, 98.0, 98.0, 98.1, 98.0, 98.0, 98.0,  0],[82, 98.3, 98.4, 98.4, 98.3, 98.4, 98.4, 98.4, 98.5, 98.5, 98.4, 98.4, 98.4,  0],[94, 98.7, 98.7, 98.7, 98.7, 98.7, 98.7, 98.7, 98.8, 98.8, 98.8, 98.8, 98.7,  0],[105, 98.9, 99.0, 98.9, 98.9, 99.0, 98.9, 99.0, 99.0, 99.0, 99.0, 99.0, 99.0,  0],[116, 98.3, 98.4, 98.3, 98.3, 98.4, 98.3, 98.4, 98.4, 98.4, 98.4, 98.4, 98.4,  0],[127, 98.7, 98.7, 98.7, 98.7, 98.7, 98.7, 98.7, 98.7, 98.7, 98.7, 98.7, 98.7,  0],[138, 98.9, 98.9, 98.9, 98.9, 98.9, 98.9, 98.9, 98.9, 98.9, 98.9, 98.9, 98.9,  0],[149, 99.0, 99.1, 99.0, 99.0, 99.1, 99.0, 99.1, 99.1, 99.1, 99.1, 99.1, 99.1,  0],[161, 99.2, 99.2, 99.2, 99.2, 99.2, 99.2, 99.2, 99.3, 99.3, 99.3, 99.3, 99.2,  0],[172, 99.3, 99.4, 99.4, 99.3, 99.4, 99.3, 99.4, 99.4, 99.4, 99.4, 99.4, 99.4,  0],[183, 98.9, 99.0, 99.0, 98.9, 99.0, 98.9, 99.0, 99.0, 99.0, 99.0, 99.0, 99.0,  0],[194, 99.0, 99.1, 99.1, 99.0, 99.1, 99.0, 99.1, 99.1, 99.1, 99.1, 99.1, 99.1,  0],[206, 99.3, 99.3, 99.3, 99.3, 99.3, 99.3, 99.3, 99.4, 99.4, 99.3, 99.4, 99.3,  0],[217, 99.5, 99.5, 99.5, 99.4, 99.5, 99.4, 99.5, 99.5, 99.5, 99.5, 99.5, 99.5,  0],[228, 99.1, 99.1, 99.1, 99.1, 99.1, 99.1, 99.1, 99.1, 99.1, 99.1, 99.1, 99.1,  0],[239, 99.2, 99.2, 99.2, 99.2, 99.2, 99.2, 99.2, 99.2, 99.2, 99.2, 99.2, 99.2,  0],[250, 99.3, 99.3, 99.3, 99.3, 99.3, 99.3, 99.3, 99.3, 99.3, 99.3, 99.3, 99.3,  0],[261, 99.3, 99.3, 99.3, 99.3, 99.3, 99.3, 99.3, 99.4, 99.4, 99.4, 99.4, 99.3,  0],[272, 99.4, 99.4, 99.4, 99.4, 99.4, 99.4, 99.4, 99.4, 99.4, 99.4, 99.4, 99.4,  0],[283, 99.5, 99.5, 99.5, 99.4, 99.5, 99.5, 99.5, 99.5, 99.5, 99.5, 99.5, 99.5,  0],[294, 99.5, 99.5, 99.5, 99.5, 99.5, 99.5, 99.5, 99.5, 99.5, 99.5, 99.5, 99.5,  0],[305, 99.5, 99.5, 99.5, 99.5, 99.5, 99.5, 99.5, 99.5, 99.5, 99.5, 99.5, 99.5,  0],
+]); 
+var mem1_atlas168 = google.visualization.arrayToDataTable([ 
+['Execution Time (s)', 'Node Memory', 'Requested Memory', 'Consumed Memory Peak (of VmRSS)', 'Consumed Memory  (VmSize)', 'Resident Memory  (VmRSS)'], 
+[0,251, 150, 0.002, 0.109, 0.002 ],[10,251, 150, 3.192, 7.565, 3.192 ],[26,251, 150, 7.922, 11.946, 7.922 ],[37,251, 150, 8.065, 12.083, 8.065 ],[48,251, 150, 8.085, 12.098, 8.085 ],[59,251, 150, 8.085, 12.060, 8.047 ],[70,251, 150, 8.092, 12.104, 8.092 ],[82,251, 150, 8.092, 7.402, 3.394 ],[94,251, 150, 8.092, 12.044, 8.039 ],[105,251, 150, 8.092, 12.087, 8.082 ],[116,251, 150, 8.092, 12.087, 8.083 ],[127,251, 150, 8.092, 7.507, 3.503 ],[138,251, 150, 8.095, 12.096, 8.095 ],[149,251, 150, 8.097, 12.100, 8.097 ],[161,251, 150, 8.277, 12.333, 8.277 ],[172,251, 150, 8.408, 12.441, 8.408 ],[183,251, 150, 8.476, 12.504, 8.476 ],[194,251, 150, 8.476, 12.574, 8.476 ],[206,251, 150, 8.509, 12.616, 8.509 ],[217,251, 150, 8.509, 12.136, 8.141 ],[228,251, 150, 8.509, 12.108, 8.137 ],[239,251, 150, 8.509, 12.140, 8.162 ],[250,251, 150, 8.509, 12.380, 8.344 ],[261,251, 150, 8.509, 12.471, 8.473 ],[272,251, 150, 8.531, 12.542, 8.531 ],[283,251, 150, 8.531, 12.605, 8.528 ],[294,251, 150, 8.597, 12.687, 8.597 ],[305,251, 150, 8.597, 12.431, 8.466 ],
+]); 
+var mem2_atlas168 = google.visualization.arrayToDataTable([ 
+['Mem class', 'Percentage'], 
+['Used memory', 5.731], 
+['Not utilized memory', 94.269], 
+]); 
+var ib_data_atlas168 = google.visualization.arrayToDataTable([ 
+['Execution Time (s)', 'Transmitted Packets', 'Received Packets', 'Transmitted Bytes (KB)', 'Received Bytes (KB)'], 
+[0, 1220, 1228, 27, 68 ],[10, 1987824, 1986441, 713097, 724880 ],[26, 4675695, 4676250, 1663387, 1666482 ],[37, 993879, 1020769, 507009, 543059 ],[48, 746555, 779917, 476454, 525826 ],[59, 2916569, 2914480, 1062473, 1059909 ],[70, 1041745, 1067293, 529859, 564607 ],[82, 2016288, 2039847, 892769, 927850 ],[94, 2886614, 2885840, 1024430, 1025657 ],[105, 917384, 948527, 536346, 580033 ],[116, 2894450, 2900784, 1040842, 1047264 ],[127, 1023099, 1052998, 548827, 587517 ],[138, 4104699, 4098380, 1465695, 1468020 ],[149, 1714639, 1727648, 648087, 664278 ],[161, 772211, 796765, 430490, 450135 ],[172, 737726, 777071, 379514, 416018 ],[183, 734651, 750792, 410350, 423457 ],[194, 669924, 707438, 368735, 408885 ],[206, 665878, 680594, 401664, 413067 ],[217, 483550, 494804, 256166, 264876 ],[228, 3119852, 3123861, 1135970, 1147538 ],[239, 1607703, 1621793, 614364, 628271 ],[250, 794444, 832122, 432236, 466083 ],[261, 733329, 752152, 397350, 412798 ],[272, 702567, 728281, 386239, 409488 ],[283, 666629, 702179, 362539, 400502 ],[294, 643784, 656665, 394146, 403688 ],[305, 360061, 372223, 212570, 222323 ],
+]); 
+var processesIO_data_atlas168 = google.visualization.arrayToDataTable([ 
+['Execution Time (s)', 'Read', 'Write'], 
+[0,0, 0],[10, 2.345, .035 ],[26, 0, 0 ],[37, 0, .003 ],[48, 0, .004 ],[59, 0, 0 ],[70, 0, .003 ],[82, 0, .002 ],[94, 0, 0 ],[105, 0, .005 ],[116, 0, 0 ],[127, 0, .004 ],[138, 0, .001 ],[149, 0, .001 ],[161, 0, .002 ],[172, 0, .002 ],[183, 0, .001 ],[194, 0, .001 ],[206, 0, .001 ],[217, 0, 0 ],[228, 0, .003 ],[239, 0, .001 ],[250, 0, .002 ],[261, 0, .002 ],[272, 0, .001 ],[283, 0, 0 ],[294, 0, .001 ],[305, 0, 0 ],
+]); 
+var nfs_data_atlas168 = google.visualization.arrayToDataTable([ 
+['Execution Time (s)', 'Read', 'Write'], 
+[0, 0, 0],[10,0, 0],[26,0, 0],[37,0, 0],[48,0, 0],[59,0, 0],[70,0, 0],[82,0, 0],[94,0, 0],[105,0, 0],[116,0, 0],[127,0, 0],[138,0, 0],[149,0, 0],[161,0, 0],[172,0, 0],[183,0, 0],[194,0, 0],[206,0, 0],[217,0, 0],[228,0, 0],[239,0, 0],[250,0, 0],[261,0, 0],[272,0, 0],[283,0, 0],[294,0, 0],[305,0, 0],
+]); 
+var disk_data_atlas168 = google.visualization.arrayToDataTable([ 
+['Devices', 'Read', 'Write'], 
+ ['sdb', 0, 0], ['sdc', 0, 0], ['sda', 0, 0],
+]); 
+var cpu_atlas167 = google.visualization.arrayToDataTable([ 
+['Execution Time (s)', 'pw.x', 'pw.x', 'pw.x', 'pw.x', 'pw.x', 'pw.x', 'pw.x', 'pw.x', 'pw.x', 'pw.x', 'pw.x', 'pw.x'], 
+[0, 93.4, 93.4, 93.3, 93.2, 93.3, 93.5, 93.3, 93.4, 93.5, 93.2, 93.3, 93.2 ],[10, 98.2, 98.2, 98.1, 98.1, 98.1, 98.2, 98.1, 98.2, 98.2, 98.1, 98.2, 98.0],[21, 98.6, 98.6, 98.5, 98.5, 98.5, 98.6, 98.5, 98.5, 98.6, 98.5, 98.5, 98.5],[32, 98.8, 98.8, 98.7, 98.7, 98.7, 98.8, 98.7, 98.8, 98.8, 98.7, 98.7, 98.7],[43, 99.0, 99.0, 98.9, 98.9, 98.9, 99.0, 98.9, 98.9, 99.0, 98.9, 98.9, 98.9],[54, 99.2, 99.2, 99.1, 99.1, 99.1, 99.2, 99.1, 99.1, 99.2, 99.1, 99.1, 99.1],[66, 98.7, 98.7, 98.7, 98.7, 98.7, 98.7, 98.7, 98.7, 98.7, 98.7, 98.7, 98.7],[77, 98.8, 98.8, 98.8, 98.8, 98.8, 98.8, 98.8, 98.8, 98.8, 98.8, 98.8, 98.8],[88, 99.0, 99.0, 99.0, 99.0, 99.0, 99.0, 99.0, 99.0, 99.0, 99.0, 99.0, 99.0],[99, 99.1, 99.1, 99.1, 99.1, 99.1, 99.1, 99.1, 99.1, 99.1, 99.1, 99.1, 99.0],[110, 99.2, 99.2, 99.2, 99.2, 99.2, 99.2, 99.2, 99.2, 99.2, 99.2, 99.2, 99.2],[121, 99.2, 99.2, 99.2, 99.2, 99.2, 99.2, 99.2, 99.2, 99.2, 99.2, 99.2, 99.2],[132, 99.4, 99.4, 99.3, 99.3, 99.3, 99.4, 99.3, 99.4, 99.4, 99.3, 99.3, 99.3],[143, 99.4, 99.4, 99.4, 99.4, 99.4, 99.4, 99.4, 99.4, 99.4, 99.4, 99.4, 99.4],[154, 99.7, 99.7, 99.7, 99.7, 99.7, 99.7, 99.7, 99.7, 99.7, 99.7, 99.7, 99.7],[165, 99.8, 99.8, 99.7, 99.7, 99.7, 99.8, 99.7, 99.8, 99.8, 99.7, 99.7, 99.7],[176, 99.8, 99.8, 99.8, 99.8, 99.8, 99.8, 99.8, 99.8, 99.8, 99.8, 99.8, 99.8],[188, 99.4, 99.4, 99.4, 99.4, 99.4, 99.4, 99.4, 99.4, 99.4, 99.4, 99.4, 99.4],[199, 99.4, 99.4, 99.4, 99.4, 99.4, 99.4, 99.4, 99.4, 99.4, 99.4, 99.4, 99.4],[211, 99.4, 99.4, 99.4, 99.4, 99.4, 99.4, 99.4, 99.4, 99.4, 99.4, 99.4, 99.4],[221, 99.8, 99.8, 99.8, 99.8, 99.8, 99.8, 99.8, 99.8, 99.8, 99.8, 99.8, 99.8],[232, 99.8, 99.8, 99.8, 99.8, 99.8, 99.8, 99.8, 99.8, 99.8, 99.8, 99.8, 99.8],[243, 99.8, 99.8, 99.8, 99.8, 99.8, 99.8, 99.8, 99.8, 99.8, 99.8, 99.8, 99.8],[254, 99.8, 99.8, 99.8, 99.8, 99.8, 99.8, 99.8, 99.8, 99.8, 99.8, 99.8, 99.8],[265, 99.8, 99.9, 99.8, 99.8, 99.8, 99.9, 99.8, 99.8, 99.8, 99.8, 99.8, 99.8],[276, 99.8, 99.9, 99.8, 99.8, 99.8, 99.9, 99.8, 99.9, 99.8, 99.8, 99.8, 99.8],[287, 99.5, 99.5, 99.5, 99.5, 99.5, 99.5, 99.5, 99.5, 99.5, 99.5, 99.5, 99.5],[299, 99.6, 99.6, 99.6, 99.6, 99.6, 99.6, 99.6, 99.6, 99.6, 99.6, 99.6, 99.6],
+]); 
+var mem1_atlas167 = google.visualization.arrayToDataTable([ 
+['Execution Time (s)', 'Node Memory', 'Requested Memory', 'Consumed Memory Peak (of VmRSS)', 'Consumed Memory  (VmSize)', 'Resident Memory  (VmRSS)'], 
+[0,251, 150, 3.968, 8.057, 3.968 ],[10,251, 150, 7.873, 11.957, 7.873 ],[21,251, 150, 8.033, 12.100, 8.033 ],[32,251, 150, 8.045, 12.110, 8.045 ],[43,251, 150, 8.045, 12.104, 8.042 ],[54,251, 150, 8.071, 12.131, 8.071 ],[66,251, 150, 8.071, 7.551, 3.495 ],[77,251, 150, 8.071, 12.104, 8.047 ],[88,251, 150, 8.071, 12.123, 8.069 ],[99,251, 150, 8.071, 12.104, 8.048 ],[110,251, 150, 8.071, 12.124, 8.069 ],[121,251, 150, 8.071, 12.106, 8.050 ],[132,251, 150, 8.071, 12.115, 8.060 ],[143,251, 150, 8.138, 12.200, 8.138 ],[154,251, 150, 8.348, 12.480, 8.348 ],[165,251, 150, 8.415, 12.558, 8.415 ],[176,251, 150, 8.491, 12.658, 8.491 ],[188,251, 150, 8.491, 12.479, 8.290 ],[199,251, 150, 8.491, 12.334, 8.302 ],[211,251, 150, 8.491, 12.098, 8.053 ],[221,251, 150, 8.491, 12.140, 8.103 ],[232,251, 150, 8.491, 12.246, 8.204 ],[243,251, 150, 8.491, 12.523, 8.415 ],[254,251, 150, 8.491, 12.607, 8.478 ],[265,251, 150, 8.525, 12.682, 8.525 ],[276,251, 150, 8.525, 12.506, 8.344 ],[287,251, 150, 8.525, 12.368, 8.340 ],[299,251, 150, 8.525, 5.786, 1.776 ],
+]); 
+var mem2_atlas167 = google.visualization.arrayToDataTable([ 
+['Mem class', 'Percentage'], 
+['Used memory', 5.683], 
+['Not utilized memory', 94.317], 
+]); 
+var ib_data_atlas167 = google.visualization.arrayToDataTable([ 
+['Execution Time (s)', 'Transmitted Packets', 'Received Packets', 'Transmitted Bytes (KB)', 'Received Bytes (KB)'], 
+[0, 3790392, 3786645, 1344206, 1351999 ],[10, 2908491, 2907863, 1041339, 1040293 ],[21, 982843, 973463, 497784, 486107 ],[32, 849753, 842771, 569093, 561167 ],[43, 2960856, 2961629, 1075992, 1077314 ],[54, 990336, 980992, 500828, 489701 ],[66, 1364813, 1363137, 715071, 711992 ],[77, 3692199, 3687737, 1306309, 1305470 ],[88, 852187, 848480, 490245, 484988 ],[99, 3031469, 3025496, 1138019, 1132095 ],[110, 834395, 823360, 480121, 467765 ],[121, 3091211, 3084444, 1134479, 1136168 ],[132, 2839020, 2837591, 1051395, 1048871 ],[143, 885199, 878399, 425586, 421392 ],[154, 864921, 859267, 505706, 499994 ],[165, 769435, 762800, 421911, 417921 ],[176, 740742, 734520, 427524, 424595 ],[188, 678646, 669892, 407703, 402738 ],[199, 409794, 418824, 235780, 246267 ],[211, 2282463, 2286158, 846802, 849151 ],[221, 2628820, 2623746, 974820, 971064 ],[232, 741390, 731690, 406271, 398190 ],[243, 829291, 825478, 459698, 456772 ],[254, 749695, 742772, 413930, 411022 ],[265, 727654, 721184, 422342, 419858 ],[276, 675728, 666724, 406334, 401408 ],[287, 413587, 422040, 237147, 247223 ],[299, 2273666, 2159271, 990372, 789680 ],
+]); 
+var processesIO_data_atlas167 = google.visualization.arrayToDataTable([ 
+['Execution Time (s)', 'Read', 'Write'], 
+[0,0, 0],[10, 2.341, .035 ],[21, 0, .003 ],[32, 0, .004 ],[43, 0, 0 ],[54, 0, .003 ],[66, 0, .003 ],[77, 0, 0 ],[88, 0, .004 ],[99, 0, .001 ],[110, 0, .003 ],[121, 0, .001 ],[132, 0, .001 ],[143, 0, .001 ],[154, 0, .002 ],[165, 0, .001 ],[176, 0, .001 ],[188, 0, .001 ],[199, 0, 0 ],[211, 0, .002 ],[221, 0, .001 ],[232, 0, .002 ],[243, 0, .001 ],[254, 0, .001 ],[265, 0, .001 ],[276, 0, .001 ],[287, 0, 0 ],[299, 0, 10.930 ],
+]); 
+var nfs_data_atlas167 = google.visualization.arrayToDataTable([ 
+['Execution Time (s)', 'Read', 'Write'], 
+[0, 0, 0],[10,0, 0],[21,0, 0],[32,0, 0],[43,0, 0],[54,0, 0],[66,0, 0],[77,0, 0],[88,0, 0],[99,0, 0],[110,0, 0],[121,0, 0],[132,0, 0],[143,0, 0],[154,0, 0],[165,0, 0],[176,0, 0],[188,0, 0],[199,0, 0],[211,0, 0],[221,0, 0],[232,0, 0],[243,0, 0],[254,0, 0],[265,0, 0],[276,0, 0],[287,0, 0],[299,0, 0],
+]); 
+var disk_data_atlas167 = google.visualization.arrayToDataTable([ 
+['Devices', 'Read', 'Write'], 
+ ['sda', 0, 0], ['sdb', 0, 0], ['sdc', 0, 0],
+]); 
+var cpu_atlas104 = google.visualization.arrayToDataTable([ 
+['Execution Time (s)', 'pw.x', 'pw.x', 'pw.x', 'pw.x', 'pw.x', 'pw.x', 'pw.x', 'pw.x', 'pw.x', 'pw.x', 'pw.x', 'pw.x'], 
+[0, 92.2, 92.9, 93.6, 92.8, 92.7, 93.2, 92.9, 92.6, 92.6, 92.5, 92.7, 92.2 ],[16, 94.8, 95.6, 96.0, 95.1, 95.0, 95.5, 95.1, 95.0, 95.0, 94.9, 95.0, 94.8],[27, 95.9, 96.5, 96.7, 96.1, 96.0, 96.4, 96.1, 96.0, 96.1, 96.0, 96.1, 96.0],[38, 96.6, 97.1, 97.3, 96.8, 96.7, 97.1, 96.8, 96.8, 96.8, 96.8, 96.8, 96.7],[48, 97.1, 97.5, 97.6, 97.3, 97.2, 97.5, 97.3, 97.2, 97.3, 97.2, 97.3, 97.2],[59, 97.5, 97.9, 97.9, 97.7, 97.5, 97.8, 97.6, 97.6, 97.6, 97.6, 97.6, 97.6],[71, 97.7, 98.1, 98.1, 97.9, 97.8, 98.0, 97.9, 97.9, 97.9, 97.9, 97.9, 97.8],[82, 98.0, 98.3, 98.3, 98.1, 98.0, 98.2, 98.1, 98.1, 98.1, 98.1, 98.1, 98.0],[93, 98.1, 98.4, 98.4, 98.3, 98.2, 98.4, 98.2, 98.3, 98.3, 98.2, 98.3, 98.2],[104, 99.1, 99.4, 99.4, 99.2, 99.1, 99.3, 99.2, 99.2, 99.2, 99.2, 99.2, 99.2],[115, 99.2, 99.4, 99.4, 99.3, 99.2, 99.4, 99.3, 99.3, 99.3, 99.3, 99.3, 99.3],[126, 99.2, 99.4, 99.4, 99.3, 99.2, 99.4, 99.3, 99.3, 99.3, 99.3, 99.3, 99.3],[137, 99.2, 99.5, 99.4, 99.4, 99.3, 99.4, 99.3, 99.3, 99.4, 99.3, 99.4, 99.3],[148, 99.2, 99.5, 99.4, 99.4, 99.3, 99.4, 99.3, 99.3, 99.4, 99.3, 99.4, 99.3],[160, 99.3, 99.5, 99.5, 99.4, 99.3, 99.5, 99.4, 99.4, 99.4, 99.4, 99.4, 99.4],[171, 99.3, 99.5, 99.4, 99.4, 99.3, 99.4, 99.3, 99.4, 99.4, 99.4, 99.4, 99.3],[182, 99.2, 99.4, 99.4, 99.3, 99.2, 99.4, 99.3, 99.3, 99.3, 99.3, 99.3, 99.3],[193, 99.3, 99.5, 99.4, 99.4, 99.3, 99.5, 99.4, 99.4, 99.4, 99.4, 99.4, 99.4],[204, 99.3, 99.5, 99.5, 99.4, 99.3, 99.5, 99.4, 99.4, 99.4, 99.4, 99.4, 99.4],[216, 99.4, 99.5, 99.5, 99.5, 99.4, 99.5, 99.4, 99.5, 99.5, 99.5, 99.5, 99.5],[227, 99.4, 99.5, 99.5, 99.5, 99.4, 99.5, 99.4, 99.5, 99.5, 99.5, 99.5, 99.4],[238, 99.4, 99.5, 99.5, 99.5, 99.4, 99.5, 99.4, 99.5, 99.5, 99.5, 99.5, 99.4],[249, 99.4, 99.5, 99.5, 99.5, 99.4, 99.5, 99.4, 99.5, 99.5, 99.5, 99.5, 99.4],[260, 99.4, 99.5, 99.5, 99.5, 99.4, 99.5, 99.4, 99.5, 99.5, 99.5, 99.5, 99.5],[271, 99.4, 99.5, 99.5, 99.5, 99.4, 99.5, 99.4, 99.5, 99.5, 99.5, 99.5, 99.4],[282, 99.4, 99.5, 99.5, 99.5, 99.4, 99.5, 99.4, 99.5, 99.5, 99.5, 99.5, 99.4],[293, 99.4, 99.5, 99.5, 99.5, 99.4, 99.5, 99.4, 99.5, 99.5, 99.5, 99.5, 99.4],
+]); 
+var mem1_atlas104 = google.visualization.arrayToDataTable([ 
+['Execution Time (s)', 'Node Memory', 'Requested Memory', 'Consumed Memory Peak (of VmRSS)', 'Consumed Memory  (VmSize)', 'Resident Memory  (VmRSS)'], 
+[0,503, 150, 3.153, 7.636, 3.153 ],[16,503, 150, 7.921, 12.022, 7.921 ],[27,503, 150, 8.024, 12.119, 8.024 ],[38,503, 150, 8.032, 12.135, 8.032 ],[48,503, 150, 8.032, 12.074, 7.980 ],[59,503, 150, 8.036, 12.128, 8.036 ],[71,503, 150, 8.036, 7.468, 3.383 ],[82,503, 150, 8.036, 12.075, 7.988 ],[93,503, 150, 8.036, 12.109, 8.024 ],[104,503, 150, 8.036, 12.075, 7.989 ],[115,503, 150, 8.036, 12.113, 8.029 ],[126,503, 150, 8.036, 12.082, 7.996 ],[137,503, 150, 8.036, 12.100, 8.016 ],[148,503, 150, 8.045, 12.124, 8.045 ],[160,503, 150, 8.230, 12.355, 8.230 ],[171,503, 150, 8.290, 12.419, 8.290 ],[182,503, 150, 8.306, 12.446, 8.306 ],[193,503, 150, 8.306, 12.359, 8.203 ],[204,503, 150, 8.306, 12.259, 8.206 ],[216,503, 150, 8.306, 12.128, 8.066 ],[227,503, 150, 8.306, 12.161, 8.100 ],[238,503, 150, 8.306, 12.242, 8.166 ],[249,503, 150, 8.306, 12.394, 8.298 ],[260,503, 150, 8.347, 12.460, 8.347 ],[271,503, 150, 8.396, 12.510, 8.396 ],[282,503, 150, 8.396, 12.433, 8.318 ],[293,503, 150, 8.396, 12.371, 8.321 ],
+]); 
+var mem2_atlas104 = google.visualization.arrayToDataTable([ 
+['Mem class', 'Percentage'], 
+['Used memory', 5.597], 
+['Not utilized memory', 94.403], 
+]); 
+var ib_data_atlas104 = google.visualization.arrayToDataTable([ 
+['Execution Time (s)', 'Transmitted Packets', 'Received Packets', 'Transmitted Bytes (KB)', 'Received Bytes (KB)'], 
+[0, 1962390, 1980574, 708654, 714761 ],[16, 4658935, 4659279, 1658534, 1656967 ],[27, 860507, 841373, 442276, 416571 ],[38, 646947, 629156, 456461, 425103 ],[48, 2914003, 2908107, 1058072, 1050414 ],[59, 864987, 847211, 444562, 419740 ],[71, 1281255, 1262508, 650278, 619866 ],[82, 3579001, 3584326, 1269119, 1270072 ],[93, 714977, 695716, 440462, 412641 ],[104, 2953579, 2946112, 1085239, 1075280 ],[115, 677956, 657557, 404708, 376011 ],[126, 3033932, 3046935, 1118055, 1113335 ],[137, 2940059, 2934019, 1078104, 1070324 ],[148, 611272, 592085, 315119, 299011 ],[160, 733766, 703865, 428364, 402468 ],[171, 644165, 616331, 364103, 335634 ],[182, 600166, 592829, 346245, 335159 ],[193, 560036, 549488, 341551, 328168 ],[204, 318970, 285770, 203377, 171241 ],[216, 2609143, 2605819, 963840, 953257 ],[227, 2174095, 2167025, 810335, 802013 ],[238, 669124, 654649, 377998, 367100 ],[249, 654988, 624922, 353772, 326460 ],[260, 627607, 607715, 350885, 329827 ],[271, 603743, 589734, 354637, 336553 ],[282, 556299, 546294, 340311, 326636 ],[293, 317886, 282330, 203956, 168462 ],
+]); 
+var processesIO_data_atlas104 = google.visualization.arrayToDataTable([ 
+['Execution Time (s)', 'Read', 'Write'], 
+[0,0, 0],[16, 1.487, .021 ],[27, 0, .002 ],[38, 0, .002 ],[48, 0, 0 ],[59, 0, .002 ],[71, 0, .002 ],[82, 0, 0 ],[93, 0, .003 ],[104, 0, 0 ],[115, 0, .002 ],[126, 0, .001 ],[137, 0, 0 ],[148, 0, .001 ],[160, 0, .001 ],[171, 0, .001 ],[182, 0, .001 ],[193, 0, .001 ],[204, 0, 0 ],[216, 0, .002 ],[227, 0, 0 ],[238, 0, .001 ],[249, 0, .001 ],[260, 0, .001 ],[271, 0, .001 ],[282, 0, .001 ],[293, 0, 0 ],
+]); 
+var nfs_data_atlas104 = google.visualization.arrayToDataTable([ 
+['Execution Time (s)', 'Read', 'Write'], 
+[0, 0, 0],[16,0, 0],[27,0, 0],[38,0, 0],[48,0, 0],[59,0, 0],[71,0, 0],[82,0, 0],[93,0, 0],[104,0, 0],[115,0, 0],[126,0, 0],[137,0, 0],[148,0, 0],[160,0, 0],[171,0, 0],[182,0, 0],[193,0, 0],[204,0, 0],[216,0, 0],[227,0, 0],[238,0, 0],[249,0, 0],[260,0, 0],[271,0, 0],[282,0, 0],[293,0, 0],
+]); 
+var disk_data_atlas104 = google.visualization.arrayToDataTable([ 
+['Devices', 'Read', 'Write'], 
+ ['sda', 0, 0], ['sdb', 0, 0], ['sdc', 0, 0],
+]); 
+var time_data = google.visualization.arrayToDataTable([ 
+['Consumed Time', 'Percentage'], 
+['Elapsed Time', 30.500], 
+['Remaining Time', 69.500], 
+]); 
+var total_mem = google.visualization.arrayToDataTable([ 
+['Mem class', 'Percentage'], 
+['Used memory', 5.731], 
+['Not utilized memory', 94.269], 
+]); 
+var time_options = { 
+width: 310, 
+height: 200, 
+chartArea: {  width: "90%", height: "90%" }, 
+colors: ['#3366CC', '#109618'], 
+is3D: true 
+}; 
+var cpu_options = { 
+title: 'CPU Utilization', 
+width: '800', 
+height: '600', 
+hAxis: {title: 'Execution Time (s)'}, 
+vAxis: {title: 'CPU used (%)'}, 
+chartArea: {  width: "70%", height: "80%" }, 
+}; 
+var mem1_options = {   
+title : 'Memory Utilization',  
+vAxis: {title: 'GB'},  
+hAxis: {title: 'Time (s)'},  
+width: 800,   
+height: 600,   
+axes: {   
+x: {   
+0: {side: 'top'}   
+}   
+},   
+};   
+var mem2_options = { 
+title: 'Requested memory usage', 
+width: 400, 
+height: 300, 
+colors: ['#3366CC', '#109618'], 
+is3D: true 
+}; 
+var ib_options = { 
+title: 'Infiniband Stats', 
+width: '800', 
+height: '600', 
+hAxis: {title: 'Execution Time (s)'}, 
+vAxis: {title: 'Values'}, 
+chartArea: {  width: "70%", height: "80%" }, 
+}; 
+var processesIO_options = {   
+title : 'Processes I/O Stats',  
+vAxis: {title: 'MB/s'},  
+hAxis: {title: 'Time (s)'},  
+width: 800,   
+height: 600,   
+axes: {   
+x: {   
+0: {side: 'top'}   
+}   
+},   
+};   
+var nfs_options = {   
+title : 'NFS I/O Stats (scicomp)',  
+vAxis: {title: 'MB/s'},  
+hAxis: {title: 'Time (s)'},  
+width: 800,   
+height: 600,   
+axes: {   
+x: {   
+0: {side: 'top'}   
+}   
+},   
+};   
+var disk_options = {   
+title : 'Local disks I/O Stats (lscratch)',  
+vAxis: {title: 'MB/s'},  
+hAxis: {title: 'Devices'},  
+chartArea: {  width: "70%", height: "80%" }, 
+width: 800,   
+height: 600,   
+axes: {   
+x: {   
+0: {side: 'bottom'}   
+}   
+},   
+};   
+var total_mem_options = { 
+ title: 'Requested memory usage', 
+ width: 650, 
+ height: 450, 
+ colors: ['#3366CC', '#109618'], 
+ is3D: true 
+}; 
+var time_chart = new google.visualization.PieChart(document.getElementById('plot_time')); 
+time_chart.draw(time_data, time_options);   
+var cpu_chart_atlas168 = new google.visualization.LineChart(document.getElementById('plot_cpu_atlas168')); 
+cpu_chart_atlas168.draw(cpu_atlas168, cpu_options);   
+var mem1_chart_atlas168 = new google.visualization.AreaChart(document.getElementById('plot1_mem_atlas168')); 
+var mem2_chart_atlas168 = new google.visualization.PieChart(document.getElementById('plot2_mem_atlas168')); 
+mem1_chart_atlas168.draw(mem1_atlas168, mem1_options);   
+mem2_chart_atlas168.draw(mem2_atlas168, mem2_options);   
+var ib_chart_atlas168 = new google.visualization.LineChart(document.getElementById('plot_ib_atlas168')); 
+ib_chart_atlas168.draw(ib_data_atlas168, ib_options);   
+var processesIO_chart_atlas168 = new google.visualization.AreaChart(document.getElementById('plot_processesIO_atlas168')); 
+processesIO_chart_atlas168.draw(processesIO_data_atlas168, processesIO_options);   
+var nfs_chart_atlas168 = new google.visualization.AreaChart(document.getElementById('plot_nfs_atlas168')); 
+nfs_chart_atlas168.draw(nfs_data_atlas168, nfs_options);   
+var disk_chart_atlas168 = new google.visualization.ColumnChart(document.getElementById('plot_disk_atlas168')); 
+disk_chart_atlas168.draw(disk_data_atlas168, disk_options);   
+var time_chart = new google.visualization.PieChart(document.getElementById('plot_time')); 
+time_chart.draw(time_data, time_options);   
+var cpu_chart_atlas167 = new google.visualization.LineChart(document.getElementById('plot_cpu_atlas167')); 
+cpu_chart_atlas167.draw(cpu_atlas167, cpu_options);   
+var mem1_chart_atlas167 = new google.visualization.AreaChart(document.getElementById('plot1_mem_atlas167')); 
+var mem2_chart_atlas167 = new google.visualization.PieChart(document.getElementById('plot2_mem_atlas167')); 
+mem1_chart_atlas167.draw(mem1_atlas167, mem1_options);   
+mem2_chart_atlas167.draw(mem2_atlas167, mem2_options);   
+var ib_chart_atlas167 = new google.visualization.LineChart(document.getElementById('plot_ib_atlas167')); 
+ib_chart_atlas167.draw(ib_data_atlas167, ib_options);   
+var processesIO_chart_atlas167 = new google.visualization.AreaChart(document.getElementById('plot_processesIO_atlas167')); 
+processesIO_chart_atlas167.draw(processesIO_data_atlas167, processesIO_options);   
+var nfs_chart_atlas167 = new google.visualization.AreaChart(document.getElementById('plot_nfs_atlas167')); 
+nfs_chart_atlas167.draw(nfs_data_atlas167, nfs_options);   
+var disk_chart_atlas167 = new google.visualization.ColumnChart(document.getElementById('plot_disk_atlas167')); 
+disk_chart_atlas167.draw(disk_data_atlas167, disk_options);   
+var time_chart = new google.visualization.PieChart(document.getElementById('plot_time')); 
+time_chart.draw(time_data, time_options);   
+var cpu_chart_atlas104 = new google.visualization.LineChart(document.getElementById('plot_cpu_atlas104')); 
+cpu_chart_atlas104.draw(cpu_atlas104, cpu_options);   
+var mem1_chart_atlas104 = new google.visualization.AreaChart(document.getElementById('plot1_mem_atlas104')); 
+var mem2_chart_atlas104 = new google.visualization.PieChart(document.getElementById('plot2_mem_atlas104')); 
+mem1_chart_atlas104.draw(mem1_atlas104, mem1_options);   
+mem2_chart_atlas104.draw(mem2_atlas104, mem2_options);   
+var ib_chart_atlas104 = new google.visualization.LineChart(document.getElementById('plot_ib_atlas104')); 
+ib_chart_atlas104.draw(ib_data_atlas104, ib_options);   
+var processesIO_chart_atlas104 = new google.visualization.AreaChart(document.getElementById('plot_processesIO_atlas104')); 
+processesIO_chart_atlas104.draw(processesIO_data_atlas104, processesIO_options);   
+var nfs_chart_atlas104 = new google.visualization.AreaChart(document.getElementById('plot_nfs_atlas104')); 
+nfs_chart_atlas104.draw(nfs_data_atlas104, nfs_options);   
+var disk_chart_atlas104 = new google.visualization.ColumnChart(document.getElementById('plot_disk_atlas104')); 
+disk_chart_atlas104.draw(disk_data_atlas104, disk_options);   
+var total_mem_chart = new google.visualization.PieChart(document.getElementById('plot_total_mem')); 
+total_mem_chart.draw(total_mem, total_mem_options); 
+} 
+</script> 
+<style> 
+body { 
+background: #25c481; /* Old browsers */ 
+background: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/Pgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgdmlld0JveD0iMCAwIDEgMSIgcHJlc2VydmVBc3BlY3RSYXRpbz0ibm9uZSI+CiAgPGxpbmVhckdyYWRpZW50IGlkPSJncmFkLXVjZ2ctZ2VuZXJhdGVkIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMCUiPgogICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzI1YzQ4MSIgc3RvcC1vcGFjaXR5PSIxIi8+CiAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMyNWI3YzQiIHN0b3Atb3BhY2l0eT0iMSIvPgogIDwvbGluZWFyR3JhZGllbnQ+CiAgPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0idXJsKCNncmFkLXVjZ2ctZ2VuZXJhdGVkKSIgLz4KPC9zdmc+); 
+background: -moz-linear-gradient(left,  #25c481 0%, #25b7c4 100%); /* FF3.6-15 */ 
+background: -webkit-linear-gradient(left,  #25c481 0%,#25b7c4 100%); /* Chrome10-25,Safari5.1-6 */ 
+background: linear-gradient(to right,  #25c481 0%,#25b7c4 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */ 
+filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#25c481', endColorstr='#25b7c4',GradientType=1 ); /* IE6-8 */ 
+margin: 0px; 
+} 
+ 
+.inline { 
+display:inline-block; 
+} 
+ 
+.text { 
+font-family: Consolas,monospace; 
+font-size: 18px; 
+} 
+ 
+.vl { 
+display: inline;  
+border-left: 2px solid black; 
+height: 10px; 
+padding-right:5em; 
+margin-left:5em; 
+} 
+ 
+table { 
+border-collapse: collapse; 
+margin: 15px; 
+margin-top: 2px; 
+margin-bottom: 2px; 
+} 
+ 
+tr { 
+border: 1px solid rgba(254, 254, 254, 0.3); 
+} 
+ 
+.overflowDivs { 
+overflow:auto; 
+white-space: nowrap; 
+} 
+ 
+.header { 
+width: 800px; 
+border: 1px solid rgba(254, 254, 254, 0.3); 
+float: left; 
+text-align: center; 
+font-family: 'Roboto', sans-serif; 
+font-size: 16px; 
+color: #fff; 
+text-transform: uppercase; 
+vertical-align: middle; 
+background-color: rgba(255,255,255,0.3); 
+} 
+ 
+.plot{ 
+vertical-align:middle; 
+} 
+ 
+#foot { 
+background-color: rgba(255,255,255,0.3); 
+margin-top: 180px; 
+display: table; 
+width:100%; 
+} 
+ 
+#textmem2 { 
+border-spacing: 5px; 
+border-collapse: separate; 
+margin: 0 auto; 
+border: 1px solid rgba(254, 254, 254, 0.3);  
+} 
+ 
+#detailedText { 
+vertical-align: top; 
+padding-top: 230px; 
+font-family: 'Roboto', sans-serif; 
+font-size: 56px; 
+color: #fff; 
+text-transform: uppercase; 
+} 
+.rcorners { 
+border: 1px solid rgba(254, 254, 254, 0.3); 
+background-color: rgba(255,255,255,0.3); 
+border-radius: 25px; 
+margin : 40px; 
+padding-left: 15px; 
+} 
+ 
+.textbox { 
+width:49%; 
+height: 300px; 
+} 
+.warningText { 
+height: 200px; 
+vertical-align: top; 
+margin-top: 230px; 
+color: #ff8000; 
+} 
+</style> 
+<body> 
+<center><h1>DCRAB REPORT - JOB 187066 </h1></center> 
+<div style="float: left;" class="inline textbox"> 
+<div style="margin-left: 70px; height: 75%;" class="text rcorners"> 
+<p style="padding :38px;"> 
+<b><u>Name of the job</u></b>: daniPruebaJob<br> 
+<b><u>JOBID</u></b>: 187066 <br> 
+<b><u>User</u></b>: dfranco <br> 
+<b><u>Working directory</u></b>: /scratch/dfranco/pruebaDCRAB/quantum/AUSURF112 <br> 
+<b><u>Node list</u></b>:  atlas-168 atlas-167 atlas-104 
+</p> 
+</div> 
+</div> 
+ 
+<div class="inline textbox"> 
+<div class="text rcorners" style="height: 75%;"> 
+<div id='plot_time' style="padding: 15px; float: left;" ></div> 
+<div style="float: left; padding-top: 55px; padding-left: 55px;"> 
+<center> 
+<b><u>Elapsed Time (DD:HH:MM:SS)</u></b><br> 
+00:00:05:05 <br><br> 
+<b><u>Cput requested</u></b><br> 
+00:00:16:40 <br> 
+</center> 
+</div> 
+</div> 
+</div> 
+<div class="overflowDivs"> 
+<div class="inline"> 
+<table><tr><td> 
+<div class="header">atlas-168</div> 
+</td></tr> 
+<tr><td> 
+<div class="plot" id='plot_cpu_atlas168'></div> 
+</td></tr> 
+</table> 
+</div> 
+<div class="inline"> 
+<table><tr><td> 
+<div class="header">atlas-167</div> 
+</td></tr> 
+<tr><td> 
+<div class="plot" id='plot_cpu_atlas167'></div> 
+</td></tr> 
+</table> 
+</div> 
+<div class="inline"> 
+<table><tr><td> 
+<div class="header">atlas-104</div> 
+</td></tr> 
+<tr><td> 
+<div class="plot" id='plot_cpu_atlas104'></div> 
+</td></tr> 
+</table> 
+</div> 
+</div> 
+<br><br><br> 
+<div class="overflowDivs"> 
+<div class="inline" style="margin-right: 50px;"> 
+<table><tr><td> 
+<div style="width: 1019px;" class="header">TOTAL MEMORY USED FOR THE SCHEDULER</div> 
+</td></tr> 
+<tr><td> 
+<div style="padding-top: 75px;padding-bottom: 75px;padding-left: 15px;padding-right: 15px;" class="plot inline" id='plot_total_mem'></div> 
+<div style="border: 0px;padding-right: 15px;" class="plot inline"> 
+<div class="text"> 
+<table id="textmem2"> 
+<tr style="border: 0px;"><td><b><u>Requested memory</u></b>:&nbsp;&nbsp;&nbsp;&nbsp;</td><td>150 GB</td></tr> 
+<tr style="border: 0px;"><td><b><u>VmRSS (peak)</u></b>:&nbsp;&nbsp;&nbsp;&nbsp;</td><td>8.597 GB</td></tr> 
+<tr style="border: 0px;"><td><b><u>VmSize (peak)</u></b>:&nbsp;&nbsp;&nbsp;&nbsp;</td><td>12.431 GB</td></tr> 
+</table> 
+</div> 
+<br><br><br> 
+</div> 
+</td></tr> 
+</table> 
+</div> 
+ 
+<div class="inline" id="detailedText"> 
+<pre style="margin: 0px;">MORE DETAILED  
+    DATA </pre> 
+<p style="margin: 0px; font-size: 115px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#8594;</p> 
+</div> 
+<div class="inline"> 
+<table><tr><td> 
+<div style="width: 1207px;" class="header">atlas-168</div> 
+</td></tr> 
+<tr><td> 
+<div class="plot inline" id='plot1_mem_atlas168'></div> 
+<div style="border: 0px;" class="plot inline"> 
+<div class="text"> 
+<table id="textmem2"> 
+<tr style="border: 0px;"><td><b><u>Node memory</u></b>:&nbsp;&nbsp;&nbsp;&nbsp;</td><td>251 GB</td></tr> 
+<tr style="border: 0px;"><td><b><u>Requested memory</u></b>:&nbsp;&nbsp;&nbsp;&nbsp;</td><td>150 GB</td></tr> 
+<tr style="border: 0px;"><td><b><u>VmRSS (peak)</u></b>:&nbsp;&nbsp;&nbsp;&nbsp;</td><td>8.597 GB</td></tr> 
+<tr style="border: 0px;"><td><b><u>VmSize (peak)</u></b>:&nbsp;&nbsp;&nbsp;&nbsp;</td><td>12.687 GB</td></tr> 
+</table> 
+</div> 
+<br><br><br> 
+<div class="plot inline" id='plot2_mem_atlas168'></div> 
+</div> 
+</td></tr> 
+</table> 
+</div> 
+<div class="inline"> 
+<table><tr><td> 
+<div style="width: 1207px;" class="header">atlas-167</div> 
+</td></tr> 
+<tr><td> 
+<div class="plot inline" id='plot1_mem_atlas167'></div> 
+<div style="border: 0px;" class="plot inline"> 
+<div class="text"> 
+<table id="textmem2"> 
+<tr style="border: 0px;"><td><b><u>Node memory</u></b>:&nbsp;&nbsp;&nbsp;&nbsp;</td><td>251 GB</td></tr> 
+<tr style="border: 0px;"><td><b><u>Requested memory</u></b>:&nbsp;&nbsp;&nbsp;&nbsp;</td><td>150 GB</td></tr> 
+<tr style="border: 0px;"><td><b><u>VmRSS (peak)</u></b>:&nbsp;&nbsp;&nbsp;&nbsp;</td><td>8.525 GB</td></tr> 
+<tr style="border: 0px;"><td><b><u>VmSize (peak)</u></b>:&nbsp;&nbsp;&nbsp;&nbsp;</td><td>12.682 GB</td></tr> 
+</table> 
+</div> 
+<br><br><br> 
+<div class="plot inline" id='plot2_mem_atlas167'></div> 
+</div> 
+</td></tr> 
+</table> 
+</div> 
+<div class="inline"> 
+<table><tr><td> 
+<div style="width: 1207px;" class="header">atlas-104</div> 
+</td></tr> 
+<tr><td> 
+<div class="plot inline" id='plot1_mem_atlas104'></div> 
+<div style="border: 0px;" class="plot inline"> 
+<div class="text"> 
+<table id="textmem2"> 
+<tr style="border: 0px;"><td><b><u>Node memory</u></b>:&nbsp;&nbsp;&nbsp;&nbsp;</td><td>503 GB</td></tr> 
+<tr style="border: 0px;"><td><b><u>Requested memory</u></b>:&nbsp;&nbsp;&nbsp;&nbsp;</td><td>150 GB</td></tr> 
+<tr style="border: 0px;"><td><b><u>VmRSS (peak)</u></b>:&nbsp;&nbsp;&nbsp;&nbsp;</td><td>8.396 GB</td></tr> 
+<tr style="border: 0px;"><td><b><u>VmSize (peak)</u></b>:&nbsp;&nbsp;&nbsp;&nbsp;</td><td>12.510 GB</td></tr> 
+</table> 
+</div> 
+<br><br><br> 
+<div class="plot inline" id='plot2_mem_atlas104'></div> 
+</div> 
+</td></tr> 
+</table> 
+</div> 
+</div> 
+<br><br><br> 
+<div class="overflowDivs"> 
+<div class="inline"> 
+<table><tr><td> 
+<div style="width: 1100px;" class="header">atlas-168</div> 
+</td></tr> 
+<tr><td> 
+<div class="plot inline" id='plot_processesIO_atlas168'></div> 
+<div style="border: 0px; margin-left: 75px;" class="plot inline"> 
+<div class="text"> 
+<table id="textmem2"> 
+<tr style="border: 0px;"><td><b><u>Total Read</u></b>:</td></tr> 
+<tr style="border: 0px;"><td>24.5206 MB</td></tr> 
+<tr style="border: 0px;"><td><b><u>Total Write</u></b>:</td></tr> 
+<tr style="border: 0px;"><td>0.9971 MB</td></tr> 
+</table> 
+</div> 
+</div> 
+</td></tr> 
+</table> 
+</div> 
+<div class="inline"> 
+<table><tr><td> 
+<div style="width: 1100px;" class="header">atlas-167</div> 
+</td></tr> 
+<tr><td> 
+<div class="plot inline" id='plot_processesIO_atlas167'></div> 
+<div style="border: 0px; margin-left: 75px;" class="plot inline"> 
+<div class="text"> 
+<table id="textmem2"> 
+<tr style="border: 0px;"><td><b><u>Total Read</u></b>:</td></tr> 
+<tr style="border: 0px;"><td>25.3653 MB</td></tr> 
+<tr style="border: 0px;"><td><b><u>Total Write</u></b>:</td></tr> 
+<tr style="border: 0px;"><td>132.1198 MB</td></tr> 
+</table> 
+</div> 
+</div> 
+</td></tr> 
+</table> 
+</div> 
+<div class="inline"> 
+<table><tr><td> 
+<div style="width: 1100px;" class="header">atlas-104</div> 
+</td></tr> 
+<tr><td> 
+<div class="plot inline" id='plot_processesIO_atlas104'></div> 
+<div style="border: 0px; margin-left: 75px;" class="plot inline"> 
+<div class="text"> 
+<table id="textmem2"> 
+<tr style="border: 0px;"><td><b><u>Total Read</u></b>:</td></tr> 
+<tr style="border: 0px;"><td>25.7757 MB</td></tr> 
+<tr style="border: 0px;"><td><b><u>Total Write</u></b>:</td></tr> 
+<tr style="border: 0px;"><td>0.7684 MB</td></tr> 
+</table> 
+</div> 
+</div> 
+</td></tr> 
+</table> 
+</div> 
+</div> 
+<br><br><br> 
+<div class="overflowDivs"> 
+<div class="text rcorners inline warningText" > 
+<center><b> 
+-- WARNING --<br> 
+Disk charts are generated<br> 
+with general statistics of the disk<br> 
+usage during the execution. This <br> 
+means that is not considering only<br> 
+your job disk usage but the whole node.<br> 
+So keep in mind when analizing the<br> 
+chart because maybe can be another<br> 
+job using the lscratch <br> 
+</b></center> 
+</div> 
+<div class="inline"> 
+<table><tr><td> 
+<div class="header">atlas-168</div> 
+</td></tr> 
+<tr><td> 
+<div class="plot" id='plot_disk_atlas168'></div> 
+</td></tr> 
+</table> 
+</div> 
+<div class="inline"> 
+<table><tr><td> 
+<div class="header">atlas-167</div> 
+</td></tr> 
+<tr><td> 
+<div class="plot" id='plot_disk_atlas167'></div> 
+</td></tr> 
+</table> 
+</div> 
+<div class="inline"> 
+<table><tr><td> 
+<div class="header">atlas-104</div> 
+</td></tr> 
+<tr><td> 
+<div class="plot" id='plot_disk_atlas104'></div> 
+</td></tr> 
+</table> 
+</div> 
+</div> 
+<br><br><br> 
+<div class="overflowDivs"> 
+<div class="text rcorners inline warningText" > 
+<center><b> 
+-- WARNING --<br> 
+Infiniband charts are generated<br> 
+with general statistics of the IB<br> 
+port during the execution. This <br> 
+means that is not considering only<br> 
+your job IB usage but the whole node.<br> 
+So keep in mind when analizing the<br> 
+chart because maybe can be another<br> 
+job using IB device <br> 
+</b></center> 
+</div> 
+<div class="inline"> 
+<table><tr><td> 
+<div class="header">atlas-168</div> 
+</td></tr> 
+<tr><td> 
+<div class="plot" id='plot_ib_atlas168'></div> 
+</td></tr> 
+</table> 
+</div> 
+<div class="inline"> 
+<table><tr><td> 
+<div class="header">atlas-167</div> 
+</td></tr> 
+<tr><td> 
+<div class="plot" id='plot_ib_atlas167'></div> 
+</td></tr> 
+</table> 
+</div> 
+<div class="inline"> 
+<table><tr><td> 
+<div class="header">atlas-104</div> 
+</td></tr> 
+<tr><td> 
+<div class="plot" id='plot_ib_atlas104'></div> 
+</td></tr> 
+</table> 
+</div> 
+<div class="overflowDivs"> 
+<div class="text rcorners inline warningText" > 
+<center><b> 
+-- WARNING --<br> 
+NFS charts are generated<br> 
+with general statistics of NFS of<br> 
+the node during the execution. This <br> 
+means that is not considering only<br> 
+your job NFS usage but the whole node.<br> 
+So keep in mind when analizing the<br> 
+chart because maybe can be another<br> 
+job using scicomp mount point <br> 
+</b></center> 
+</div> 
+<div class="inline"> 
+<table><tr><td> 
+<div style="width: 1100px;" class="header">atlas-168</div> 
+</td></tr> 
+<tr><td> 
+<div class="plot inline" id='plot_nfs_atlas168'></div> 
+<div style="border: 0px; margin-left: 75px;" class="plot inline"> 
+<div class="text"> 
+<table id="textmem2"> 
+<tr style="border: 0px;"><td><b><u>Total Read</u></b>:</td></tr> 
+<tr style="border: 0px;"><td>0 MB</td></tr> 
+<tr style="border: 0px;"><td><b><u>Total Write</u></b>:</td></tr> 
+<tr style="border: 0px;"><td>0 MB</td></tr> 
+</table> 
+</div> 
+</div> 
+</td></tr> 
+</table> 
+</div> 
+<div class="inline"> 
+<table><tr><td> 
+<div style="width: 1100px;" class="header">atlas-167</div> 
+</td></tr> 
+<tr><td> 
+<div class="plot inline" id='plot_nfs_atlas167'></div> 
+<div style="border: 0px; margin-left: 75px;" class="plot inline"> 
+<div class="text"> 
+<table id="textmem2"> 
+<tr style="border: 0px;"><td><b><u>Total Read</u></b>:</td></tr> 
+<tr style="border: 0px;"><td>0 MB</td></tr> 
+<tr style="border: 0px;"><td><b><u>Total Write</u></b>:</td></tr> 
+<tr style="border: 0px;"><td>0 MB</td></tr> 
+</table> 
+</div> 
+</div> 
+</td></tr> 
+</table> 
+</div> 
+<div class="inline"> 
+<table><tr><td> 
+<div style="width: 1100px;" class="header">atlas-104</div> 
+</td></tr> 
+<tr><td> 
+<div class="plot inline" id='plot_nfs_atlas104'></div> 
+<div style="border: 0px; margin-left: 75px;" class="plot inline"> 
+<div class="text"> 
+<table id="textmem2"> 
+<tr style="border: 0px;"><td><b><u>Total Read</u></b>:</td></tr> 
+<tr style="border: 0px;"><td>0 MB</td></tr> 
+<tr style="border: 0px;"><td><b><u>Total Write</u></b>:</td></tr> 
+<tr style="border: 0px;"><td>0 MB</td></tr> 
+</table> 
+</div> 
+</div> 
+</td></tr> 
+</table> 
+</div> 
+</div> 
+<br><br><br> 
+<div id='foot'> 
+<div class="inline">&nbsp;&nbsp;&nbsp;</div> 
+<div class="inline"> 
+<a href="http://dipc.ehu.es/" target="_blank"> 
+<svg version="1.1" x="0px" y="0px" width="90px" height="45px" viewBox="0 0 90 45" enable-background="new 0 0 90 45" xml:space="preserve" style="margin-top: 10px;"><image width="90" height="45" x="0" y="0" 
+xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHgAAABFCAMAAAC2XtKTAAAABGdBTUEAALGPC/xhBQAAACBjSFJN 
+AAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAACvlBMVEUAAAAAAAAAAAAAAAAA 
+AAAAAAAAAAAAAAAAAAAAkt0ClN4ClN0ClN0Ak+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA 
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlN0Cld0ClN4AkdoAAAAAAAAAAAAAAAAAAAAA 
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA 
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA 
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAClN4ClN0AAAAAAAAAAAAAAAAAAAAAAAAAkdoC 
+ld0Ck90ClN0Ak+QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA 
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA 
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA 
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA 
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA 
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA 
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD 
+ld7///8fboK2AAAA53RSTlMAudnOlm9AGAE20d/OMjLf0TYvydjMtJFoORNu/vHPThE88/A4OPDz 
+PDTu/e3Gh0MLEPQXrVwNuPy7Xwf4rlGbiyIz98dYtkfk1F564WP2+XbiYOxivy6Yr97y/ntlqPXb 
+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"/> 
+</a> 
+</div> 
+<div style="font-size: 12px; display: table-cell; vertical-align: middle;" class="text inline"> 
+Copyright &copy; 2018 DIPC (Donostia International Physics Center) 
+<div class="vl"></div> 
+<a href="http://dipc.ehu.es/cc/computing_resources/index.html" target="_blank"  style="text-decoration: none; color: black;"><b>Technical Documentation</b></a> 
+<div class="vl"></div> 
+<a href="http://dipc.ehu.es/" target="_blank"  style="text-decoration: none; color: black;"><b>DIPC Home Page</b></a> 
+<div class="vl"></div> 
+</div> 
+</body>  
+</html>  

@@ -37,9 +37,6 @@ source $DCRAB_BIN/scripts/dcrab_report_functions.sh
 # Initialize variables
 dcrab_node_monitor_init_variables $2
 
-# Write first values in the main html report 
-dcrab_write_initial_values
-
 # Determines the main processes of the job and initializes html file first time 
 dcrab_determine_main_process 
 
@@ -62,8 +59,8 @@ while [ 1 ]; do
 	dcrab_write_data 
 
 	# Sleep to the next data collection
-        sleep $DCRAB_COLLECT_TIME
+	sleep $DCRAB_COLLECT_TIME
 	
 	# To avoid block in the loop 
-        dcrab_check_exit 1
+	dcrab_check_exit 1
 done

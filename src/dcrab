@@ -33,10 +33,10 @@ case "$1" in
 		dcrab_init_variables
 
  		# Move to working directory
-                cd $DCRAB_WORKDIR
+		cd $DCRAB_WORKDIR
 		mkdir -p $DCRAB_REPORT_DIR/log
 
-                # Initialize log report of the main node
+		# Initialize log report of the main node
 		echo "--- DCRAB main-node: `hostname` log ---" >> $DCRAB_LOG_DIR/dcrab.log
 
 		# Create report files
@@ -46,43 +46,42 @@ case "$1" in
 		dcrab_start_data_collection  >> $DCRAB_LOG_DIR/dcrab.log 2>&1
 	
 		echo "--- End DCRAB output (start fase)---"
-            	;;
+   	;;
 	finish)
 		echo "--- Start DCRAB output (finish fase) ---"
 		
 		# Load necessary functions
-	        source $DCRAB_BIN/scripts/dcrab_finalize.sh
+		source $DCRAB_BIN/scripts/dcrab_finalize.sh
 		source $DCRAB_BIN/scripts/dcrab_config.sh
 
 		# Check which scheduler use the system
-                dcrab_check_scheduler
+		dcrab_check_scheduler
 
 		export DCRAB_REPORT_DIR=dcrab_report_$DCRAB_JOB_ID
 		export DCRAB_LOG_DIR=$DCRAB_REPORT_DIR/log
 
    		# Move to working directory
-                cd $DCRAB_WORKDIR
+		cd $DCRAB_WORKDIR
 
 		# Finalize DCRAB
 		dcrab_finalize  >> $DCRAB_LOG_DIR/dcrab.log 2>&1
 
 		echo "--- End DCRAB output (finish fase) ---"
-            	;;
-
+   	;;
 	version)
 		cat $DCRAB_BIN/../config/version
-		;;
-        *)
+	;;
+	*)
 		echo "DCRAB report help"
 		echo "Developed by DIPC Fundation, CC-staff"
 		echo ""
-                echo $"Usage: $0 {start|finish|version}"
+		echo $"Usage: $0 {start|finish|version}"
 		echo ""
 		echo "Summary:"
-		echo "    * start          | starts DCRAB report"
-		echo "    * finish         | finalize data collection and DCRAB processes"
-		echo "    * version        | displays DCRAB version"
+		echo "    * start    | starts DCRAB report"
+		echo "    * finish   | finalize data collection and DCRAB processes"
+		echo "    * version  | displays DCRAB version"
 		echo ""
-            	exit 1
+    	exit 1
 esac
 
