@@ -60,33 +60,34 @@ dcrab_write_data () {
 	0)	
 		# GLOBAL TIME
 		printf "%s \n" "sed -i \"$DCRAB_TIME_TEXT_L1\"'s|\([0-9]*:[0-9]*:[0-9]*:[0-9]*\)|'\"$DCRAB_ELAPSED_TIME_TEXT\"'|' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
-	    printf "%s \n" "sed -i \"$DCRAB_TIME_L1\"'s|\([0-9]*[.]*[0-9]*\)\]|'\"$DCRAB_ELAPSED_TIME_VALUE\"'\]|' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
-	    printf "%s \n" "sed -i \"$DCRAB_TIME_L2\"'s|\([0-9]*[.]*[0-9]*\)\]|'\"$DCRAB_REMAINING_TIME_VALUE\"'\]|' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
+		printf "%s \n" "sed -i \"$DCRAB_TIME_L1\"'s|\([0-9]*[.]*[0-9]*\)\]|'\"$DCRAB_ELAPSED_TIME_VALUE\"'\]|' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
+		printf "%s \n" "sed -i \"$DCRAB_TIME_L2\"'s|\([0-9]*[.]*[0-9]*\)\]|'\"$DCRAB_REMAINING_TIME_VALUE\"'\]|' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
 
 		# More than one node
 		if [ "$DCRAB_NNODES" -gt 1 ]; then
 			# MEM TOTAL
-            printf "%s \n" "sed -i \"$DCRAB_MEM_TOTAL_L2\"'s|\([0-9]*[.]*[0-9]*\)\]|'\"$DCRAB_MEM_TOTAL_UNUSED\"'\]|' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
-            printf "%s \n" "sed -i \"$DCRAB_MEM_TOTAL_L1\"'s|\([0-9]*[.]*[0-9]*\)\]|'\"$DCRAB_MEM_TOTAL_USED\"'\]|' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
-            printf "%s \n" "sed -i \"$DCRAB_MEM_TOTAL_TEXT_L2\"'s|\([0-9]*[.]*[0-9]*\) GB</td></tr>|'\"$DCRAB_MEM_TOTAL_MAX_VMRSS\"' GB</td></tr>|' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
-            printf "%s \n" "sed -i \"$DCRAB_MEM_TOTAL_TEXT_L3\"'s|\([0-9]*[.]*[0-9]*\) GB</td></tr>|'\"$DCRAB_MEM_TOTAL_VMSIZE\"' GB</td></tr>|' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
+			printf "%s \n" "sed -i \"$DCRAB_MEM_TOTAL_L2\"'s|\([0-9]*[.]*[0-9]*\)\]|'\"$DCRAB_MEM_TOTAL_UNUSED\"'\]|' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
+		        printf "%s \n" "sed -i \"$DCRAB_MEM_TOTAL_L1\"'s|\([0-9]*[.]*[0-9]*\)\]|'\"$DCRAB_MEM_TOTAL_USED\"'\]|' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
+		        printf "%s \n" "sed -i \"$DCRAB_MEM_TOTAL_TEXT_L2\"'s|\([0-9]*[.]*[0-9]*\) GB</td></tr>|'\"$DCRAB_MEM_TOTAL_MAX_VMRSS\"' GB</td></tr>|' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
+		        printf "%s \n" "sed -i \"$DCRAB_MEM_TOTAL_TEXT_L3\"'s|\([0-9]*[.]*[0-9]*\) GB</td></tr>|'\"$DCRAB_MEM_TOTAL_VMSIZE\"' GB</td></tr>|' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
 
 			if [ "$DCRAB_MEM_TOTAL_EXCEEDED" -eq 1 ] && [ "$DCRAB_MEM_TOTAL_CHANGED" -eq 0 ]; then
-                printf "%s \n" "sed -i \"$DCRAB_MEM_TOTAL_COLOR_BASELINE\"'s/#3366CC/#ff0000/' $DCRAB_HTML; "
-                DCRAB_MEM_TOTAL_EXCEEDED=0
-                DCRAB_MEM_TOTAL_CHANGED=1
-            fi
+                		printf "%s \n" "sed -i \"$DCRAB_MEM_TOTAL_COLOR_BASELINE\"'s/#3366CC/#ff0000/' $DCRAB_HTML; "
+		                DCRAB_MEM_TOTAL_EXCEEDED=0
+		                DCRAB_MEM_TOTAL_CHANGED=1
+		        fi
 		fi 
 
 		# When new processes are created
-	    if [ "$DCRAB_CPU_UPDATES" -gt 0 ]; then
+		if [ "$DCRAB_CPU_UPDATES" -gt 0 ]; then
 			# Construct the string to insert
-            DCRAB_CPU_UPDATE_STRING1=""
-            DCRAB_CPU_UPDATE_STRING2=""
-            for i in $( seq 0 $((DCRAB_CPU_UPDATES -1)) ); do
-   	        	DCRAB_CPU_UPDATE_STRING1=$DCRAB_CPU_UPDATE_STRING1", '${DCRAB_CPU_UPD_PROC_NAME[$i]}'"
-                DCRAB_CPU_UPDATE_STRING2=$DCRAB_CPU_UPDATE_STRING2", "
-            done	
+	            	DCRAB_CPU_UPDATE_STRING1=""
+            		DCRAB_CPU_UPDATE_STRING2=""
+
+            		for i in $( seq 0 $((DCRAB_CPU_UPDATES -1)) ); do
+   	        		DCRAB_CPU_UPDATE_STRING1=$DCRAB_CPU_UPDATE_STRING1", '${DCRAB_CPU_UPD_PROC_NAME[$i]}'"
+	   	             	DCRAB_CPU_UPDATE_STRING2=$DCRAB_CPU_UPDATE_STRING2", "
+	            	done	
 			
 			# CPU				
 			printf "%s \n" "sed -i \"$DCRAB_CPU_L1\"\"s|\['Execution Time (s)'|\['Execution Time (s)'$DCRAB_CPU_UPDATE_STRING1|\" $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
@@ -94,7 +95,7 @@ dcrab_write_data () {
 		fi	
 	
 		# The first write
-        if [ "$DCRAB_FIRST_WRITE" -eq 0 ]; then
+        	if [ "$DCRAB_FIRST_WRITE" -eq 0 ]; then
 			# TOTAL PIE CHART TEXT
 			[ "$DCRAB_NNODES" -gt 1 ] && printf "%s \n" "sed -i \"$DCRAB_MEM_TOTAL_TEXT_L1\"'s|\([0-9]*[.]*[0-9]*\) GB</td></tr>|'\"$DCRAB_REQ_MEM\"' GB</td></tr>|' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
 		
@@ -104,55 +105,56 @@ dcrab_write_data () {
 	;;
 	*)
 		# When new processes are created
-        if [ "$DCRAB_CPU_UPDATES" -gt 0 ]; then
-            # Construct the string to insert
-            DCRAB_CPU_UPDATE_STRING1=""
-            DCRAB_CPU_UPDATE_STRING2=""
-            for i in $( seq 0 $((DCRAB_CPU_UPDATES -1)) ); do
-                DCRAB_CPU_UPDATE_STRING1=$DCRAB_CPU_UPDATE_STRING1", '${DCRAB_CPU_UPD_PROC_NAME[$i]}'"
-                DCRAB_CPU_UPDATE_STRING2=$DCRAB_CPU_UPDATE_STRING2", "
-            done
+        	if [ "$DCRAB_CPU_UPDATES" -gt 0 ]; then
+            		# Construct the string to insert
+           		DCRAB_CPU_UPDATE_STRING1=""
+            		DCRAB_CPU_UPDATE_STRING2=""
 
-            printf "%s \n" "sed -i \"$DCRAB_CPU_L1\"\"s|\['Execution Time (s)'|\['Execution Time (s)'$DCRAB_CPU_UPDATE_STRING1|\" $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
-            printf "%s \n" "sed -i \"$DCRAB_CPU_L2\"'s|\[\([0-9]*\),|\[\1, '\"$DCRAB_CPU_UPDATE_STRING2\"'|g' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
-        fi
+            		for i in $( seq 0 $((DCRAB_CPU_UPDATES -1)) ); do
+                		DCRAB_CPU_UPDATE_STRING1=$DCRAB_CPU_UPDATE_STRING1", '${DCRAB_CPU_UPD_PROC_NAME[$i]}'"
+                		DCRAB_CPU_UPDATE_STRING2=$DCRAB_CPU_UPDATE_STRING2", "
+           	 	done
+
+            		printf "%s \n" "sed -i \"$DCRAB_CPU_L1\"\"s|\['Execution Time (s)'|\['Execution Time (s)'$DCRAB_CPU_UPDATE_STRING1|\" $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
+            		printf "%s \n" "sed -i \"$DCRAB_CPU_L2\"'s|\[\([0-9]*\),|\[\1, '\"$DCRAB_CPU_UPDATE_STRING2\"'|g' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
+        	fi
 	;;
 	esac
 
 	# The first write
-    if [ "$DCRAB_FIRST_WRITE" -eq 0 ]; then
-    	# MEM
-        printf "%s \n" "sed -i \"$DCRAB_MEM3_L1\"'s|\([0-9]\) GB|'\"$DCRAB_NODE_TOTAL_MEM\"' GB|' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
-        printf "%s \n" "sed -i \"$DCRAB_MEM3_L2\"'s|\([0-9]\) GB|'\"$DCRAB_REQ_MEM\"' GB|' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
+	if [ "$DCRAB_FIRST_WRITE" -eq 0 ]; then
+	    	# MEM
+	        printf "%s \n" "sed -i \"$DCRAB_MEM3_L1\"'s|\([0-9]\) GB|'\"$DCRAB_NODE_TOTAL_MEM\"' GB|' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
+	        printf "%s \n" "sed -i \"$DCRAB_MEM3_L2\"'s|\([0-9]\) GB|'\"$DCRAB_REQ_MEM\"' GB|' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
 
-        DCRAB_FIRST_WRITE=$((DCRAB_FIRST_WRITE + 1))
-    fi
+        	DCRAB_FIRST_WRITE=$((DCRAB_FIRST_WRITE + 1))
+	fi
 
 	# CPU
-    printf "%s \n" "sed -i \"$DCRAB_CPU_L2\"'s/.*/&'\"$DCRAB_CPU_DATA\"'/' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
+	printf "%s \n" "sed -i \"$DCRAB_CPU_L2\"'s/.*/&'\"$DCRAB_CPU_DATA\"'/' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
 
-    # MEM 
-    printf "%s \n" "sed -i \"$DCRAB_MEM1_L1\"'s/.*/&'\"$DCRAB_MEM_DATA\"'/' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
-    printf "%s \n" "sed -i \"$DCRAB_MEM2_L2\"'s|\([0-9]*[.]*[0-9]*\)\]|'\"$DCRAB_MEM2_UNUSED\"'\]|' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
-    printf "%s \n" "sed -i \"$DCRAB_MEM2_L1\"'s|\([0-9]*[.]*[0-9]*\)\]|'\"$DCRAB_MEM2_USED\"'\]|' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
-    printf "%s \n" "sed -i \"$DCRAB_MEM3_L3\"'s|\([0-9]*[.]*[0-9]*\) GB</td></tr>|'\"$DCRAB_MEM_MAX_VMRSS\"' GB</td></tr>|' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
-    printf "%s \n" "sed -i \"$DCRAB_MEM3_L4\"'s|\([0-9]*[.]*[0-9]*\) GB</td></tr>|'\"$DCRAB_MEM_MAX_VMSIZE\"' GB</td></tr>|' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
+  	# MEM 
+	printf "%s \n" "sed -i \"$DCRAB_MEM1_L1\"'s/.*/&'\"$DCRAB_MEM_DATA\"'/' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
+    	printf "%s \n" "sed -i \"$DCRAB_MEM2_L2\"'s|\([0-9]*[.]*[0-9]*\)\]|'\"$DCRAB_MEM2_UNUSED\"'\]|' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
+    	printf "%s \n" "sed -i \"$DCRAB_MEM2_L1\"'s|\([0-9]*[.]*[0-9]*\)\]|'\"$DCRAB_MEM2_USED\"'\]|' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
+    	printf "%s \n" "sed -i \"$DCRAB_MEM3_L3\"'s|\([0-9]*[.]*[0-9]*\) GB</td></tr>|'\"$DCRAB_MEM_MAX_VMRSS\"' GB</td></tr>|' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
+    	printf "%s \n" "sed -i \"$DCRAB_MEM3_L4\"'s|\([0-9]*[.]*[0-9]*\) GB</td></tr>|'\"$DCRAB_MEM_MAX_VMSIZE\"' GB</td></tr>|' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
 
-    # IB 
-    printf "%s \n" "sed -i \"$DCRAB_IB_L1\"'s/.*/&'\"$DCRAB_IB_DATA\"'/' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
+    	# IB 
+    	printf "%s \n" "sed -i \"$DCRAB_IB_L1\"'s/.*/&'\"$DCRAB_IB_DATA\"'/' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
 
-    # PROCESSES_IO
-    printf "%s \n" "sed -i \"$DCRAB_PROCESSESIO_L1\"'s/.*/&'\"$DCRAB_PROCESSESIO_DATA\"'/' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
-    printf "%s \n" "sed -i \"$DCRAB_PROCESSESIO_TEXT_L1\"'s|\([0-9]*[.]*[0-9]*\) '\"$DCRAB_PROCESSESIO_TOTAL_LAST_READ_STRING\"'</td></tr>|'\"$DCRAB_PROCESSESIO_TOTAL_READ_REDUCED $DCRAB_PROCESSESIO_TOTAL_READ_STRING\"'</td></tr>|' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
-    printf "%s \n" "sed -i \"$DCRAB_PROCESSESIO_TEXT_L2\"'s|\([0-9]*[.]*[0-9]*\) '\"$DCRAB_PROCESSESIO_TOTAL_LAST_WRITE_STRING\"'</td></tr>|'\"$DCRAB_PROCESSESIO_TOTAL_WRITE_REDUCED $DCRAB_PROCESSESIO_TOTAL_WRITE_STRING\"'</td></tr>|' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
+    	# PROCESSES_IO
+    	printf "%s \n" "sed -i \"$DCRAB_PROCESSESIO_L1\"'s/.*/&'\"$DCRAB_PROCESSESIO_DATA\"'/' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
+    	printf "%s \n" "sed -i \"$DCRAB_PROCESSESIO_TEXT_L1\"'s|\([0-9]*[.]*[0-9]*\) '\"$DCRAB_PROCESSESIO_TOTAL_LAST_READ_STRING\"'</td></tr>|'\"$DCRAB_PROCESSESIO_TOTAL_READ_REDUCED $DCRAB_PROCESSESIO_TOTAL_READ_STRING\"'</td></tr>|' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
+    	printf "%s \n" "sed -i \"$DCRAB_PROCESSESIO_TEXT_L2\"'s|\([0-9]*[.]*[0-9]*\) '\"$DCRAB_PROCESSESIO_TOTAL_LAST_WRITE_STRING\"'</td></tr>|'\"$DCRAB_PROCESSESIO_TOTAL_WRITE_REDUCED $DCRAB_PROCESSESIO_TOTAL_WRITE_STRING\"'</td></tr>|' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
 
-    # NFS
-    printf "%s \n" "sed -i \"$DCRAB_NFS_L1\"'s/.*/&'\"$DCRAB_NFS_DATA\"'/' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
-    printf "%s \n" "sed -i \"$DCRAB_NFS_TEXT_L1\"'s|\([0-9]*[.]*[0-9]*\) '\"$DCRAB_NFS_TOTAL_LAST_READ_STRING\"'</td></tr>|'\"$DCRAB_NFS_TOTAL_READ_REDUCED $DCRAB_NFS_TOTAL_READ_STRING\"'</td></tr>|' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
-    printf "%s \n" "sed -i \"$DCRAB_NFS_TEXT_L2\"'s|\([0-9]*[.]*[0-9]*\) '\"$DCRAB_NFS_TOTAL_LAST_WRITE_STRING\"'</td></tr>|'\"$DCRAB_NFS_TOTAL_WRITE_REDUCED $DCRAB_NFS_TOTAL_WRITE_STRING\"'</td></tr>|' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
+    	# NFS
+    	printf "%s \n" "sed -i \"$DCRAB_NFS_L1\"'s/.*/&'\"$DCRAB_NFS_DATA\"'/' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
+    	printf "%s \n" "sed -i \"$DCRAB_NFS_TEXT_L1\"'s|\([0-9]*[.]*[0-9]*\) '\"$DCRAB_NFS_TOTAL_LAST_READ_STRING\"'</td></tr>|'\"$DCRAB_NFS_TOTAL_READ_REDUCED $DCRAB_NFS_TOTAL_READ_STRING\"'</td></tr>|' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
+    	printf "%s \n" "sed -i \"$DCRAB_NFS_TEXT_L2\"'s|\([0-9]*[.]*[0-9]*\) '\"$DCRAB_NFS_TOTAL_LAST_WRITE_STRING\"'</td></tr>|'\"$DCRAB_NFS_TOTAL_WRITE_REDUCED $DCRAB_NFS_TOTAL_WRITE_STRING\"'</td></tr>|' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
 
-    # DISK
-    printf "%s \n" "sed -i \"$DCRAB_DISK_L1\"'s/.*/'\"$DCRAB_DISK_DATA\"'/' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
+    	# DISK
+    	printf "%s \n" "sed -i \"$DCRAB_DISK_L1\"'s/.*/'\"$DCRAB_DISK_DATA\"'/' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
 
 	# Mark the report to inform the next node that is waiting that all changes has been made
 	printf "%s \n" "sed -i 1's|<!--$DCRAB_PREVIOUS_NODE-->|<!--$DCRAB_NODE_NUMBER-->|' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE

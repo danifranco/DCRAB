@@ -113,20 +113,20 @@ dcrab_create_report_files () {
 #
 dcrab_init_variables () {
 
-    DCRAB_REPORT_DIR=dcrab_report_$DCRAB_JOB_ID
-    DCRAB_LOG_DIR=$DCRAB_REPORT_DIR/log
-    DCRAB_HTML=$DCRAB_REPORT_DIR/dcrab_report.html
-    DCRAB_LOCK_FILE=$DCRAB_REPORT_DIR/aux/dcrab.lockfile
+	DCRAB_REPORT_DIR=dcrab_report_$DCRAB_JOB_ID
+    	DCRAB_LOG_DIR=$DCRAB_REPORT_DIR/log
+    	DCRAB_HTML=$DCRAB_REPORT_DIR/dcrab_report.html
+    	DCRAB_LOCK_FILE=$DCRAB_REPORT_DIR/aux/dcrab.lockfile
 
-    DCRAB_USER_ID=`id -u $USER`
-    DCRAB_HOST_OS=$(cat /etc/*release | head -1 | awk '{print $1}')
+    	DCRAB_USER_ID=`id -u $USER`
+    	DCRAB_HOST_OS=$(cat /etc/*release | head -1 | awk '{print $1}')
 
-    # Delay to collect the data
-    DCRAB_COLLECT_TIME=10
+    	# Delay to collect the data
+    	DCRAB_COLLECT_TIME=10
 
-    # Used to calculate the numbers of loops a node must be done until found 
+    	# Used to calculate the numbers of loops a node must be done until found 
 	# the control port process, which is the first step to start collecting data
-    DCRAB_SLEEP_TIME_CONTROL=5
+    	DCRAB_SLEEP_TIME_CONTROL=5
 }
 
 
@@ -134,6 +134,7 @@ dcrab_init_variables () {
 # Starts the reporting script in the nodes involved in the execution 
 #
 dcrab_start_data_collection () {
+
 	declare -a DCRAB_PIDs
 	i=0
 	for node in $DCRAB_NODES

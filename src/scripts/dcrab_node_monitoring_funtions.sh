@@ -504,14 +504,15 @@ dcrab_collect_nfs_data () {
 	"MB")
 		DCRAB_NFS_TOTAL_READ_REDUCED=$(echo "scale=4; ($DCRAB_NFS_TOTAL_READ / 1024) / 1024" | bc)
 		if [ $(echo "$DCRAB_NFS_TOTAL_READ_REDUCED >= 1024" | bc)  -eq 1 ]; then
-				DCRAB_NFS_TOTAL_READ_REDUCED=$(echo "scale=4; $DCRAB_NFS_TOTAL_READ_REDUCED / 1024 " | bc )
-				DCRAB_NFS_TOTAL_READ_STRING="GB"
-			fi
+			DCRAB_NFS_TOTAL_READ_REDUCED=$(echo "scale=4; $DCRAB_NFS_TOTAL_READ_REDUCED / 1024 " | bc )
+			DCRAB_NFS_TOTAL_READ_STRING="GB"
+		fi
 	;;
 	"GB")
 		DCRAB_NFS_TOTAL_READ_REDUCED=$(echo "scale=4; (($DCRAB_NFS_TOTAL_READ /1024) /1024 ) /1024" | bc)
 	;;
 	esac
+
 	# Construct data for the write text value
 	DCRAB_NFS_TOTAL_LAST_WRITE_STRING=$DCRAB_NFS_TOTAL_WRITE_STRING
 	case $DCRAB_NFS_TOTAL_WRITE_STRING in
