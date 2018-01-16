@@ -96,6 +96,8 @@ dcrab_create_report_files () {
 	# Create folders to save required files
 	mkdir -p $DCRAB_REPORT_DIR/aux
 	mkdir $DCRAB_REPORT_DIR/aux/mem
+	mkdir $DCRAB_REPORT_DIR/aux/ib
+	mkdir $DCRAB_REPORT_DIR/aux/ldisk
 	
 	# Change permissions
 	chmod -R 755 $DCRAB_REPORT_DIR 

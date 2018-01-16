@@ -30,7 +30,8 @@ source "$1"
 cd $DCRAB_WORKDIR
 
 # Source modules
-source $DCRAB_BIN/scripts/dcrab_node_monitoring_funtions.sh
+source $DCRAB_BIN/scripts/dcrab_internal_report_functions.sh
+source $DCRAB_BIN/scripts/dcrab_node_monitoring_functions.sh
 source $DCRAB_BIN/scripts/dcrab_finalize.sh
 source $DCRAB_BIN/scripts/dcrab_report_functions.sh
 
@@ -57,6 +58,9 @@ while [ 1 ]; do
 
 	# Insert collected data in the main .html page
 	dcrab_write_data 
+	
+	# The main node must write some data for the internal report
+	[ $DCRAB_NODE_NUMBER -eq 0 ] && dcrab_write_internal_data
 
 	# Sleep to the next data collection
 	sleep $DCRAB_COLLECT_TIME

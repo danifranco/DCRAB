@@ -34,6 +34,7 @@ dcrab_node_monitor_init_variables () {
 	DCRAB_NUMBERS_OF_LOOPS_CONTROL=$(( DCRAB_WAIT_TIME_CONTROL / DCRAB_SLEEP_TIME_CONTROL ))
 	DCRAB_LOOP_BEFORE_CRASH=50
 	DCRAB_FIRST_WRITE=0
+	DCRAB_DATE=$(date +"%d""%m""%y")
 
 	# Files and directories	
 	DCRAB_USER_PROCESSES_FILE=$DCRAB_REPORT_DIR/data/$DCRAB_NODE_HOSTNAME/user_processes
@@ -43,8 +44,8 @@ dcrab_node_monitor_init_variables () {
 	touch $DCRAB_COMMAND_FILE
 	chmod 755 $DCRAB_COMMAND_FILE
 	DCRAB_MEM_FILE=$DCRAB_REPORT_DIR/data/$DCRAB_NODE_HOSTNAME/mem
-	DCRAB_TOTAL_MEM_FILE=$DCRAB_REPORT_DIR/aux/mem/$DCRAB_NODE_HOSTNAME.txt
-	DCRAB_TOTAL_MEM_DIR=$DCRAB_REPORT_DIR/aux/mem/
+	DCRAB_TOTAL_MEM_DIR=$DCRAB_REPORT_DIR/aux/mem
+	DCRAB_TOTAL_MEM_FILE=$DCRAB_TOTAL_MEM_DIR/$DCRAB_NODE_HOSTNAME.txt
 	if [ -d "/sys/class/infiniband/mlx5_0/ports/1/counters_ext/" ]; then
 		DCRAB_IB_BASE_DIR=/sys/class/infiniband/mlx5_0/ports/1/counters_ext
 		DCRAB_IB_XMIT_PACK=$DCRAB_IB_BASE_DIR/port_xmit_packets_64
@@ -70,7 +71,13 @@ dcrab_node_monitor_init_variables () {
 		DCRAB_IB_RCV_PACK=$DCRAB_IB_BASE_DIR/port_rcv_packets_64
 		DCRAB_IB_RCV_DATA=$DCRAB_IB_BASE_DIR/port_rcv_data_64
 	fi
+	DCRAB_TOTAL_IB_DIR=$DCRAB_REPORT_DIR/aux/ib
+        DCRAB_TOTAL_IB_FILE=$DCRAB_TOTAL_IB_DIR/$DCRAB_NODE_HOSTNAME.txt
+	echo "" > $DCRAB_TOTAL_IB_FILE
 	DCRAB_PROCESSES_IO_FILE=$DCRAB_REPORT_DIR/data/$DCRAB_NODE_HOSTNAME/processesIO
+	DCRAB_TOTAL_DISK_DIR=$DCRAB_REPORT_DIR/aux/ldisk
+        DCRAB_TOTAL_DISK_FILE=$DCRAB_TOTAL_DISK_DIR/$DCRAB_NODE_HOSTNAME.txt
+	echo "" > $DCRAB_TOTAL_DISK_FILE
 
 	# PIDs
 	DCRAB_MAIN_PIDS=0
@@ -140,6 +147,8 @@ dcrab_node_monitor_init_variables () {
 	DCRAB_IB_DATA=""
 	DCRAB_IB_BASELINE=$(grep -n -m 1 "var ib_data_$DCRAB_NODE_HOSTNAME_MOD" $DCRAB_HTML | cut -f1 -d:)
 	DCRAB_IB_L1=$((DCRAB_IB_BASELINE + 2))
+	DCRAB_IB_FIRST_XMIT_DATA_VALUE=$(cat $DCRAB_IB_XMIT_DATA)
+	DCRAB_IB_FIRST_RCV_DATA_VALUE=$(cat $DCRAB_IB_RCV_DATA)
 	DCRAB_IB_XMIT_PCK_VALUE=$(cat $DCRAB_IB_XMIT_PACK)
 	DCRAB_IB_XMIT_DATA_VALUE=$(cat $DCRAB_IB_XMIT_DATA)
 	DCRAB_IB_RCV_PCK_VALUE=$(cat $DCRAB_IB_RCV_PACK)
@@ -244,6 +253,9 @@ dcrab_node_monitor_init_variables () {
 			DCRAB_DISK_FIRST_WRITE_VALUE[$i]=$(echo "$line" | awk '{print $10}')
 		fi
 	done
+	
+	# Initializes variables for the internal report 
+	dcrab_internal_report_init_variables
 }
 
 
@@ -333,6 +345,7 @@ dcrab_collect_ib_data () {
 
 	local aux1=$( echo "($DCRAB_IB_NEW_XMIT_DATA_VALUE - $DCRAB_IB_XMIT_DATA_VALUE) / 1024" | bc )
 	local aux2=$( echo "($DCRAB_IB_NEW_RCV_DATA_VALUE - $DCRAB_IB_RCV_DATA_VALUE) / 1024" | bc )
+	local aux3=$(( (DCRAB_IB_NEW_XMIT_DATA_VALUE - DCRAB_IB_FIRST_XMIT_DATA_VALUE) + (DCRAB_IB_NEW_RCV_DATA_VALUE - DCRAB_IB_FIRST_RCV_DATA_VALUE) )) 
 
 	# Construct ib data
 	DCRAB_IB_DATA="$DCRAB_IB_DATA"" $((DCRAB_IB_NEW_XMIT_PCK_VALUE - DCRAB_IB_XMIT_PCK_VALUE)), $((DCRAB_IB_NEW_RCV_PCK_VALUE - DCRAB_IB_RCV_PCK_VALUE)), $aux1, $aux2 ],"
@@ -341,17 +354,19 @@ dcrab_collect_ib_data () {
 	DCRAB_IB_XMIT_DATA_VALUE=$DCRAB_IB_NEW_XMIT_DATA_VALUE
 	DCRAB_IB_RCV_PCK_VALUE=$DCRAB_IB_NEW_RCV_PCK_VALUE
 	DCRAB_IB_RCV_DATA_VALUE=$DCRAB_IB_NEW_RCV_DATA_VALUE
+		
+	sed -i 1's|.*|'"$aux3"'|' $DCRAB_TOTAL_IB_FILE
 }
 
 
 #
-# Collects the time elapsed of the job and formts it 
+# Collects the time elapsed of the job and formats it 
 #
 dcrab_format_time () {
 	
 	DCRAB_ELAPSED_TIME_TEXT=""
 	local timeStamp=$DCRAB_DIFF_TIMESTAMP
-	local d=$((timeStamp / 86400 ))
+	local d=$((timeStamp / 86400))
 	[[ "$d" -gt 9 ]] && DCRAB_ELAPSED_TIME_TEXT="$d" || DCRAB_ELAPSED_TIME_TEXT="0$d"
 	timeStamp=$((timeStamp - (d * 86400) ))
 	local h=$((timeStamp / 3600))
@@ -544,6 +559,7 @@ dcrab_collect_nfs_data () {
 #
 dcrab_collect_disk_data () {
 
+	local aux3=0
 	# Collect IO disk stats
 	while read line; do
 		aux_device=$(echo "$line" | awk '{print $3}')	
@@ -561,11 +577,14 @@ dcrab_collect_disk_data () {
 			DCRAB_DISK_WRITE_VALUE[$i]=$(echo "$(echo "$line" | awk '{print $10}') - ${DCRAB_DISK_FIRST_WRITE_VALUE[$i]}" | bc)
 			
 			local aux1=$(echo "((${DCRAB_DISK_READ_VALUE[$i]} * 512 )/1024 )/1024" | bc)
-			local aux2=$(echo "((${DCRAB_DISK_WRITE_VALUE[$i]} * 512 )/1024 )/1024" | bc)
+			local aux2=$(echo "((${DCRAB_DISK_WRITE_VALUE[$i]} * 512 )/1024 )/1024" | bc)	
+			aux3=$(echo "$aux3 + (${DCRAB_DISK_WRITE_VALUE[$i]} * 512)  + (${DCRAB_DISK_READ_VALUE[$i]} * 512)" | bc)
 				
 			DCRAB_DISK_DATA="$DCRAB_DISK_DATA ['${DCRAB_DISK_NAMES[$i]}', $aux1, $aux2],"	
 		fi	
 	done < <(cat /proc/diskstats)
+		
+	sed -i 1's|.*|'"$aux3"'|' $DCRAB_TOTAL_DISK_FILE
 }
 
 
@@ -879,5 +898,4 @@ dcrab_update_data () {
 	# DISK data
 	dcrab_collect_disk_data
 }
-
 

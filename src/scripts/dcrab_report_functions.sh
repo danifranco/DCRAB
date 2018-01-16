@@ -62,7 +62,7 @@ dcrab_write_data () {
 		printf "%s \n" "sed -i \"$DCRAB_TIME_TEXT_L1\"'s|\([0-9]*:[0-9]*:[0-9]*:[0-9]*\)|'\"$DCRAB_ELAPSED_TIME_TEXT\"'|' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
 		printf "%s \n" "sed -i \"$DCRAB_TIME_L1\"'s|\([0-9]*[.]*[0-9]*\)\]|'\"$DCRAB_ELAPSED_TIME_VALUE\"'\]|' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
 		printf "%s \n" "sed -i \"$DCRAB_TIME_L2\"'s|\([0-9]*[.]*[0-9]*\)\]|'\"$DCRAB_REMAINING_TIME_VALUE\"'\]|' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
-
+	
 		# More than one node
 		if [ "$DCRAB_NNODES" -gt 1 ]; then
 			# MEM TOTAL
@@ -692,6 +692,9 @@ dcrab_generate_html () {
 		printf "%s \n" "</div>" >> $DCRAB_HTML
 		i=$((i+1))
 	done
+	printf "%s \n" "</div>" >> $DCRAB_HTML
+        printf "%s \n" "<br><br><br>" >> $DCRAB_HTML
+
 	# NFS plots
 	printf "%s \n" "<div class=\"overflowDivs\">" >> $DCRAB_HTML
 	printf "%s \n" "<div class=\"text rcorners inline warningText\" >" >> $DCRAB_HTML
