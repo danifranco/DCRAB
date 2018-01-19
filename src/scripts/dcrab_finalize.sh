@@ -17,7 +17,7 @@
 # Stops DCRAB monitoring script in the nodes involved in the execution
 #
 dcrab_stop_remote_processes () {
-	# Kill remote remora processes running in background
+	# Kill remote processes running in background
 	i=0
 	echo "PID: "${DCRAB_PIDs[*]}
 	
@@ -62,7 +62,7 @@ dcrab_check_exit () {
 			echo "DCRAB stop" 
 			exit 0
 		# Finish if the report directory has been removed or moved
-		elif [ ! -d "$DCRAB_REPORT_DIR" ]; then
+		elif [ ! -d "$DCRAB_REPORT_DIR" ] && [ $DCRAB_INTERNAL_MODE -eq 0 ]; then
 			echo "ERROR in $DCRAB_NODE_HOSTNAME: DCRAB directory has been deleted or moved" >> $DCRAB_WORKDIR/DCRAB_ERROR_"$DCRAB_NODE_HOSTNAME"_"$DCRAB_JOB_ID"
 			echo "DCRAB stop" >> $DCRAB_WORKDIR/DCRAB_ERROR_"$DCRAB_NODE_HOSTNAME"_"$DCRAB_JOB_ID"
 			exit 2
@@ -79,7 +79,7 @@ dcrab_finalize () {
 
 	# Restore environment
 	source $DCRAB_REPORT_DIR/aux/env.txt
-
+	
 	# Stop DCRAB processes  
 	dcrab_stop_remote_processes
 }

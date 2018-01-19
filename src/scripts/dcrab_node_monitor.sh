@@ -36,7 +36,7 @@ source $DCRAB_BIN/scripts/dcrab_finalize.sh
 source $DCRAB_BIN/scripts/dcrab_report_functions.sh
 
 # Initialize variables
-dcrab_node_monitor_init_variables $2
+dcrab_node_monitor_init_variables $2 
 
 # Determines the main processes of the job and initializes html file first time 
 dcrab_determine_main_process 
@@ -57,7 +57,7 @@ while [ 1 ]; do
 	dcrab_update_data 
 
 	# Insert collected data in the main .html page
-	dcrab_write_data 
+	[ $DCRAB_INTERNAL_MODE -eq 0 ] && dcrab_write_data 
 	
 	# The main node must write some data for the internal report
 	[ $DCRAB_NODE_NUMBER -eq 0 ] && dcrab_write_internal_data

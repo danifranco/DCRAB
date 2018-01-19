@@ -51,7 +51,7 @@ dcrab_wait_and_write () {
 #
 dcrab_write_data () {
 
-	# Empty file
+	# Empty command file
 	:> $DCRAB_COMMAND_FILE
 
 	case "$DCRAB_NODE_NUMBER" in

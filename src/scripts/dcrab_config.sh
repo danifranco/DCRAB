@@ -20,17 +20,17 @@ dcrab_save_environment () {
 
 	DCRAB_KEY_STRING="DCRAB_"
 
-	case $DCRAB_HOST_OS in
-		SUSE)
-		declare -p | grep "^$DCRAB_KEY_STRING" >> $DCRAB_REPORT_DIR/aux/env.txt
-		;;
-		CentOS)
-		declare -p | grep "$DCRAB_KEY_STRING" >> $DCRAB_REPORT_DIR/aux/env.txt
-		;;
-		*)
-		declare -p | grep "$DCRAB_KEY_STRING" >> $DCRAB_REPORT_DIR/aux/env.txt
-		;;
-	esac
+        case $DCRAB_HOST_OS in
+                SUSE)
+                declare -p | grep "^$DCRAB_KEY_STRING" >> $DCRAB_REPORT_DIR/aux/env.txt
+                ;;
+                CentOS)
+                declare -p | grep "$DCRAB_KEY_STRING" >> $DCRAB_REPORT_DIR/aux/env.txt
+                ;;
+                *)
+                declare -p | grep "$DCRAB_KEY_STRING" >> $DCRAB_REPORT_DIR/aux/env.txt
+       	        ;;
+        esac
 }
 
 
@@ -86,49 +86,57 @@ dcrab_check_scheduler () {
 
 
 #
+# Initialize necessary variables 
+# Arguments:
+#       1- Int --> If only the internal report is enabled or not  (1 = Only internal mode, 0 = Normal monitoring)
+#
+dcrab_init_variables () {
+
+        DCRAB_INTERNAL_MODE=$1
+
+        if [ $DCRAB_INTERNAL_MODE -eq 0 ]; then
+                DCRAB_REPORT_DIR=$DCRAB_WORKDIR/dcrab_report_$DCRAB_JOB_ID
+                DCRAB_HTML=$DCRAB_REPORT_DIR/dcrab_report.html
+                DCRAB_LOCK_FILE=$DCRAB_REPORT_DIR/aux/dcrab.lockfile
+        else
+		DCRAB_REPORT_DIR=/scratch/administracion/admin/dcrab/job/$DCRAB_JOB_ID
+        fi
+	
+	DCRAB_LOG_DIR=$DCRAB_REPORT_DIR/log
+	
+        DCRAB_USER_ID=`id -u $USER`
+        DCRAB_HOST_OS=$(cat /etc/*release | head -1 | awk '{print $1}')
+
+        # Delay to collect the data
+        DCRAB_COLLECT_TIME=10
+
+        # Used to calculate the numbers of loops a node must be done until found 
+        # the control port process, which is the first step to start collecting data
+        DCRAB_SLEEP_TIME_CONTROL=5
+}
+
+
+#
 # Creates reporting directory structure baseline
 #
 dcrab_create_report_files () {
 
 	# Create data folder 
-	mkdir -p $DCRAB_REPORT_DIR/data
-	
+        mkdir -p $DCRAB_REPORT_DIR/data
+
 	# Create folders to save required files
 	mkdir -p $DCRAB_REPORT_DIR/aux
-	mkdir $DCRAB_REPORT_DIR/aux/mem
+	[ $DCRAB_INTERNAL_MODE -eq 0 ] && mkdir $DCRAB_REPORT_DIR/aux/mem
 	mkdir $DCRAB_REPORT_DIR/aux/ib
 	mkdir $DCRAB_REPORT_DIR/aux/ldisk
+
+	if [ $DCRAB_INTERNAL_MODE -eq 0 ]; then		
+		# Generate the first steps of the report
+		dcrab_generate_html 
+	fi
 	
 	# Change permissions
-	chmod -R 755 $DCRAB_REPORT_DIR 
-
-	# Generate the first steps of the report
-	dcrab_generate_html 
-
-	# Save environment
-	dcrab_save_environment "DCRAB_" 
-}
-
-
-#
-# Initialize necessary variables 
-#
-dcrab_init_variables () {
-
-	DCRAB_REPORT_DIR=dcrab_report_$DCRAB_JOB_ID
-    	DCRAB_LOG_DIR=$DCRAB_REPORT_DIR/log
-    	DCRAB_HTML=$DCRAB_REPORT_DIR/dcrab_report.html
-    	DCRAB_LOCK_FILE=$DCRAB_REPORT_DIR/aux/dcrab.lockfile
-
-    	DCRAB_USER_ID=`id -u $USER`
-    	DCRAB_HOST_OS=$(cat /etc/*release | head -1 | awk '{print $1}')
-
-    	# Delay to collect the data
-    	DCRAB_COLLECT_TIME=10
-
-    	# Used to calculate the numbers of loops a node must be done until found 
-	# the control port process, which is the first step to start collecting data
-    	DCRAB_SLEEP_TIME_CONTROL=5
+        chmod -R 755 $DCRAB_REPORT_DIR
 }
 
 
@@ -136,6 +144,9 @@ dcrab_init_variables () {
 # Starts the reporting script in the nodes involved in the execution 
 #
 dcrab_start_data_collection () {
+		
+	# Save environment
+        dcrab_save_environment
 
 	declare -a DCRAB_PIDs
 	i=0
@@ -144,9 +155,8 @@ dcrab_start_data_collection () {
 		# Create node folders
 		mkdir -p $DCRAB_REPORT_DIR/data/$node
 		
-		COMMAND="$DCRAB_BIN/scripts/dcrab_node_monitor.sh $DCRAB_WORKDIR/$DCRAB_REPORT_DIR/aux/env.txt $i $DCRAB_WORKDIR/$DCRAB_LOG_DIR/$node.log & echo \$!"
+		COMMAND="$DCRAB_BIN/scripts/dcrab_node_monitor.sh $DCRAB_REPORT_DIR/aux/env.txt $i $DCRAB_LOG_DIR/$node.log & echo \$!"
 
-		# Hay que poner la key, sino pide password
 		DCRAB_PIDs[$i]=`ssh -n $node PATH=$PATH $COMMAND | tail -n 1 `
 
 		echo "N: $node P:"${DCRAB_PIDs[$i]}
@@ -155,5 +165,6 @@ dcrab_start_data_collection () {
 	done
 	
 	# Save DCRAB_PID variable for future use
-	dcrab_save_environment "DCRAB_PIDs" 
+	dcrab_save_environment
 }
+
