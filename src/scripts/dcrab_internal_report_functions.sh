@@ -19,9 +19,8 @@
 #
 dcrab_internal_report_init_variables () {
 	
-	# Files
-	DCRAB_IREPORT_IB_FILE="/scratch/administracion/admin/dcrab/ib/$DCRAB_JOB_ID"
-	DCRAB_IREPORT_DISK_FILE="/scratch/administracion/admin/dcrab/ldisk/$DCRAB_JOB_ID"
+	# File
+	DCRAB_IREPORT_DATA_FILE="/scratch/administracion/admin/dcrab/data/$DCRAB_JOB_ID"
 
 	# IB
         DCRAB_IREPORT_IB_TOTAL_DATA=0
@@ -55,11 +54,9 @@ dcrab_write_internal_data () {
         done		
 
 	if [ "$DCRAB_FIRST_WRITE" -eq 1 -a $DCRAB_INTERNAL_MODE -eq 0 ] || [ "$DCRAB_FIRST_WRITE" -eq 0 -a $DCRAB_INTERNAL_MODE -eq 1 ]; then
-		echo "$DCRAB_JOB_ID $DCRAB_IREPORT_IB_TOTAL_DATA" >> $DCRAB_IREPORT_IB_FILE
-		echo "$DCRAB_JOB_ID $DCRAB_IREPORT_DISK_TOTAL_DATA" >> $DCRAB_IREPORT_DISK_FILE
-		DCRAB_FIRST_WRITE=$((DCRAB_FIRST_WRITE +1))
+		echo "$DCRAB_DIFF_TIMESTAMP $DCRAB_NNODES $DCRAB_IREPORT_IB_TOTAL_DATA $DCRAB_IREPORT_DISK_TOTAL_DATA" >> $DCRAB_IREPORT_DATA_FILE
+		DCRAB_FIRST_WRITE=$((DCRAB_FIRST_WRITE + 1))
 	else
-		sed -i 's|.*|'"$DCRAB_IREPORT_IB_TOTAL_DATA"'|g' $DCRAB_IREPORT_IB_FILE		
-		sed -i 's|.*|'"$DCRAB_IREPORT_DISK_TOTAL_DATA"'|g' $DCRAB_IREPORT_DISK_FILE		
+		sed -i 's|.*|'"$DCRAB_DIFF_TIMESTAMP $DCRAB_NNODES $DCRAB_IREPORT_IB_TOTAL_DATA $DCRAB_IREPORT_DISK_TOTAL_DATA"'|' $DCRAB_IREPORT_DATA_FILE		
 	fi
 }

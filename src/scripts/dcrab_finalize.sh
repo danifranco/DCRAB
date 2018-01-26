@@ -77,9 +77,11 @@ dcrab_check_exit () {
 #
 dcrab_finalize () {
 
-	# Restore environment
-	source $DCRAB_REPORT_DIR/aux/env.txt
-	
-	# Stop DCRAB processes  
-	dcrab_stop_remote_processes
+	if [ -d "$DCRAB_REPORT_DIR" ]; then
+		# Restore environment
+		source $DCRAB_REPORT_DIR/aux/env.txt
+		
+		# Stop DCRAB processes  
+		dcrab_stop_remote_processes
+	fi
 }

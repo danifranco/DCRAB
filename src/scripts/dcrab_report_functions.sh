@@ -328,7 +328,7 @@ dcrab_generate_html () {
 	# DISK
 	printf "%s \n" "var disk_options = {  " >> $DCRAB_HTML
 	printf "%s \n" "title : 'Local disks I/O Stats (lscratch)', " >> $DCRAB_HTML
-	printf "%s \n" "vAxis: {title: 'MB/s'}, " >> $DCRAB_HTML
+	printf "%s \n" "vAxis: {title: 'MB'}, " >> $DCRAB_HTML
 	printf "%s \n" "hAxis: {title: 'Devices'}, " >> $DCRAB_HTML
 	printf "%s \n" "chartArea: {  width: \"70%\", height: \"80%\" }," >> $DCRAB_HTML
 	printf "%s \n" "width: $plot_width,  " >> $DCRAB_HTML

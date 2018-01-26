@@ -802,9 +802,10 @@ dcrab_determine_main_process () {
 		fi
 	fi	
 
+	# Get time
+        DCRAB_M1_TIMESTAMP=`date +"%s"`
 	if [ $DCRAB_INTERNAL_MODE -eq 0 ]; then
 		# Get time
-		DCRAB_M1_TIMESTAMP=`date +"%s"`
 		DCRAB_M3_TIMESTAMP=$DCRAB_M1_TIMESTAMP
 	
 		# CPU data. Remove the last comma
@@ -842,10 +843,11 @@ dcrab_update_data () {
 	
 	# Init. variables
 	IFS=$'\n'
+	DCRAB_M2_TIMESTAMP=`date +"%s"`
+        DCRAB_DIFF_TIMESTAMP=$((DCRAB_M2_TIMESTAMP - DCRAB_M1_TIMESTAMP))
+
 	if [ $DCRAB_INTERNAL_MODE -eq 0 ]; then
 		DCRAB_CPU_UPDATES=0
-		DCRAB_M2_TIMESTAMP=`date +"%s"`
-		DCRAB_DIFF_TIMESTAMP=$((DCRAB_M2_TIMESTAMP - DCRAB_M1_TIMESTAMP))
 		DCRAB_DIFF_PARTIAL=$((DCRAB_M2_TIMESTAMP - DCRAB_M3_TIMESTAMP))
 		DCRAB_M3_TIMESTAMP=$DCRAB_M2_TIMESTAMP
 
