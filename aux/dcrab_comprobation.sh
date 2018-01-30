@@ -38,7 +38,7 @@ if [ "$1" != "" ]; then
                         position=$(grep -n "#PBS" $1 | tail -1 | cut -d':' -f1)
 
                         # Insert DCRAB lines
-                        sed -i "$position"'s|$|\nexport DCRAB_BIN=/scratch/dfranco/3-dcrab/src\nexport PATH=$PATH:$DCRAB_BIN\ndcrab istart\n|' $1
+                        sed -i "$position"'s|$|\nexport DCRAB_BIN=/scratch/administracion/admin/dcrab/software/src\nexport PATH=$PATH:$DCRAB_BIN\ndcrab istart\n|' $1
                         echo "dcrab ifinish" >> $1		
 		fi
 	fi
