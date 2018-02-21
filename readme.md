@@ -1,4 +1,6 @@
-![DIPC Logo](https://raw.githubusercontent.com/dipc-cc/dcrab/master/aux/logos/DCRAB_logo.png)
+<p align="center">
+  <img src="https://raw.githubusercontent.com/dipc-cc/dcrab/master/aux/logos/DCRAB_logo.png" alt="DCRAB Logo"/>
+</p>
 
 DCRAB monitorizes submitted jobs into a scheduler system and creates a realtime based report to have a general view of how the job is going. It allows to view the CPU usage per node,
 memory consumed by all the processes, MPI comunication statistics etc.
