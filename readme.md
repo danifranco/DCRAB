@@ -1,4 +1,8 @@
-# DCRAB (Dipc Control and Report Application in Bash)
+# DCRAB 
+
+![DIPC Logo](https://raw.githubusercontent.com/dipc-cc/dcrab/master/aux/logos/DCRAB_logo_400.png)
+
+## DCRAB: Dipc Control and Report Application in Bash
 
 DCRAB monitorizes submitted jobs into a scheduler system and creates a realtime based report to have a general view of how the job is going. It allows to view the CPU usage per node,
 memory consumed by all the processes, MPI comunication statistics etc.
