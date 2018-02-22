@@ -30,10 +30,10 @@ source "$1"
 cd $DCRAB_WORKDIR
 
 # Source modules
-source $DCRAB_BIN/scripts/dcrab_internal_report_functions.sh
-source $DCRAB_BIN/scripts/dcrab_node_monitoring_functions.sh
-source $DCRAB_BIN/scripts/dcrab_finalize.sh
-source $DCRAB_BIN/scripts/dcrab_report_functions.sh
+source $DCRAB_PATH/scripts/dcrab_internal_report_functions.sh
+source $DCRAB_PATH/scripts/dcrab_node_monitoring_functions.sh
+source $DCRAB_PATH/scripts/dcrab_finalize.sh
+source $DCRAB_PATH/scripts/dcrab_report_functions.sh
 
 # Initialize variables
 dcrab_node_monitor_init_variables $2 

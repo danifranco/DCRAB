@@ -12,8 +12,8 @@
 
 
 # Check if binary path is defined
-if [ -z "$DCRAB_BIN" ]; then
-    echo "ERROR: DCRAB_BIN undefined"
+if [ -z "$DCRAB_PATH" ]; then
+    echo "ERROR: DCRAB_PATH undefined"
     exit 
 fi
 
@@ -23,8 +23,8 @@ case "$1" in
 		echo "--- Start DCRAB output (start fase) ---"
 
 		# Load necessary functions
-		source $DCRAB_BIN/scripts/dcrab_config.sh
-		source $DCRAB_BIN/scripts/dcrab_report_functions.sh
+		source $DCRAB_PATH/scripts/dcrab_config.sh
+		source $DCRAB_PATH/scripts/dcrab_report_functions.sh
 
 		# Check which scheduler use the system
 		dcrab_check_scheduler
@@ -51,8 +51,8 @@ case "$1" in
 		echo "--- Start DCRAB output (finish fase) ---"
 		
 		# Load necessary functions
-		source $DCRAB_BIN/scripts/dcrab_finalize.sh
-		source $DCRAB_BIN/scripts/dcrab_config.sh
+		source $DCRAB_PATH/scripts/dcrab_finalize.sh
+		source $DCRAB_PATH/scripts/dcrab_config.sh
 
 		# Check which scheduler use the system
 		dcrab_check_scheduler
@@ -70,8 +70,8 @@ case "$1" in
    	;;
 	istart)
 		# Load necessary functions
-                source $DCRAB_BIN/scripts/dcrab_config.sh
-                source $DCRAB_BIN/scripts/dcrab_report_functions.sh
+                source $DCRAB_PATH/scripts/dcrab_config.sh
+                source $DCRAB_PATH/scripts/dcrab_report_functions.sh
 
                 # Check which scheduler use the system
                 dcrab_check_scheduler
@@ -89,8 +89,8 @@ case "$1" in
 	;;
 	ifinish)
 		# Load necessary functions
-                source $DCRAB_BIN/scripts/dcrab_finalize.sh
-                source $DCRAB_BIN/scripts/dcrab_config.sh
+                source $DCRAB_PATH/scripts/dcrab_finalize.sh
+                source $DCRAB_PATH/scripts/dcrab_config.sh
 
                 # Check which scheduler use the system
                 dcrab_check_scheduler
@@ -103,7 +103,7 @@ case "$1" in
 
 	;;
 	version)
-		cat $DCRAB_BIN/../config/version
+		cat $DCRAB_PATH/../config/version
 	;;
 	*)
 		echo "DCRAB report help"

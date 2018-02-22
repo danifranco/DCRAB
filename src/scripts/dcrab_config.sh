@@ -155,7 +155,7 @@ dcrab_start_data_collection () {
 		# Create node folders
 		mkdir -p $DCRAB_REPORT_DIR/data/$node
 		
-		COMMAND="$DCRAB_BIN/scripts/dcrab_node_monitor.sh $DCRAB_REPORT_DIR/aux/env.txt $i $DCRAB_LOG_DIR/$node.log & echo \$!"
+		COMMAND="$DCRAB_PATH/scripts/dcrab_node_monitor.sh $DCRAB_REPORT_DIR/aux/env.txt $i $DCRAB_LOG_DIR/$node.log & echo \$!"
 
 		DCRAB_PIDs[$i]=`ssh -n $node PATH=$PATH $COMMAND | tail -n 1 `
 
