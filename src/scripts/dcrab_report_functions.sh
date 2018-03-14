@@ -491,7 +491,7 @@ dcrab_generate_html () {
         printf "%s \n" "background: linear-gradient(to right,  #25c481 0%,#25b7c4 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */ " >> $DCRAB_HTML
         printf "%s \n" "filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#25c481', endColorstr='#25b7c4',GradientType=1 ); /* IE6-8 */ " >> $DCRAB_HTML
         printf "%s \n" "margin:0px;" >> $DCRAB_HTML
-        printf "%s \n" "font-family: verdana;" >> $DCRAB_HTML
+        printf "%s \n" "font-family: Verdana, Geneva, sans-serif;" >> $DCRAB_HTML
 	printf "%s \n" "font-size: 18px;" >> $DCRAB_HTML
         printf "%s \n" "} " >> $DCRAB_HTML
         printf "%s \n" ".inline {" >> $DCRAB_HTML
@@ -531,7 +531,7 @@ dcrab_generate_html () {
         printf "%s \n" "border: 1px solid rgba(254, 254, 254, 0.3);" >> $DCRAB_HTML
         printf "%s \n" "float: left;" >> $DCRAB_HTML
         printf "%s \n" "text-align: center;" >> $DCRAB_HTML
-        printf "%s \n" "font-family: Verdana" >> $DCRAB_HTML
+        printf "%s \n" "font-family: Verdana, Geneva, sans-serif;" >> $DCRAB_HTML
         printf "%s \n" "font-size: 16px;" >> $DCRAB_HTML
         printf "%s \n" "color: black;" >> $DCRAB_HTML
         printf "%s \n" "text-transform: uppercase;" >> $DCRAB_HTML
@@ -676,7 +676,7 @@ dcrab_generate_html () {
         printf "%s \n" "border:none;" >> $DCRAB_HTML
         printf "%s \n" "min-width: inherit;" >> $DCRAB_HTML
         printf "%s \n" "height: inherit;" >> $DCRAB_HTML
-        printf "%s \n" "font-family:verdana;" >> $DCRAB_HTML
+        printf "%s \n" "font-family:Verdana, Geneva, sans-serif;" >> $DCRAB_HTML
         printf "%s \n" "color: #505050;" >> $DCRAB_HTML
         printf "%s \n" "}" >> $DCRAB_HTML
 	printf "%s \n" "</style>" >> $DCRAB_HTML

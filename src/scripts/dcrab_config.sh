@@ -105,7 +105,6 @@ dcrab_init_variables () {
 	DCRAB_LOG_DIR=$DCRAB_REPORT_DIR/log
 	
         DCRAB_USER_ID=`id -u $USER`
-	DCRAB_USER_SHELL=`echo $SHELL`
         DCRAB_HOST_OS=$(cat /etc/*release | head -1 | awk '{print $1}')
 
         # Delay to collect the data

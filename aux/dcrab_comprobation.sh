@@ -37,9 +37,15 @@ if [ "$1" != "" ]; then
 			# Determine the position to insert 
                         position=$(grep -n "#PBS" $1 | tail -1 | cut -d':' -f1)
 
-                        # Insert DCRAB lines
-                        sed -i "$position"'s|$|\nexport DCRAB_PATH=/scratch/administracion/admin/dcrab/software/src\nexport PATH=$PATH:$DCRAB_PATH\ndcrab istart\n|' $1
-                        echo "dcrab ifinish" >> $1		
+			# Insert DCRAB lines
+			shell_type=$(cat $1 | grep "#\!")
+			echo $shell_type | grep -q "bash"
+			if [ $? -eq 0 ]; then
+	                	sed -i "$position"'s|$|\nexport DCRAB_PATH=/scratch/administracion/admin/dcrab/software/src\nexport PATH=$PATH:$DCRAB_PATH\ndcrab istart\n|' $1
+			else
+				sed -i "$position"'s|$|\nsetenv DCRAB_PATH /scratch/administracion/admin/dcrab/software/src\nsetenv PATH $PATH\\:$DCRAB_PATH\ndcrab istart\n|' $1	
+			fi
+			echo "dcrab ifinish" >> $1
 		fi
 	fi
 fi
