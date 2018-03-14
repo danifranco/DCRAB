@@ -105,6 +105,7 @@ dcrab_init_variables () {
 	DCRAB_LOG_DIR=$DCRAB_REPORT_DIR/log
 	
         DCRAB_USER_ID=`id -u $USER`
+	DCRAB_USER_SHELL=`echo $SHELL`
         DCRAB_HOST_OS=$(cat /etc/*release | head -1 | awk '{print $1}')
 
         # Delay to collect the data
@@ -157,8 +158,7 @@ dcrab_start_data_collection () {
 		
 		COMMAND="$DCRAB_PATH/scripts/dcrab_node_monitor.sh $DCRAB_REPORT_DIR/aux/env.txt $i $DCRAB_LOG_DIR/$node.log & echo \$!"
 
-		DCRAB_PIDs[$i]=`ssh -n $node PATH=$PATH $COMMAND | tail -n 1 `
-
+		DCRAB_PIDs[$i]=`ssh -n $node "$COMMAND" | tail -n 1 `
 		echo "N: $node P:"${DCRAB_PIDs[$i]}
 
 		i=$((i+1))

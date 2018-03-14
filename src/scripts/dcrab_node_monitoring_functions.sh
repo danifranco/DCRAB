@@ -29,10 +29,10 @@ dcrab_node_monitor_init_variables () {
         [ "$DCRAB_NODE_NUMBER" -eq 0 ] && DCRAB_PREVIOUS_NODE=$((DCRAB_NNODES - 1)) || DCRAB_PREVIOUS_NODE=$((DCRAB_NODE_NUMBER - 1))
 
         # Time control
-        DCRAB_WAIT_TIME_CONTROL=180 # 3 minutes
+        DCRAB_WAIT_TIME_CONTROL=180
         DCRAB_DIFF_TIMESTAMP=0
         DCRAB_NUMBERS_OF_LOOPS_CONTROL=$(( DCRAB_WAIT_TIME_CONTROL / DCRAB_SLEEP_TIME_CONTROL ))
-        DCRAB_LOOP_BEFORE_CRASH=50
+        DCRAB_LOOP_BEFORE_CRASH=180
         DCRAB_FIRST_WRITE=0
 
 	# Files and directories 
@@ -213,8 +213,8 @@ dcrab_node_monitor_init_variables () {
 		DCRAB_NFS_TEXT_BASELINE=$(grep -n -m 1 "id='plot_nfs_$DCRAB_NODE_HOSTNAME_MOD" $DCRAB_HTML | cut -f1 -d:)
 		DCRAB_NFS_TEXT_L1=$((DCRAB_NFS_TEXT_BASELINE + 5))
 		DCRAB_NFS_TEXT_L2=$((DCRAB_NFS_TEXT_BASELINE + 7))
-		DCRAB_NFS_READ=$(mountstats --nfs $DCRAB_NFS_MOUNT_PATH | grep "applications read" | grep "via read(2)" | awk '{print $3}')
-		DCRAB_NFS_WRITE=$(mountstats --nfs $DCRAB_NFS_MOUNT_PATH | grep "applications wrote" | grep "via write(2)" | awk '{print $3}')
+		DCRAB_NFS_READ=$(/usr/sbin/mountstats --nfs $DCRAB_NFS_MOUNT_PATH | grep "applications read" | grep "via read(2)" | awk '{print $3}')
+		DCRAB_NFS_WRITE=$(/usr/sbin/mountstats --nfs $DCRAB_NFS_MOUNT_PATH | grep "applications wrote" | grep "via write(2)" | awk '{print $3}')
 		DCRAB_NFS_NEW_READ=0
 		DCRAB_NFS_NEW_WRITE=0
 		DCRAB_NFS_TOTAL_READ=0	
@@ -585,8 +585,8 @@ dcrab_collect_processesIO_data () {
 #
 dcrab_collect_nfs_data () {
 
-	DCRAB_NFS_NEW_READ=$(mountstats --nfs $DCRAB_NFS_MOUNT_PATH | grep "applications read" | grep "via read(2)" | awk '{print $3}' )
-	DCRAB_NFS_NEW_WRITE=$(mountstats --nfs $DCRAB_NFS_MOUNT_PATH | grep "applications wrote" | grep "via write(2)" | awk '{print $3}' )
+	DCRAB_NFS_NEW_READ=$(/usr/sbin/mountstats --nfs $DCRAB_NFS_MOUNT_PATH | grep "applications read" | grep "via read(2)" | awk '{print $3}' )
+	DCRAB_NFS_NEW_WRITE=$(/usr/sbin/mountstats --nfs $DCRAB_NFS_MOUNT_PATH | grep "applications wrote" | grep "via write(2)" | awk '{print $3}' )
 	DCRAB_NFS_TOTAL_READ=$((DCRAB_NFS_TOTAL_READ + DCRAB_NFS_NEW_READ - DCRAB_NFS_READ))
 	DCRAB_NFS_TOTAL_WRITE=$((DCRAB_NFS_TOTAL_WRITE + DCRAB_NFS_NEW_WRITE - DCRAB_NFS_WRITE))
 
@@ -677,7 +677,7 @@ dcrab_collect_beegfs_data () {
 
 
 #
-# Determines the main processes of the job which will be used to find the rest of the processes involved in the execution (because they will main processes childs).
+# Determines the main processes of the job which will be used to find the rest of the processes involved in the execution (because they will be main processes childs).
 # Also initializes the first time the html report.
 #
 dcrab_determine_main_process () {
