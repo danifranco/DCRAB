@@ -18,18 +18,21 @@
 #
 dcrab_save_environment () {
 
-	DCRAB_KEY_STRING="DCRAB_"
-
-        case $DCRAB_HOST_OS in
-                SUSE)
-                declare -p | grep "^$DCRAB_KEY_STRING" >> $DCRAB_REPORT_DIR/aux/env.txt
-                ;;
-                CentOS)
-                declare -p | grep "$DCRAB_KEY_STRING" >> $DCRAB_REPORT_DIR/aux/env.txt
-                ;;
-                *)
-                declare -p | grep "$DCRAB_KEY_STRING" >> $DCRAB_REPORT_DIR/aux/env.txt
-       	        ;;
+	if [ $# -eq 0 ]; then 
+		DCRAB_KEY_STRING="DCRAB_"
+	else
+		DCRAB_KEY_STRING="$1"		
+	fi
+	case $DCRAB_HOST_OS in
+                        SUSE)
+                        declare -p | grep "^$DCRAB_KEY_STRING" >> $DCRAB_REPORT_DIR/aux/env.txt
+                        ;;
+                        CentOS)
+                        declare -p | grep "$DCRAB_KEY_STRING" >> $DCRAB_REPORT_DIR/aux/env.txt
+                        ;;
+                        *)
+                        declare -p | grep "$DCRAB_KEY_STRING" >> $DCRAB_REPORT_DIR/aux/env.txt
+                        ;;
         esac
 }
 
@@ -164,6 +167,6 @@ dcrab_start_data_collection () {
 	done
 	
 	# Save DCRAB_PID variable for future use
-	dcrab_save_environment
+	dcrab_save_environment "DCRAB_PID"
 }
 

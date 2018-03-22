@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 # DCRAB SOFTWARE
 # Version: 2.0
 # Autor: CC-staff
@@ -14,6 +14,7 @@
 DCRAB_IREPORT="/scratch/administracion/admin/dcrab/dcrab_ireport_$(date +%d%m%Y)"
 DCRAB_IREPORT_DATA_DIR="/scratch/administracion/admin/dcrab/data"
 DCRAB_NUMBER_OF_BARS=20
+DCRAB_NUMBER_OF_CHARACTERS=50
 
 # Initialize necessary variables
 firstDate=$(ls -lt --time-style="+%s" $DCRAB_IREPORT_DATA_DIR | grep -v total | tail -1 | sed 's|\s\s*| |g' | cut -d' ' -f6)
@@ -24,8 +25,8 @@ lastDateFormated=$(date -d@$lastDate +%d/%m/%y)
 lastDateReduced=$(date -d $(date -d@$lastDate +%m/%d/%y) +"%s")
 days=$(echo "( ($lastDateReduced - $firstDateReduced)/(24*3600) ) +1" | bc)
 lastFile=$(ls -lt --time-style="+%s" $DCRAB_IREPORT_DATA_DIR | grep -v total | head -1 | sed 's|\s\s*| |g' | cut -d' ' -f7)
-nNodes=$(cat  $DCRAB_IREPORT_DATA_DIR/$lastFile | cut -d' ' -f2)
-time=$(cat  $DCRAB_IREPORT_DATA_DIR/$lastFile | cut -d' ' -f1) 
+nNodes=$(cat $DCRAB_IREPORT_DATA_DIR/$lastFile | cut -d' ' -f2)
+time=$(cat $DCRAB_IREPORT_DATA_DIR/$lastFile | cut -d' ' -f1) 
 ibMax=$(cat $DCRAB_IREPORT_DATA_DIR/$lastFile | cut -d' ' -f3)
 ibMax=$(echo "scale=3; $ibMax / (1024 * 1024 * $time * $nNodes) " | bc)
 ibMin=$(cat $DCRAB_IREPORT_DATA_DIR/$lastFile | cut -d' ' -f3)
@@ -34,17 +35,31 @@ diskMax=$(cat $DCRAB_IREPORT_DATA_DIR/$lastFile | cut -d' ' -f4)
 diskMax=$(echo "scale=3; (($diskMax * 512 )/1024 )/1024" | bc)
 diskMin=$(cat $DCRAB_IREPORT_DATA_DIR/$lastFile | cut -d' ' -f4)
 diskMin=$(echo "scale=3; (($diskMin * 512 )/1024 )/1024" | bc)
+if [ "$firstDate" == "" ] || [ "$firstDateFormated" == "" ] || [ "$firstDateReduced" == "" ] || [ "$lastDate" == "" ] || [ "$lastDateFormated" == "" ] || [ "$lastDateReduced" == "" ] || [ "$days" == "" ] || [ "$lastFile" == "" ] || [ "$nNodes" == "" ] || [ "$time" == "" ] || [ "$ibMax" == "" ] || [ "$ibMin" == "" ] || [ "$diskMax" == "" ] || [ "$diskMin" == "" ]; then
+	echo "Alguno de los ficheros consultados no se ha podido leer. Los ficheros que consulta esta utilidad estan siendo modificados continuamente por los trabajos en ejecucion, por ello aveces puede darse este caso. Hay que volver a ejecutar para intentarlo de nuevo"
+	exit 1
+fi
 declare -a ibData
 declare -a ibCounter; for i in $(seq 0 $((DCRAB_NUMBER_OF_BARS - 1))); do ibCounter[$i]=0; done
 declare -a diskData
 declare -a diskCounter; for i in $(seq 0 $((DCRAB_NUMBER_OF_BARS - 1))); do diskCounter[$i]=0; done
 declare -a ibDataPerDay; for i in $(seq 0 $((days - 1))); do ibDataPerDay[$i]=0; done
 declare -a diskDataPerDay; for i in $(seq 0 $((days - 1))); do diskDataPerDay[$i]=0; done
+numberOfFiles=$(ls -1 $DCRAB_IREPORT_DATA_DIR | wc -l)
+numberOfFilesPerCharacter=$(echo "scale=8; $DCRAB_NUMBER_OF_CHARACTERS / $numberOfFiles" | bc)
+numberOfFilesPerCharacter=$(echo "1/$numberOfFilesPerCharacter" | bc)
+numberOfChars=0
+countFiles=0
 ibString=""
+ibString2=""
 diskString=""
+diskString2=""
 ibStringPerDay=""
+ibStringPerDay2=""
 diskStringPerDay=""
+diskStringPerDay2=""
 
+echo "Recolectando todos los datos para crear los graficos:"
 # Collect all the data from all the jobs 
 i=0
 for file in $DCRAB_IREPORT_DATA_DIR/*
@@ -52,38 +67,51 @@ do
 	i=$((i+1))
 
 	# File date
-	date=$(ls -lt --time-style="+%s" $file | grep -v total | head -1 | sed 's|\s\s*| |g' |  cut -d' ' -f6)
+	date=$(ls -lt --time-style="+%s" $file 2> /dev/null | grep -v total | head -1 | sed 's|\s\s*| |g' |  cut -d' ' -f6 )
 
 	# File data
-	time=$(cat $file | cut -d' ' -f1)	
-	nNodes=$(cat $file | cut -d' ' -f2)
-	ibValue=$(cat $file | cut -d' ' -f3)
-	diskValue=$(cat $file | cut -d' ' -f4)
+	time=$(cat $file 2> /dev/null | cut -d' ' -f1)
+	nNodes=$(cat $file 2> /dev/null | cut -d' ' -f2 )
+	ibValue=$(cat $file 2> /dev/null | cut -d' ' -f3 )
+	diskValue=$(cat $file 2> /dev/null | cut -d' ' -f4 )
 
-	# IB
-	ib_aux=$(echo "scale=3; $ibValue / (1024 * 1024 * $time * $nNodes) " | bc)
-	ibData[$i]=$ib_aux
-	[ $(echo "$ibMax < $ib_aux" | bc) -eq 1 ] && ibMax=$ib_aux
-        [ $(echo "$ibMin > $ib_aux" | bc) -eq 1 ] && ibMin=$ib_aux
-
-	# Disk
-	disk_aux=$(echo "scale=3; (($diskValue * 512 )/1024 )/1024" | bc)
-	diskData[$i]=$disk_aux
-	[ $(echo "$diskMax < $disk_aux" | bc) -eq 1 ] && diskMax=$disk_aux
-        [ $(echo "$diskMin > $disk_aux" | bc) -eq 1 ] && diskMin=$disk_aux
+	if [ "$time" != "" ] && [ "$nNodes" != "" ] && [ "$ibValue" != "" ] && [ "$diskValue" != "" ]; then
+		# IB
+		ib_aux=$(echo "scale=3; $ibValue / (1024 * 1024 * $time * $nNodes) " | bc)
+		ibData[$i]=$ib_aux
+		[ $(echo "$ibMax < $ib_aux" | bc) -eq 1 ] && ibMax=$ib_aux
+	        [ $(echo "$ibMin > $ib_aux" | bc) -eq 1 ] && ibMin=$ib_aux
 	
-	d=$(echo "($date - $firstDate)/(24*3600)" | bc)
-	# IB per day
-	ibDataPerDay[$d]=$(echo "${ibDataPerDay[$d]} + $ib_aux" | bc) 	
-
-	# Disk per day
-	diskDataPerDay[$d]=$(echo "${diskDataPerDay[$d]} + $disk_aux" | bc)
+		# Disk
+		disk_aux=$(echo "scale=3; (($diskValue * 512 )/1024 )/1024" | bc)
+		diskData[$i]=$disk_aux
+		[ $(echo "$diskMax < $disk_aux" | bc) -eq 1 ] && diskMax=$disk_aux
+	        [ $(echo "$diskMin > $disk_aux" | bc) -eq 1 ] && diskMin=$disk_aux
+		
+		d=$(echo "($date - $firstDate)/(24*3600)" | bc)
+		# IB per day
+		ibDataPerDay[$d]=$(echo "${ibDataPerDay[$d]} + $ib_aux" | bc) 	
+	
+		# Disk per day
+		diskDataPerDay[$d]=$(echo "${diskDataPerDay[$d]} + $disk_aux" | bc)
+	fi
+	
+	countFiles=$((countFiles +1))
+ 	if [ "$countFiles" -eq "$numberOfFilesPerCharacter" ]; then
+ 		countFiles=0
+ 		numberOfChars=$((numberOfChars+1))
+ 		s=""
+ 		k=0
+ 		for j in $(seq 0 $numberOfChars); do s="${s}#"; k=$((k+1)); done
+ 		while [ $k -le $DCRAB_NUMBER_OF_CHARACTERS ]; do s="${s} "; k=$((k+1)); done
+ 		echo -ne "$s  ($(echo "scale=3; ($numberOfChars/$DCRAB_NUMBER_OF_CHARACTERS) * 100" | bc )%)\r"
+ 	fi
 done
+echo -ne '\n'
 
 # Calculate the intervals for the charts
 ib_interval=$(echo "scale=3; ($ibMax - $ibMin)/$DCRAB_NUMBER_OF_BARS" | bc)
 disk_interval=$(echo "scale=3; ($diskMax - $diskMin)/$DCRAB_NUMBER_OF_BARS" | bc)
-
 # Counter the number of jobs in each interval
 for j in $(seq 1 $i); do
 	# IB
@@ -101,11 +129,116 @@ done
 for j in $(seq 0 $((DCRAB_NUMBER_OF_BARS -1)) )
 do
 	if [ $j -eq 0 ]; then
-		ibString="$ibString [ '[$(echo "$ibMin + ($ib_interval * $j)" | bc),$(echo "$ibMin + ($ib_interval * ($j + 1))" | bc)]', ${ibCounter[$j]} ],"
-		diskString="$diskString [ '[$(echo "$diskMin + ($disk_interval * $j)" | bc),$(echo "$diskMin + ($disk_interval * ($j + 1))" | bc)]', ${diskCounter[$j]} ],"
+		aux1=$(scale=0; echo "$ibMin + ($ib_interval * $j)" | bc)
+		aux1Value=B
+		aux2=$(scale=0; echo "$ibMin + ($ib_interval * ($j + 1))" | bc)
+		aux2Value=B
+		# Reduce the values
+		while [ $(echo "$aux1 >= 1024" | bc) -eq 1 ] && [ "$aux1Value" != "GB" ]; do 
+			aux1=$(scale=15; echo "$aux1 / 1024" | bc)
+			if [ "$aux1Value" == "B" ]; then
+				aux1Value=KB
+			elif [ "$aux1Value" == "KB" ]; then
+				aux1Value=MB	
+			elif [ "$aux1Value" == "MB" ]; then
+				aux1Value=GB
+			fi	
+        	done
+		while [ $(echo "$aux2 >= 1024" | bc) -eq 1 ] && [ "$aux2Value" != "GB" ]; do 
+                        aux2=$(scale=15; echo "$aux2 / 1024" | bc)
+			if [ "$aux2Value" == "B" ]; then
+                                aux2Value=KB
+                        elif [ "$aux2Value" == "KB" ]; then
+                                aux2Value=MB
+                        elif [ "$aux2Value" == "MB" ]; then
+                                aux2Value=GB
+                        fi
+                done
+		ibString="$ibString [ '[${aux1} ${aux1Value},${aux2} ${aux2Value}]', ${ibCounter[$j]} ],"
+		ibString2="${ibString2}${ibCounter[$j]} "
+		
+		aux1=$(scale=0; echo "$diskMin + ($disk_interval * $j)" | bc); aux1Value=B
+		aux2=$(scale=0; echo "$diskMin + ($disk_interval * ($j + 1))" | bc); aux2Value=B
+		# Reduce the values
+                while [ $(echo "$aux1 >= 1024" | bc) -eq 1 ] && [ "$aux1Value" != "GB" ]; do 
+                        aux1=$(scale=15; echo "$aux1 / 1024" | bc)
+			if [ "$aux1Value" == "B" ]; then
+                                aux1Value=KB
+                        elif [ "$aux1Value" == "KB" ]; then
+                                aux1Value=MB
+                        elif [ "$aux1Value" == "MB" ]; then
+                                aux1Value=GB
+                        fi
+                done
+                while [ $(echo "$aux2 >= 1024" | bc) -eq 1 ] && [ "$aux2Value" != "GB" ]; do
+                        aux2=$(scale=15; echo "$aux2 / 1024" | bc)
+			if [ "$aux2Value" == "B" ]; then
+                                aux2Value=KB
+                        elif [ "$aux2Value" == "KB" ]; then
+                                aux2Value=MB
+                        elif [ "$aux2Value" == "MB" ]; then
+                                aux2Value=GB
+                        fi
+                done
+		diskString="$diskString [ '[${aux1} ${aux1Value},${aux2} ${aux2Value}]', ${diskCounter[$j]} ],"
+		diskString2="${diskString2}${diskCounter[$j]} "
 	else
-		ibString="$ibString [ '($(echo "$ibMin + ($ib_interval * $j)" | bc),$(echo "$ibMin + ($ib_interval * ($j + 1))" | bc)]', ${ibCounter[$j]} ],"
-		diskString="$diskString [ '($(echo "$diskMin + ($disk_interval * $j)" | bc),$(echo "$diskMin + ($disk_interval * ($j + 1))" | bc)]', ${diskCounter[$j]} ],"
+		aux1=$(scale=0; echo "$ibMin + ($ib_interval * $j)" | bc)
+		aux1Value=B
+                aux2=$(scale=0; echo "$ibMin + ($ib_interval * ($j + 1))" | bc)
+		aux2Value=B
+		# Reduce the values
+                while [ $(echo "$aux1 >= 1024" | bc) -eq 1 ] && [ "$aux1Value" != "GB" ]; do 
+                        aux1=$(scale=15; echo "$aux1 / 1024" | bc)
+                        if [ "$aux1Value" == "B" ]; then
+                                aux1Value=KB
+                        elif [ "$aux1Value" == "KB" ]; then
+                                aux1Value=MB
+                        elif [ "$aux1Value" == "MB" ]; then
+                                aux1Value=GB
+                        fi
+                done
+                while [ $(echo "$aux2 >= 1024" | bc) -eq 1 ] && [ "$aux2Value" != "GB" ]; do
+                        aux2=$(scale=15; echo "$aux2 / 1024" | bc )
+                        if [ "$aux2Value" == "B" ]; then
+                                aux2Value=KB
+                        elif [ "$aux2Value" == "KB" ]; then
+                                aux2Value=MB
+                        elif [ "$aux2Value" == "MB" ]; then
+                                aux2Value=GB
+                        fi
+                done
+
+		ibString="$ibString [ '(${aux1} ${aux1Value},${aux2} ${aux2Value}]', ${ibCounter[$j]} ],"
+		ibString2="${ibString2}${ibCounter[$j]} "
+
+		aux1=$(scale=0; echo "$diskMin + ($disk_interval * $j)" | bc)
+		aux1Value=B
+                aux2=$(scale=0; echo "$diskMin + ($disk_interval * ($j + 1))" | bc)
+		aux2Value=B
+		# Reduce the values
+                while [ $(echo "$aux1 >= 1024" | bc) -eq 1 ] && [ "$aux1Value" != "GB" ]; do 
+                        aux1=$(scale=15; echo "$aux1 / 1024" | bc)
+                        if [ "$aux1Value" == "B" ]; then
+                                aux1Value=KB
+                        elif [ "$aux1Value" == "KB" ]; then
+                                aux1Value=MB
+                        elif [ "$aux1Value" == "MB" ]; then
+                                aux1Value=GB
+                        fi
+                done
+                while [ $(echo "$aux2 >= 1024" | bc) -eq 1 ] && [ "$aux2Value" != "GB" ]; do
+                        aux2=$(scale=15; echo "$aux2 / 1024" | bc )
+                        if [ "$aux2Value" == "B" ]; then
+                                aux2Value=KB
+                        elif [ "$aux2Value" == "KB" ]; then
+                                aux2Value=MB
+                        elif [ "$aux2Value" == "MB" ]; then
+                                aux2Value=GB
+                        fi
+                done
+		diskString="$diskString [ '(${aux1} ${aux1Value},${aux2} ${aux2Value}]', ${diskCounter[$j]} ],"
+		diskString2="${diskString2}${diskCounter[$j]} "
 	fi
 done
 
@@ -117,7 +250,9 @@ do
 	d=$(date -d@$d +%d/%m/%y)
 
 	ibStringPerDay="$ibStringPerDay ['$d', ${ibDataPerDay[$j]}],"	
+	ibStringPerDay2="${ibStringPerDay2}${ibDataPerDay[$j]} "	
 	diskStringPerDay="$diskStringPerDay ['$d', ${diskDataPerDay[$j]}],"	
+	diskStringPerDay2="${diskStringPerDay2}${diskDataPerDay[$j]} "	
 done
 
 # Generate the report
@@ -147,15 +282,24 @@ printf "%s \n" "legend: { position: 'none' }," >> $DCRAB_IREPORT
 printf "%s \n" "bar: { groupWidth: \"90%\" }," >> $DCRAB_IREPORT
 printf "%s \n" "axes: {" >> $DCRAB_IREPORT
 printf "%s \n" "x: {" >> $DCRAB_IREPORT
-printf "%s \n" "0: { label: 'MBps per node'} // Top x-axis." >> $DCRAB_IREPORT
+printf "%s \n" "0: { label: 'Speed per second per node'} // Top x-axis." >> $DCRAB_IREPORT
 printf "%s \n" "}," >> $DCRAB_IREPORT
 printf "%s \n" "y: {" >> $DCRAB_IREPORT
 printf "%s \n" "0: {label: 'Number of jobs'}" >> $DCRAB_IREPORT
 printf "%s \n" "}" >> $DCRAB_IREPORT
 printf "%s \n" "}," >> $DCRAB_IREPORT
 printf "%s \n" "};" >> $DCRAB_IREPORT
-printf "%s \n" "var chart = new google.charts.Bar(document.getElementById('chart_div1'));" >> $DCRAB_IREPORT
-printf "%s \n" "chart.draw(data1,google.charts.Bar.convertOptions(options1));" >> $DCRAB_IREPORT
+printf "%s \n" "var chart1 = new google.charts.Bar(document.getElementById('chart_div1'));" >> $DCRAB_IREPORT
+printf "%s \n" "google.visualization.events.addListener(chart1, 'ready', function () {" >> $DCRAB_IREPORT
+printf "%s \n" "var d = \"$ibString2\"" >> $DCRAB_IREPORT
+printf "%s \n" "var d2 = d.split(\" \");" >> $DCRAB_IREPORT
+printf "%s \n" "var cont =0;" >> $DCRAB_IREPORT
+printf "%s \n" "var list = document.getElementById(\"chart_div1\").children;" >> $DCRAB_IREPORT
+printf "%s \n" "for (i = 0; i < list.length; i++) {" >> $DCRAB_IREPORT
+printf "%s \n" "traverseElements(list[i], d2, cont, 1);" >> $DCRAB_IREPORT
+printf "%s \n" "}" >> $DCRAB_IREPORT
+printf "%s \n" "});" >> $DCRAB_IREPORT
+printf "%s \n" "chart1.draw(data1,google.charts.Bar.convertOptions(options1));" >> $DCRAB_IREPORT
 
 # Disk chart
 printf "%s \n" "var data2 = google.visualization.arrayToDataTable([" >> $DCRAB_IREPORT
@@ -174,15 +318,24 @@ printf "%s \n" "legend: { position: 'none' }," >> $DCRAB_IREPORT
 printf "%s \n" "bar: { groupWidth: \"90%\" }," >> $DCRAB_IREPORT
 printf "%s \n" "axes: {" >> $DCRAB_IREPORT
 printf "%s \n" "x: {" >> $DCRAB_IREPORT
-printf "%s \n" "0: { label: 'MB'} // Top x-axis." >> $DCRAB_IREPORT
+printf "%s \n" "0: { label: 'Usage'}" >> $DCRAB_IREPORT
 printf "%s \n" "}," >> $DCRAB_IREPORT
 printf "%s \n" "y: {" >> $DCRAB_IREPORT
 printf "%s \n" "0: {label: 'Number of jobs'}" >> $DCRAB_IREPORT
 printf "%s \n" "}" >> $DCRAB_IREPORT
 printf "%s \n" "}," >> $DCRAB_IREPORT
 printf "%s \n" "};" >> $DCRAB_IREPORT
-printf "%s \n" "var chart = new google.charts.Bar(document.getElementById('chart_div2'));" >> $DCRAB_IREPORT
-printf "%s \n" "chart.draw(data2,google.charts.Bar.convertOptions(options2));" >> $DCRAB_IREPORT
+printf "%s \n" "var chart2 = new google.charts.Bar(document.getElementById('chart_div2'));" >> $DCRAB_IREPORT
+printf "%s \n" "google.visualization.events.addListener(chart2, 'ready', function () {" >> $DCRAB_IREPORT
+printf "%s \n" "var d = \"$diskString2\"" >> $DCRAB_IREPORT
+printf "%s \n" "var d2 = d.split(\" \");" >> $DCRAB_IREPORT
+printf "%s \n" "var cont =0;" >> $DCRAB_IREPORT
+printf "%s \n" "var list = document.getElementById(\"chart_div2\").children;" >> $DCRAB_IREPORT
+printf "%s \n" "for (i = 0; i < list.length; i++) {" >> $DCRAB_IREPORT
+printf "%s \n" "traverseElements(list[i], d2, cont, 0);" >> $DCRAB_IREPORT
+printf "%s \n" "}" >> $DCRAB_IREPORT
+printf "%s \n" "});" >> $DCRAB_IREPORT
+printf "%s \n" "chart2.draw(data2,google.charts.Bar.convertOptions(options2));" >> $DCRAB_IREPORT
 
 # IB per day chart
 printf "%s \n" "var data3 = google.visualization.arrayToDataTable([" >> $DCRAB_IREPORT
@@ -197,8 +350,8 @@ printf "%s \n" "title: 'Infiniband usage per day'," >> $DCRAB_IREPORT
 printf "%s \n" "curveType: 'function'," >> $DCRAB_IREPORT
 printf "%s \n" "legend: { position: 'bottom' }" >> $DCRAB_IREPORT
 printf "%s \n" "};" >> $DCRAB_IREPORT
-printf "%s \n" "var chart = new google.visualization.LineChart(document.getElementById('chart_div3'));" >> $DCRAB_IREPORT
-printf "%s \n" "chart.draw(data3, options3);" >> $DCRAB_IREPORT
+printf "%s \n" "var chart3 = new google.visualization.LineChart(document.getElementById('chart_div3'));" >> $DCRAB_IREPORT
+printf "%s \n" "chart3.draw(data3, options3);" >> $DCRAB_IREPORT
 
 # Disk per day chart
 printf "%s \n" "var data4 = google.visualization.arrayToDataTable([" >> $DCRAB_IREPORT
@@ -213,8 +366,38 @@ printf "%s \n" "title: 'Lscratch usage per day'," >> $DCRAB_IREPORT
 printf "%s \n" "curveType: 'function'," >> $DCRAB_IREPORT
 printf "%s \n" "legend: { position: 'bottom' }" >> $DCRAB_IREPORT
 printf "%s \n" "};" >> $DCRAB_IREPORT
-printf "%s \n" "var chart = new google.visualization.LineChart(document.getElementById('chart_div4'));" >> $DCRAB_IREPORT
-printf "%s \n" "chart.draw(data4, options4);" >> $DCRAB_IREPORT
+printf "%s \n" "var chart4 = new google.visualization.LineChart(document.getElementById('chart_div4'));" >> $DCRAB_IREPORT
+printf "%s \n" "chart4.draw(data4, options4);" >> $DCRAB_IREPORT
+
+# Recursivwe function
+printf "%s \n" "function traverseElements (element, d2, cont, ib) {" >> $DCRAB_IREPORT
+printf "%s \n" "var offsetX = 35;" >> $DCRAB_IREPORT
+printf "%s \n" "var offsetY = 20;" >> $DCRAB_IREPORT
+printf "%s \n" "if (element.tagName !== \"text\") {" >> $DCRAB_IREPORT
+printf "%s \n" "if ( element.children.length !== 0) {" >> $DCRAB_IREPORT
+printf "%s \n" "if (element.tagName === \"g\" || element.tagName === \"DIV\" || element.tagName === \"svg\") {" >> $DCRAB_IREPORT
+printf "%s \n" "var c = element.children;" >> $DCRAB_IREPORT
+printf "%s \n" "var j = 0;" >> $DCRAB_IREPORT
+printf "%s \n" "for (; j < c.length; j++) {" >> $DCRAB_IREPORT
+printf "%s \n" "if ( ib === 0 ) {" >> $DCRAB_IREPORT
+printf "%s \n" "traverseElements(c[j], d2, j, ib);" >> $DCRAB_IREPORT
+printf "%s \n" "} else {" >> $DCRAB_IREPORT
+printf "%s \n" "traverseElements(c[j], d2, j*2, ib);" >> $DCRAB_IREPORT
+printf "%s \n" "}" >> $DCRAB_IREPORT
+printf "%s \n" "}" >> $DCRAB_IREPORT
+printf "%s \n" "}" >> $DCRAB_IREPORT
+printf "%s \n" "}" >> $DCRAB_IREPORT
+printf "%s \n" "} else {" >> $DCRAB_IREPORT
+printf "%s \n" "if (element.innerHTML.includes(\"[\") || element.innerHTML.includes(\"]\")) {" >> $DCRAB_IREPORT
+printf "%s \n" "var newNode = element.cloneNode(true);" >> $DCRAB_IREPORT
+printf "%s \n" "var y = parseInt(newNode.getAttribute(\"y\")) + 20;" >> $DCRAB_IREPORT
+printf "%s \n" "newNode.setAttribute(\"y\",y);" >> $DCRAB_IREPORT
+printf "%s \n" "newNode.innerHTML = d2[cont];" >> $DCRAB_IREPORT
+printf "%s \n" "element.parentNode.appendChild(newNode);" >> $DCRAB_IREPORT
+printf "%s \n" "}" >> $DCRAB_IREPORT
+printf "%s \n" "}" >> $DCRAB_IREPORT
+printf "%s \n" "}" >> $DCRAB_IREPORT
+
 
 printf "%s \n" "}" >> $DCRAB_IREPORT
 printf "%s \n" "</script>" >> $DCRAB_IREPORT
