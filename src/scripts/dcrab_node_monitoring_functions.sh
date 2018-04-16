@@ -73,6 +73,8 @@ dcrab_node_monitor_init_variables () {
 			DCRAB_IB_RCV_PACK=$DCRAB_IB_BASE_DIR/port_rcv_packets_64
 			DCRAB_IB_RCV_DATA=$DCRAB_IB_BASE_DIR/port_rcv_data_64
 		fi
+		[ $(echo "${DCRAB_IB_XMIT_DATA_VALUE: -1} % 2" | bc) -eq 1 ] && DCRAB_IB_XMIT_DATA_VALUE=$((DCRAB_IB_XMIT_DATA_VALUE + 1))
+	        [ $(echo "${DCRAB_IB_RCV_DATA_VALUE: -1} % 2" | bc) -eq 1 ] && DCRAB_IB_RCV_DATA_VALUE=$((DCRAB_IB_RCV_DATA_VALUE + 1))
 		DCRAB_TOTAL_IB_DIR=$DCRAB_REPORT_DIR/aux/ib
 	        DCRAB_TOTAL_IB_FILE=$DCRAB_TOTAL_IB_DIR/$DCRAB_NODE_HOSTNAME.txt
 		echo "" > $DCRAB_TOTAL_IB_FILE
@@ -155,6 +157,8 @@ dcrab_node_monitor_init_variables () {
 		DCRAB_IB_XMIT_DATA_VALUE=$(cat $DCRAB_IB_XMIT_DATA)
 		DCRAB_IB_RCV_PCK_VALUE=$(cat $DCRAB_IB_RCV_PACK)
 		DCRAB_IB_RCV_DATA_VALUE=$(cat $DCRAB_IB_RCV_DATA)
+		[ $(echo "${DCRAB_IB_FIRST_XMIT_DATA_VALUE: -1} % 2" | bc) -eq 1 ] && DCRAB_IB_FIRST_XMIT_DATA_VALUE=$((DCRAB_IB_FIRST_XMIT_DATA_VALUE + 1))
+	        [ $(echo "${DCRAB_IB_FIRST_RCV_DATA_VALUE: -1} % 2" | bc) -eq 1 ] && DCRAB_IB_FIRST_RCV_DATA_VALUE=$((DCRAB_IB_FIRST_RCV_DATA_VALUE + 1))
 		DCRAB_IB_NEW_XMIT_PCK_VALUE=0
 		DCRAB_IB_NEW_XMIT_DATA_VALUE=0
 		DCRAB_IB_NEW_RCV_PCK_VALUE=0
@@ -295,6 +299,8 @@ dcrab_node_monitor_init_variables () {
 		# IB
                 DCRAB_IB_FIRST_XMIT_DATA_VALUE=$(cat $DCRAB_IB_XMIT_DATA)
                 DCRAB_IB_FIRST_RCV_DATA_VALUE=$(cat $DCRAB_IB_RCV_DATA)
+		[ $(echo "${DCRAB_IB_FIRST_XMIT_DATA_VALUE: -1} % 2" | bc) -eq 1 ] && DCRAB_IB_FIRST_XMIT_DATA_VALUE=$((DCRAB_IB_FIRST_XMIT_DATA_VALUE + 1))
+	        [ $(echo "${DCRAB_IB_FIRST_RCV_DATA_VALUE: -1} % 2" | bc) -eq 1 ] && DCRAB_IB_FIRST_RCV_DATA_VALUE=$((DCRAB_IB_FIRST_RCV_DATA_VALUE + 1))
                 DCRAB_IB_NEW_XMIT_PCK_VALUE=0
                 DCRAB_IB_NEW_XMIT_DATA_VALUE=0
                 DCRAB_IB_NEW_RCV_PCK_VALUE=0
@@ -416,6 +422,8 @@ dcrab_collect_ib_data () {
 	DCRAB_IB_NEW_RCV_PCK_VALUE=$(cat $DCRAB_IB_RCV_PACK)	
 	DCRAB_IB_NEW_XMIT_DATA_VALUE=$(cat $DCRAB_IB_XMIT_DATA)
 	DCRAB_IB_NEW_RCV_DATA_VALUE=$(cat $DCRAB_IB_RCV_DATA)
+	[ $(echo "${DCRAB_IB_NEW_XMIT_DATA_VALUE: -1} % 2" | bc) -eq 1 ] && DCRAB_IB_NEW_XMIT_DATA_VALUE=$((DCRAB_IB_NEW_XMIT_DATA_VALUE + 1))
+	[ $(echo "${DCRAB_IB_NEW_RCV_DATA_VALUE: -1} % 2" | bc) -eq 1 ] && DCRAB_IB_NEW_RCV_DATA_VALUE=$((DCRAB_IB_NEW_RCV_DATA_VALUE + 1))
 
 	if [ $DCRAB_INTERNAL_MODE -eq 0 ]; then
 		local aux1=$( echo "($DCRAB_IB_NEW_XMIT_DATA_VALUE - $DCRAB_IB_XMIT_DATA_VALUE) / 1024" | bc )
@@ -870,53 +878,53 @@ dcrab_update_data () {
 	cat $DCRAB_USER_PROCESSES_FILE | grep -E "$DCRAB_MAIN_PIDS" > $DCRAB_JOB_PROCESSES_FILE.tmp
 
 	# To check if there is some processes that aren't in the process tree of the main node but belongs the job (this case occurs with mvapich)
-	diff -u $DCRAB_JOB_PROCESSES_FILE.tmp $DCRAB_USER_PROCESSES_FILE | grep "^\+" | awk 'NR>1 {print}' | sed 's|+||' > $DCRAB_JOB_CANDIDATE_PROCESSES_FILE
-	if [ $(cat $DCRAB_JOB_CANDIDATE_PROCESSES_FILE | wc -l) -gt 0 ]; then
-
-		# Renew DCRAB_MAIN_PROCESS_LAST_CHILD_PID variable
-		DCRAB_MAIN_PROCESS_LAST_CHILD_PID=$(cat $DCRAB_USER_PROCESSES_FILE | grep $DCRAB_FIRST_MAIN_PROCESS_PID | tail -1 | awk '{printf $6}')
-		DCRAB_LAST_CHILD_NEXT_VALID_PID=$((DCRAB_MAIN_PROCESS_LAST_CHILD_PID + 1))
-		i=0; found=0
-		while [ "$found" -eq 0 ]; do
-			kill -0 $DCRAB_LAST_CHILD_NEXT_VALID_PID >> /dev/null 2>&1
-			[[ $? -eq 0 ]] && found=1 || DCRAB_LAST_CHILD_NEXT_VALID_PID=$((DCRAB_LAST_CHILD_NEXT_VALID_PID + 1))
-		done
-
-		for line in $(cat $DCRAB_JOB_CANDIDATE_PROCESSES_FILE)
-		do
-			pid=$(echo "$line" | awk '{print $6}')
-			if [ "$DCRAB_MAIN_PROCESS_LAST_CHILD_PID" != "" ] && [ "$DCRAB_FIRST_MAIN_PROCESS_PID" != "0" ]; then
-				# To check that is not child of any of the main processes
-				pstree -p $DCRAB_FIRST_MAIN_PROCESS_PID | grep -q "$pid"
-				if [ $? -ne 0 ] && 
-				   [ "$pid" -le $((DCRAB_MAIN_PROCESS_LAST_CHILD_PID + DCRAB_RANGE_PIDs)) ] && 
-				   [ "$pid" -ge $((DCRAB_MAIN_PROCESS_LAST_CHILD_PID - DCRAB_RANGE_PIDs)) ]; then
-			       		DCRAB_MAIN_PIDS="$DCRAB_MAIN_PIDS""|""$pid"
-					DCRAB_NUMBER_MAIN_PIDS=$((DCRAB_NUMBER_MAIN_PIDS + 1))
-					echo "Another main process confirmed. PID:$pid, COMMAND: $(echo "$line" | awk '{print $8}')"
-	
-					# If the new process is the control process. Needed for multinode statistics.
-					echo $line | grep -q "control-port"
-					if [ "$?" -eq 0 ] && [ "$DCRAB_NODE_NUMBER" -eq 0 ]; then
-						DCRAB_CONTROL_PORT_MAIN_NODE=$(echo ${line#*control-port} | awk '{print $1}')
-						echo "$DCRAB_CONTROL_PORT_MAIN_NODE" > $DCRAB_REPORT_DIR/aux/control_port.txt
-					fi
-				elif [ "$?" -ne "0" ] && [ "$pid" == "$DCRAB_LAST_CHILD_NEXT_VALID_PID" ]; then
-					DCRAB_MAIN_PIDS="$DCRAB_MAIN_PIDS""|""$pid"
-					DCRAB_NUMBER_MAIN_PIDS=$((DCRAB_NUMBER_MAIN_PIDS + 1))
-					echo "Another main process confirmed. PID:$pid, COMMAND: $(echo "$line" | awk '{print $8}')"
-
-					# If the new process is the control process. Needed for multinode statistics.
-					echo $line | grep -q "control-port"
-					if [ "$?" -eq 0 ] && [ "$DCRAB_NODE_NUMBER" -eq 0 ]; then
-						DCRAB_CONTROL_PORT_MAIN_NODE=$(echo ${line#*control-port} | awk '{print $1}')
-						echo "$DCRAB_CONTROL_PORT_MAIN_NODE" > $DCRAB_REPORT_DIR/aux/control_port.txt
-					fi
-				fi
-			fi				
-
-		done
-	fi
+#	diff -u $DCRAB_JOB_PROCESSES_FILE.tmp $DCRAB_USER_PROCESSES_FILE | grep "^\+" | awk 'NR>1 {print}' | sed 's|+||' > $DCRAB_JOB_CANDIDATE_PROCESSES_FILE
+#	if [ $(cat $DCRAB_JOB_CANDIDATE_PROCESSES_FILE | wc -l) -gt 0 ]; then
+#
+#		# Renew DCRAB_MAIN_PROCESS_LAST_CHILD_PID variable
+#		DCRAB_MAIN_PROCESS_LAST_CHILD_PID=$(cat $DCRAB_USER_PROCESSES_FILE | grep $DCRAB_FIRST_MAIN_PROCESS_PID | tail -1 | awk '{printf $6}')
+#		DCRAB_LAST_CHILD_NEXT_VALID_PID=$((DCRAB_MAIN_PROCESS_LAST_CHILD_PID + 1))
+#		i=0; found=0
+#		while [ "$found" -eq 0 ]; do
+#			kill -0 $DCRAB_LAST_CHILD_NEXT_VALID_PID >> /dev/null 2>&1
+#			[[ $? -eq 0 ]] && found=1 || DCRAB_LAST_CHILD_NEXT_VALID_PID=$((DCRAB_LAST_CHILD_NEXT_VALID_PID + 1))
+#		done
+#
+#		for line in $(cat $DCRAB_JOB_CANDIDATE_PROCESSES_FILE)
+#		do
+#			pid=$(echo "$line" | awk '{print $6}')
+#			if [ "$DCRAB_MAIN_PROCESS_LAST_CHILD_PID" != "" ] && [ "$DCRAB_FIRST_MAIN_PROCESS_PID" != "0" ]; then
+#				# To check that is not child of any of the main processes
+#				pstree -p $DCRAB_FIRST_MAIN_PROCESS_PID | grep -q "$pid"
+#				if [ $? -ne 0 ] && 
+#				   [ "$pid" -le $((DCRAB_MAIN_PROCESS_LAST_CHILD_PID + DCRAB_RANGE_PIDs)) ] && 
+#				   [ "$pid" -ge $((DCRAB_MAIN_PROCESS_LAST_CHILD_PID - DCRAB_RANGE_PIDs)) ]; then
+#			       		DCRAB_MAIN_PIDS="$DCRAB_MAIN_PIDS""|""$pid"
+#					DCRAB_NUMBER_MAIN_PIDS=$((DCRAB_NUMBER_MAIN_PIDS + 1))
+#					echo "Another main process confirmed. PID:$pid, COMMAND: $(echo "$line" | awk '{print $8}')"
+#	
+#					# If the new process is the control process. Needed for multinode statistics.
+#					echo $line | grep -q "control-port"
+#					if [ "$?" -eq 0 ] && [ "$DCRAB_NODE_NUMBER" -eq 0 ]; then
+#						DCRAB_CONTROL_PORT_MAIN_NODE=$(echo ${line#*control-port} | awk '{print $1}')
+#						echo "$DCRAB_CONTROL_PORT_MAIN_NODE" > $DCRAB_REPORT_DIR/aux/control_port.txt
+#					fi
+#				elif [ "$?" -ne "0" ] && [ "$pid" == "$DCRAB_LAST_CHILD_NEXT_VALID_PID" ]; then
+#					DCRAB_MAIN_PIDS="$DCRAB_MAIN_PIDS""|""$pid"
+#					DCRAB_NUMBER_MAIN_PIDS=$((DCRAB_NUMBER_MAIN_PIDS + 1))
+#					echo "Another main process confirmed. PID:$pid, COMMAND: $(echo "$line" | awk '{print $8}')"
+#
+#					# If the new process is the control process. Needed for multinode statistics.
+#					echo $line | grep -q "control-port"
+#					if [ "$?" -eq 0 ] && [ "$DCRAB_NODE_NUMBER" -eq 0 ]; then
+#						DCRAB_CONTROL_PORT_MAIN_NODE=$(echo ${line#*control-port} | awk '{print $1}')
+#						echo "$DCRAB_CONTROL_PORT_MAIN_NODE" > $DCRAB_REPORT_DIR/aux/control_port.txt
+#					fi
+#				fi
+#			fi				
+#
+#		done
+#	fi
 
 	lastEmptyValue=0
 	i=1
