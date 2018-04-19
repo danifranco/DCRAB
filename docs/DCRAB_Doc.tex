@@ -1,17 +1,24 @@
-\documentclass[12pt]{article}
-\usepackage[english]{babel}
-\usepackage{natbib}
-\usepackage{url}
-\usepackage[utf8x]{inputenc}
-\usepackage{amsmath}
-\usepackage{graphicx}
-\graphicspath{{images/}}
-\usepackage{parskip}
+\documentclass[10pt,a4paper]{report}
+\usepackage[margin=1.25in]{geometry}
 \usepackage{fancyhdr}
-\usepackage{vmargin}
-\setmarginsrb{3 cm}{2.5 cm}{3 cm}{2.5 cm}{1 cm}{1.5 cm}{1 cm}{1.5 cm}
+\usepackage[pdftex]{graphicx}
+\usepackage{subfigure}
+\usepackage{titlesec}
+\usepackage{placeins}
+\usepackage{color}
+\usepackage{verbatim}
+\usepackage{hyperref}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    citecolor=blue,
+    filecolor=black,
+    urlcolor=blue
+}
 
 \author{CC-Staff}
+\title{User Documentation}
 \date{17 April 2018}
 
 \makeatletter
@@ -23,8 +30,13 @@
 \pagestyle{fancy}
 \fancyhf{}
 \rhead{\theauthor}
-\lhead{\thetitle}
+\lhead{DCRAB User Guide}
 \cfoot{\thepage}
+
+\titleformat{\chapter}
+  {\normalfont\LARGE\bfseries}{\thechapter}{1em}{}
+\titlespacing*{\chapter}{0pt}{3.5ex plus 1ex minus .2ex}{2.3ex plus .2ex}
+
 
 \begin{document}
 
@@ -32,52 +44,158 @@
 
 \begin{titlepage}
 	\centering
-    \vspace*{0.5 cm}
+    \vspace*{3 cm}
     \includegraphics[scale = 0.6]{../aux/logos/DCRAB_logo.png}\\[1.0 cm]
-		\hfill \break
-	\rule{\linewidth}{0.5 mm} \\[0.4 cm]
-\hfill \break
-\hfill \break
+		\vspace*{2 cm}
+	\rule{\linewidth}{0.2 mm} \\[0.4 cm]
+	{ \huge \bfseries \thetitle}\\
+	\rule{\linewidth}{0.2 mm} \\[0.4 cm]
+\vspace*{4.5 cm}
 	\begin{minipage}{0.4\textwidth}
 		\begin{flushleft} \large
 			Document Revision 1.0\\
 			17 April 2018\\
 			\end{flushleft}
-			\end{minipage}~
-			\begin{minipage}{0.4\textwidth}
-
+			\end{minipage}
+			\begin{minipage}{0.4 \textwidth}
 			\begin{flushright} \large
-			DCRAB v2.0 \\
+			DCRAB v2.0\\
 		\end{flushright}
-
 	\end{minipage}\\[2 cm]
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+\thispagestyle{empty}
+\begin{flushleft}
+CC-Staff \\
+Contact: http://dipc.ehu.es/cc/computing\_resources/staff.html \\
+High Performance Computing \\
+Donostia International Physics Center, Computing Center \\
+Donostia - San Sebastián \\
+\vspace{1cm}
+DCRAB Copyright (C) 2018 CC-Staff
+\end{flushleft}
 
-
-
-
-
-
+\newpage
 \end{titlepage}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\tableofcontents
-\pagebreak
+\begin{abstract}
+
+DCRAB is a tool to monitorize resource utilization in HPC environments. It works side-by-side with the job scheduler to collect runtime information about the processes generated in compute nodes.
+
+Excluding a few cases, the data DCRAB collects is taken from the processes which the job has started, not from the entire node. The tool is able to collect the information listed below:
+
+\begin{itemize}
+	\item CPU used
+	\item Memory usage
+	\item Infiniband statistics (of the entire node)
+	\item Processes IO statistics
+	\item NFS usage (of the entire node)
+	\item Disk IO statistics
+\end{itemize}
+
+\end{abstract}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\section{About this design}
-This is a simple report template with the UCT logo. Feel free to use/modify it to suit your needs. Variables that need to be altered have been commented to make modifications easier. For example if you need to change the university logo, look for the comment \texttt{\% University Logo} in this file and then make appropriate modifications in that line.
+\tableofcontents
 
-A Table of Contents and a bibliography have also been implemented. To add entries to your bibliography, simply edit \texttt{biblist.bib} in the root folder and then use the \texttt{\textbackslash cite\{\ldots\}} command in \texttt{main.tex} \cite{bibtex}. The Table of Contents will be updated automatically.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-I hope that you find this template both visually appealing and useful. \\
+\chapter{Installation}
 
-\hspace{1 cm}--- Linus
+DCRAB has no installation at all, you have to take the lastest version tarball available in Github (currently v2.0) and expand it in a convenient location in your system:
 
-\newpage
-\bibliographystyle{plain}
-\bibliography{biblist}
+\begin{verbatim}
+    tar xzvf ./DCRAB-2.0.tar.gz
+\end{verbatim}
+
+This will create a directory called \verb+DCRAB-2.0+ with subdirectories \verb+/src+, which contains the source files of the tool, and \verb+/examples+, where are stored DCRAB's generated report examples of each version since it was created.
+
+\chapter{How to use DCRAB}
+
+\section{Data Collection}
+
+DCRAB has two operation modes: normal report operation, which may be used by all users, and internal report operation, which is more focused to sysadmins. The second operation mode is going to be explained in \ref{internalreport} section, so let's introduce here the normal report operation which will be the commonly used one. The tool is straightforward to use, you have to add the following lines into your submission script:
+
+\ \
+
+\begin{verbatim}
+    export DCRAB_PATH=/PATH_TO_DCRAB/src/
+    export PATH=$PATH:$DCRAB_PATH
+    dcrab start
+
+    ##################################
+    #    BLOCK OF CODE TO MONITOR    #
+    ##################################
+
+    dcrab finish
+\end{verbatim}
+
+Note that the variable \verb+DCRAB_PATH+ must be declared to run DCRAB, so do not omit it.
+
+DCRAB will start a process in each compute node where the script runs, and will monitorize the processes started by it. The code will run as normal, and meanwhile DCRAB will generate a directory report called \verb+dcrab_report_<jobid>+ where \verb+jobid+ is the job number assigned by the scheduler. This reporting directory is generated in the same folder where the job was submitted.
+
+Inside this reporting directory, DCRAB will create the reporting file called \verb+dcrab_report.html+ (which will be named as "the reporting file" is this document from now on), which is the main purpose of this monitorization, and were you will find statistics and plots to analyze visually the information collected. This report is continuous change (every 10 seconds) because the information collected is stored at the time it is taken. So, you could open it with a browser at the start of the job's execution and refresh to see what is going on with the job.
+
+The reporting file is completely modular so you could copy only it and move to any location, because it does not need any other file to visualize or open it in a browser. Every plot and image is embedded in the report.
+
+Furthermore, inside this reporting folder you will find some subdirectories, which normally are not relevant at all for the user, because they are generated to guarantee the correct behaviour of the tool. One will be \verb+/data+, which contains for each computing node the files in charge of manage the processes asociated with the job. Another folder called \verb+/aux+, which contains auxiliary files needed for the comunication between compute nodes, and \verb+/log+, which contains the output generated by DCRAB process in each node and DCRAB's main process output also in a file called \verb+dcrab.log+ (used mostly for troubleshooting).
+
+\section{Execution Customization}
+
+On DCRAB version 2.0 is not included yet any configuration file to customize the execution, but it is included in the roadmap. However, there are some variables that could be changed inside the code until the configuration file is not released:
+
+\begin{itemize}
+	\item \textbf{DCRAB\_COLLECT\_TIME}. This variable, inside \verb+src/scripts/dcrab_config.sh+ in \verb+dcrab_init_variables()+ function, configures the time between each data collection. By default it is set to 10 seconds.
+	\item \textbf{DCRAB\_NFS\_MOUNT\_PATH}. This variable, inside \verb+src/scripts/dcrab_node_monitoring_functions.sh+ in \verb+dcrab_node_monitor_init_variables()+ function, configures the path of the NFS filesystem to be monitorized. By defaut, its value is \verb+/scratch+.
+\end{itemize}
+
+\section{Crashed jobs}
+In the case where the job execution fails, as the report is continuosly upgrading every 10 seconds, it will ensure to have a report until the crash, which may contain relevant information about it.
+
+On the other hand, there a couple of exceptions thrown by DCRAB when some situations occur:
+
+\begin{itemize}
+	\item When some of the compute nodes try to write so many times in the reporting file with no success
+	\item When the reporting directory has been deleted or moved
+\end{itemize}
+
+In this cases, a file called \verb+DCRAB_ERROR_<computeNodeHostname>_<jobid>+ will be generated, per each compute node involved in the calculation, in the same folder as the reporting folder: where the job was submitted. The \verb+computeNodeHostname+ refers to the hostname of the compute node that throws the error and \verb+jobid+ is the job number assigned by the scheduler to the job.
+
+
+\chapter{Design and Implementation}
+
+The main idea of DCRAB was to create a tool easy to use for the users. Notwithstanding that DCRAB is upgrading an HTML file continuosly, the runtime penalty is superfluous.
+
+The continue upgrading of the report formed the scheleton of DCRAB's structure. It is modular relating to the data collection but no with the report upgrading. This upgrade is a critical section of the project because all the compute nodes need to write there at the same time, so there is a race condition we had to solve. In early versions we resolved the problem with a lock, to make the writing atomic, but there was a problem with the delay of parallel scratches when the reporting file become bigger. The error occurs when a compute node that is waiting to write into the report, take the lock and writes, sometimes the report is not refreshed yet with the previous write information. We made a mark at the first line of the report to serialize the writes and solve the problem.
+
+In its current implementation the tool makes a ssh from the master node to all other nodes. This connection starts a process in background that monitorizes the processes started by the job and collects information about them every 10 seconds (by default). The tool take advantage of the scheduler to know which processes are related to that job.
+
+\section{Statistics Collected}
+
+DCRAB collects different statistics and information which may be usefull for the user every 10 seconds by default. Here is a better explanation of the statistics:
+
+\begin{itemize}
+	\item \textbf{CPU used}. The application reports the CPU usage for all the processes started by the job. This data is collected with \verb+ps+ command so it is a snapshot of the process at a concrete time. However, to have only a view of the main processes in the chart there is a threshold value defined to avoid trivial processes. This information is very useful for applications that use OpenMP.
+	\item \textbf{Memory usage}. This value is obtained with the processes' \verb+/proc/<pid>/status+ file where \verb+pid+ is the PID of the process. The tool collect information about Virtual Memory (displayed as VmSize), Resident Memory and Max Resident Memory (displayed as VmRSS). Also is displayed the memory requested by the user for that job in the scheduler and the total memory available in the node.
+
+	If there are more than one node involved in the execution a special pie chart is generated to display the amount of memory used for the scheduler (with one node calculation this value is the same as the usage in that node so there is no reason to generate that plot). With this information the users could revise the amount of memory requested into a more real value one to not waste resources, which may also help schedulers' algorithms such as Backfill of Moab.
+	\item \textbf{Infiniband statistics (of the entire node)}. Number of packets and MB of data transfered and received over Infiniband of the entire node (this values can not be collected per processes). This information can be used to improve or revise certain parts of the code, reducing the amount of data transferred over the network, comparing this code section with high network activity levels. This values are taken from the counters available in \verb+/sys/class/infiniband/mlx5_0/ports/1/counters+.
+	\item \textbf{Processes IO statistics}. The I/O (Input/Output) made by the processes (no matters the filesystem type). This information can be useful to see if a process is writing more expected and is being a bottleneck in the program. This data is collected from \verb+/proc/<pid>/io+ file where \verb+pid+ is the PID of the process.
+	\item \textbf{NFS usage (of the entire node)}. The I/O (Input/Output) made by the processes on the NFS fylesystem determined by \verb+DCRAB_NFS_MOUNT_PATH+ variable. This value, as the Infiniband value, can not be measured by process and must be a collected from the entire node statistics. The information is collected from \verb+mountstats+ command.
+	\item \textbf{Disk IO statistics (of the entire node)}. The I/O (Input/Output) made by the processes on the local disks. This data is obtained from \verb+/proc/diskstats+ file so this statistic if related to the entire node.
+\end{itemize}
+
+\section{Modular Design}
+
+\section{Code Structure}
+
+
+\chapter{Internal Report Operation}
+
+
 
 \end{document}

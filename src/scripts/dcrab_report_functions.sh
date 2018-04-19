@@ -995,7 +995,9 @@ dcrab_generate_html () {
 	printf "%s \n" "</a>" >> $DCRAB_HTML
 	printf "%s \n" "</div>" >> $DCRAB_HTML
 	printf "%s \n" "<div style=\"font-size: 12px; display: table-cell; vertical-align: middle;\" class=\"text inline\">" >> $DCRAB_HTML
-	printf "%s \n" "Copyright &copy; 2018 DIPC (Donostia International Physics Center)" >> $DCRAB_HTML
+	printf "%s \n" "DCRAB Copyright (C) 2018 CC-Staff of DIPC (Donostia International Physics Center)" >> $DCRAB_HTML
+	printf "%s \n" "<div class=\"vl\"></div>" >> $DCRAB_HTML
+	printf "%s \n" "DCRAB is licensed under GNU GPLv3" >> $DCRAB_HTML 
 	printf "%s \n" "<div class=\"vl\"></div>" >> $DCRAB_HTML
 	printf "%s \n" "<a href=\"http://dipc.ehu.es/cc/computing_resources/index.html\" target=\"_blank\" style=\"text-decoration: none; color: black;\"><b>Technical Documentation</b></a>" >> $DCRAB_HTML
 	printf "%s \n" "<div class=\"vl\"></div>" >> $DCRAB_HTML
