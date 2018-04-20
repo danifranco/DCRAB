@@ -8,6 +8,21 @@
 \usepackage{color}
 \usepackage{verbatim}
 \usepackage{hyperref}
+\usepackage{tikz}
+\usepackage{pgf}
+
+\usetikzlibrary{arrows,shapes,positioning,shadows,trees,automata}
+
+\tikzset{
+  basic/.style  = {draw, text width=2cm, drop shadow, font=\sffamily, rectangle},
+  root/.style   = {basic, rounded corners=2pt, thin, align=center,
+                   fill=green!30},
+  level 2/.style = {basic, rounded corners=6pt, thin,align=center, fill=orange!30,
+                   text width=10em},
+  level 3/.style = {basic, thin, align=left, fill=pink!60, text width=11em, align=center},
+	level 4/.style = {basic, thin, align=left, fill=pink!60, text width=14.5em, align=center},
+	level 5/.style = {basic, thin, align=left, fill=pink!60, text width=6.5em, align=center}
+}
 
 \hypersetup{
     colorlinks=true,
@@ -170,7 +185,7 @@ In this cases, a file called \verb+DCRAB_ERROR_<computeNodeHostname>_<jobid>+ wi
 
 The main idea of DCRAB was to create a tool easy to use for the users. Notwithstanding that DCRAB is upgrading an HTML file continuosly, the runtime penalty is superfluous.
 
-The continue upgrading of the report formed the scheleton of DCRAB's structure. It is modular relating to the data collection but no with the report upgrading. This upgrade is a critical section of the project because all the compute nodes need to write there at the same time, so there is a race condition we had to solve. In early versions we resolved the problem with a lock, to make the writing atomic, but there was a problem with the delay of parallel scratches when the reporting file become bigger. The error occurs when a compute node that is waiting to write into the report, take the lock and writes, sometimes the report is not refreshed yet with the previous write information. We made a mark at the first line of the report to serialize the writes and solve the problem.
+The continue upgrading of the report formed the scheleton of DCRAB's structure. The tool is modular relating to the data collection but no with the report upgrading. This upgrade is a critical section of the project because all the compute nodes need to write there at the same time, so there is a race condition we had to solve. In early versions we resolved the problem with a lock, to make the writing atomic, but there was a problem with the delay of parallel filesystems when the reporting file become bigger. The error occurs when a compute node that is waiting to write into the report some data is lost, because there is a little delay until the file is upgraded or refreshed with the new information for other nodes. We made a mark at the first line of the report to serialize the writes and solve the problem.
 
 In its current implementation the tool makes a ssh from the master node to all other nodes. This connection starts a process in background that monitorizes the processes started by the job and collects information about them every 10 seconds (by default). The tool take advantage of the scheduler to know which processes are related to that job.
 
@@ -182,16 +197,105 @@ DCRAB collects different statistics and information which may be usefull for the
 	\item \textbf{CPU used}. The application reports the CPU usage for all the processes started by the job. This data is collected with \verb+ps+ command so it is a snapshot of the process at a concrete time. However, to have only a view of the main processes in the chart there is a threshold value defined to avoid trivial processes. This information is very useful for applications that use OpenMP.
 	\item \textbf{Memory usage}. This value is obtained with the processes' \verb+/proc/<pid>/status+ file where \verb+pid+ is the PID of the process. The tool collect information about Virtual Memory (displayed as VmSize), Resident Memory and Max Resident Memory (displayed as VmRSS). Also is displayed the memory requested by the user for that job in the scheduler and the total memory available in the node.
 
-	If there are more than one node involved in the execution a special pie chart is generated to display the amount of memory used for the scheduler (with one node calculation this value is the same as the usage in that node so there is no reason to generate that plot). With this information the users could revise the amount of memory requested into a more real value one to not waste resources, which may also help schedulers' algorithms such as Backfill of Moab.
+	If there are more than one node involved in the execution a bigger pie chart is generated to display the amount of memory used for the scheduler (with one node calculation this value is the same as the usage in that node so there is no reason to generate that plot). With this information the users could revise the amount of memory requested into a more real value one to not waste resources, which may also help schedulers' algorithms such as Backfill of Moab.
 	\item \textbf{Infiniband statistics (of the entire node)}. Number of packets and MB of data transfered and received over Infiniband of the entire node (this values can not be collected per processes). This information can be used to improve or revise certain parts of the code, reducing the amount of data transferred over the network, comparing this code section with high network activity levels. This values are taken from the counters available in \verb+/sys/class/infiniband/mlx5_0/ports/1/counters+.
 	\item \textbf{Processes IO statistics}. The I/O (Input/Output) made by the processes (no matters the filesystem type). This information can be useful to see if a process is writing more expected and is being a bottleneck in the program. This data is collected from \verb+/proc/<pid>/io+ file where \verb+pid+ is the PID of the process.
 	\item \textbf{NFS usage (of the entire node)}. The I/O (Input/Output) made by the processes on the NFS fylesystem determined by \verb+DCRAB_NFS_MOUNT_PATH+ variable. This value, as the Infiniband value, can not be measured by process and must be a collected from the entire node statistics. The information is collected from \verb+mountstats+ command.
 	\item \textbf{Disk IO statistics (of the entire node)}. The I/O (Input/Output) made by the processes on the local disks. This data is obtained from \verb+/proc/diskstats+ file so this statistic if related to the entire node.
 \end{itemize}
 
-\section{Modular Design}
-
 \section{Code Structure}
+
+This are the scripts that compose DCRAB without the internal report operation scripts, which are dcrab\_internal\_report\_generation.sh and dcrab\_internal\_report\_functions.sh.
+
+\vspace*{1.5 cm}
+
+\begin{tikzpicture}[
+  level 1/.style={sibling distance=55mm},
+  edge from parent/.style={->,draw},
+  >=latex]
+
+% root of the the initial tree, level 1
+\node[root] {dcrab}
+% The first level, as children of the initial tree
+  child {node[level 2] (c1) {dcrab\_config.sh}}
+  child {node[level 2] (c2) {dcrab\_node\_monitor.sh}}
+	child {node[level 2, xshift=45pt] (c3) {dcrab\_finalize.sh}};
+
+% The second level, relatively positioned nodes
+\node [level 3, below of = c1, xshift=25pt] (c11) {dcrab\_check\_scheduler};
+\node [level 3, below of = c11] (c12) {dcrab\_init\_variables};
+\node [level 3, below of = c12] (c13) {dcrab\_create\_report\_files};
+\node [level 3, below of = c13] (c14) {dcrab\_start\_data\_collection};
+\node [level 3, below of = c14] (c15) {dcrab\_save\_environment};
+
+\node [level 3, below of = c2, xshift=40pt, rounded corners=6pt, fill=orange!30, text width=15em] (c21) {dcrab\_node\_monitoring\_functions.sh};
+\node [level 4, below of = c21, xshift=20pt] (c211) {dcrab\_node\_monitor\_init\_variables};
+\node [level 4, below of = c211] (c212) {dcrab\_determine\_main\_process};
+\node [level 4, below of = c212] (c213) {dcrab\_update\_data};
+\node [level 4, below of = c213, yshift=-35pt, fill=blue!20] (c214) {dcrab\_collect\_mem\_data \\ dcrab\_collect\_ib\_data \\ dcrab\_format\_time \\ dcrab\_collect\_processesIO\_data \\ dcrab\_collect\_nfs\_data \\ dcrab\_collect\_disk\_data \\ dcrab\_collect\_beegfs\_data };
+
+\node [level 3, below of = c214, xshift=-20pt, yshift=-35pt, rounded corners=6pt, fill=orange!30, text width=15em] (c22) {dcrab\_report\_functions.sh};
+\node [level 4, below of = c22, xshift=20pt] (c221) {dcrab\_wait\_and\_write};
+\node [level 4, below of = c221] (c222) {dcrab\_write\_data};
+\node [level 4, below of = c222] (c223) {dcrab\_generate\_html};
+
+\node [level 3, below of = c3, xshift=15pt] (c31) {dcrab\_check\_exit};
+\node [level 3, below of = c31] (c32) {dcrab\_finalize};
+
+\foreach \value in {1,...,5}
+  \draw[-] (c1.185) |- (c1\value.west);
+\foreach \value in {1,2}
+	\draw[-] (c2.185) |- (c2\value.west);
+\foreach \value in {1,2,3,4}
+	\draw[-] (c21.185) |- (c21\value.west);
+\foreach \value in {1,2,3}
+	\draw[-] (c22.185) |- (c22\value.west);
+\foreach \value in {1,2}
+	\draw[-] (c3.185) |- (c3\value.west);
+\end{tikzpicture}
+
+\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=8cm,
+                    semithick]
+  \tikzstyle{every state}=[fill=red,draw=none,text=black]
+
+  \node[initial,state] (A)              {$dcrab$};
+	\node[state, node distance=4cm, fill=blue!20] 				 (B) [below of=A] {$Config.$};
+  \node[state, fill=green!30]         (C) [right of=A] {$Monitor$};
+	\node[state, node distance=2cm, xshift=1cm, yshift=-2.5cm, fill=green!30]         (D) [below of=C] {$Monitor$};
+	\node[state, xshift=-4cm, yshift=2cm, fill=green!30]         (E) [below left of=D] {$Monitor$};
+	\node[state, fill=green!30]         (F) [below right of=E] {$Monitor$};
+	\node[state]         (G) [above right of=F] {$Exit$};
+	\node[state,  node distance=2cm]         (H) [right of=G] {$Finalize$};
+
+  \path (A) edge              node {} (B)
+        (B) edge 							node {} (C)
+				(C) edge 							node {1} (D)
+				(D) edge [bend left]	node {2} (E)
+				(E) edge 							node {3} (F)
+				(F) edge 							node {4} (G)
+				(G) edge 							node {5} (D)
+				(G) edge 							node {6} (H);
+
+\node[yshift=-1.85cm, xshift=-1cm] (t1) {Executes};
+
+\filldraw[rounded corners=15pt, fill=blue!20, draw=black, node distance=0.4cm, yshift=-6.35cm, xshift=2cm] (0,0) rectangle (4.5,2.4);
+\node[yshift=-4.4cm, xshift=3.4cm] (t2)   {dcrab\_config.sh :};
+\node[node distance=0.4cm, xshift=0.6cm] (t3) [below of=t2] {dcrab\_init\_variables};
+\node[node distance=0.4cm, xshift=0.3cm] (t4) [below of=t3]  {dcrab\_create\_report\_file};
+\node[node distance=0.4cm, xshift=0.05cm, yshift=0.05cm] (t5) [below of=t4]  {dcrab\_save\_environment};
+\node[node distance=0.4cm, xshift=-0.15cm] (t6) [below of=t5]  {dcrab\_check\_scheduler};
+\draw [<-, rounded corners, thick, black, yshift=-5.3cm, xshift=1cm] (-0.5,0.5) -- (0.2,0) -- (1,0);
+
+\node[cm={cos(27) ,sin(27) ,-sin(27) ,cos(27) ,(0 cm,0 cm)}, yshift=-3.3cm, xshift=2.5cm] (t8) {dcrab\_start\_data\_collection};
+
+\filldraw[rounded corners=15pt, fill=green!30, draw=black, node distance=0.4cm, yshift=-1.3cm, xshift=9.5cm] (0,0) rectangle (5.7,1.7);
+\node[yshift=0cm, xshift=11.5cm] (t9)   {dcrab\_node\_monitor.sh :};
+\node[node distance=0.4cm, xshift=1cm] (t10) [below of=t9] {dcrab\_node\_monitor\_init\_variables};
+\node[node distance=0.4cm, xshift=-0.275cm] (t11) [below of=t10]  {dcrab\_determine\_main\_process};
+
+\end{tikzpicture}
+
 
 
 \chapter{Internal Report Operation}

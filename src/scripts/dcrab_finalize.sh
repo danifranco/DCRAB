@@ -14,24 +14,6 @@
 
 
 #
-# Stops DCRAB monitoring script in the nodes involved in the execution
-#
-dcrab_stop_remote_processes () {
-	# Kill remote processes running in background
-	i=0
-	echo "PID: "${DCRAB_PIDs[*]}
-	
-	for node in $DCRAB_NODES; do
-		echo "Node: $node"
-		COMMAND="kill ${DCRAB_PIDs[$i]}"
-		echo "Comando: $COMMAND"
-		ssh -f $node "$COMMAND"
-		i=$((i+1))
-	done
-}
-
-
-#
 # Checks exit status in different situations
 # Arguments:
 #	1- Int --> 	With '0' checks exit conditions while the script tries to take the lock 
@@ -80,8 +62,17 @@ dcrab_finalize () {
 	if [ -d "$DCRAB_REPORT_DIR" ]; then
 		# Restore environment
 		source $DCRAB_REPORT_DIR/aux/env.txt
-		
-		# Stop DCRAB processes  
-		dcrab_stop_remote_processes
+	
+		# Kill remote processes running in background
+	        i=0
+	        echo "PID: "${DCRAB_PIDs[*]}
+	
+	        for node in $DCRAB_NODES; do
+	                echo "Node: $node"
+	                COMMAND="kill ${DCRAB_PIDs[$i]}"
+	                echo "Comando: $COMMAND"
+	                ssh -f $node "$COMMAND"
+	                i=$((i+1))
+	        done	
 	fi
 }
