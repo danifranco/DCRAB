@@ -10,6 +10,7 @@
 \usepackage{hyperref}
 \usepackage{tikz}
 \usepackage{pgf}
+\usepackage{float}
 
 \usetikzlibrary{arrows,shapes,positioning,shadows,trees,automata}
 
@@ -169,6 +170,7 @@ On DCRAB version 2.0 is not included yet any configuration file to customize the
 \end{itemize}
 
 \section{Crashed jobs}
+\label{crash}
 In the case where the job execution fails, as the report is continuosly upgrading every 10 seconds, it will ensure to have a report until the crash, which may contain relevant information about it.
 
 On the other hand, there a couple of exceptions thrown by DCRAB when some situations occur:
@@ -255,7 +257,7 @@ This are the scripts that compose DCRAB without the internal report operation sc
 	\draw[-] (c3.185) |- (c3\value.west);
 \end{tikzpicture}
 
-\begin{figure}
+\begin{figure}[H]
 \begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=8cm,
                     semithick]
   \tikzstyle{every state}=[draw=none,text=black]
@@ -288,11 +290,9 @@ This are the scripts that compose DCRAB without the internal report operation sc
 \node[node distance=0.4cm, xshift=-0.15cm] (t6) [below of=t5]  {dcrab\_check\_scheduler};
 \draw [<-, rounded corners, thick, black, yshift=-5.3cm, xshift=1cm] (-0.5,0.5) -- (0.2,0) -- (1,0);
 
-\filldraw[rounded corners=15pt, fill=green!30, draw=black, node distance=0.4cm, yshift=-1.1cm, xshift=9.5cm] (0,0) rectangle (5.7,1.5);
-\node[yshift=0cm, xshift=11.5cm] (t9)   {dcrab\_node\_monitor.sh :};
-\node[node distance=0.4cm, xshift=1cm] (t10) [below of=t9] {dcrab\_node\_monitor\_init\_variables};
+\node[yshift=0cm, xshift=11.5cm] (t9)   {};
+\node[node distance=0.4cm, yshift=-1.4cm] (t10) [below of=t9] {dcrab\_node\_monitor\_init\_variables};
 \node[node distance=0.4cm, xshift=-0.275cm] (t11) [below of=t10]  {dcrab\_determine\_main\_process};
-\draw [<-, rounded corners, thick, black, yshift=-0.5cm, xshift=9cm] (-0.15,0.15) -- (0.2,0) -- (0.5,0);
 
 \filldraw[rounded corners=15pt, fill=green!30, draw=black, yshift=-15.4cm, xshift=-2.0cm] (0,0) rectangle (6,3.4);
 \node[yshift=-12.4cm, xshift=1cm] (t12)   {dcrab\_node\_monitoring\_functions.sh :};
@@ -317,11 +317,23 @@ This are the scripts that compose DCRAB without the internal report operation sc
 \node[yshift=-10cm, xshift=9.5cm] (t83) {Exit};
 \node[yshift=-14.3cm, xshift=11.3cm] (t84) {(waiting until its turn reached)};
 \end{tikzpicture}
-\caption{DCRAB's scheme}
-\labe{dcrabCodeScheme}
+\caption{DCRAB's state machine}
+\label{dcrabCodeScheme}
 \end{figure}
 
-In the example \ref{dcrabCodeScheme}
+Above, in the figure \ref{dcrabCodeScheme}, is presented a bit modificated state machine which may clarify the states where DCRAB passed through. Each node represents the main steps made by the tool and each edge an operation to change between states. There are boxes attached to some states to point the functions executed on them.
+
+\begin{itemize}
+  \item The first node, which is named as "dcrab", represent the script executed with "dcrab start" command.
+  \item The second node, named as "Config.", represents the configuration made by the tool where different functions are executed (attached box in blue color). It starts in each node the data collection.
+  \item The next node "Monitor" is the first of four states that represent the process started in background on the compute nodes. This first node initialize some variables to execute correctly the module's data collection and creates the minimal environment to work. This means that it will find the main process of the job which is and will be the parent of all the processes started by the job on that compute node. The tool take advantage of the scheduler used to identify that main process.
+  \item The next "Monitor" node represents the moment where the update function (which is made every 10 seconds by default) will be executed and goes to the next step.
+  \item On this fiveth node the data of the different modules will be collected. In its box attached are written the names of the functions in charge of it. It prepares the data to go to the next step.
+  \item In this last "Monitor" state, where the data will be collected and prepared to write, a wait will be done until the write turn of the node reaches. Normally the nodes do not wait more than a second to write into the report. It checks the exit of the tools in some scenarios as described in the section \ref{crash}. If the conditions are satisfied it goes to the final state and if not it returns to the second "Monitor" state where another data collection will be done in the next 10 seconds.
+  \item The last node, called "Finalize", 
+\end{itemize}
+
+
 
 \chapter{Internal Report Operation}
 
