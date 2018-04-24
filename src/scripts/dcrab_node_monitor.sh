@@ -57,7 +57,7 @@ while [ 1 ]; do
 	dcrab_update_data 
 
 	# Insert collected data in the main .html page
-	[ $DCRAB_INTERNAL_MODE -eq 0 ] && dcrab_write_data 
+	[ $DCRAB_INTERNAL_MODE -eq 0 ] && dcrab_prepare_data_to_write 
 	
 	# The main node must write some data for the internal report
 	[ $DCRAB_NODE_NUMBER -eq 0 ] && dcrab_write_internal_data

@@ -832,7 +832,7 @@ dcrab_determine_main_process () {
 		# DISK data
 		dcrab_collect_disk_data
 	
-		dcrab_write_data 	
+		dcrab_prepare_data_to_write
 	fi
 
 	# IB data

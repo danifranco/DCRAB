@@ -49,7 +49,7 @@ dcrab_wait_and_write () {
 #
 # Writes collected data in the html reporting file. This function is made in each loop after collect all the data.
 #
-dcrab_write_data () {
+dcrab_prepare_data_to_write () {
 
 	# Empty command file
 	:> $DCRAB_COMMAND_FILE
