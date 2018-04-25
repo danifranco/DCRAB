@@ -259,6 +259,11 @@ dcrab_node_monitor_init_variables () {
 				DCRAB_DISK_FIRST_WRITE_VALUE[$i]=$(echo "$line" | awk '{print $10}')
 			fi
 		done
+			
+		##########################
+		## ADD NEW MODULES HERE ##
+		##########################
+
 	else	
 		# Files and directories
 		if [ -d "/sys/class/infiniband/mlx5_0/ports/1/counters_ext/" ]; then
@@ -684,6 +689,11 @@ dcrab_collect_beegfs_data () {
 }
 
 
+####################################
+## ADD NEW MODULE'S FUNCTION HERE ##
+####################################
+
+
 #
 # Determines the main processes of the job which will be used to find the rest of the processes involved in the execution (because they will be main processes childs).
 # Also initializes the first time the html report.
@@ -701,6 +711,10 @@ dcrab_determine_main_process () {
 		DCRAB_PROCESSESIO_DATA="[0,"
 		# NFS
 		DCRAB_NFS_DATA="[0, 0, 0],"
+	
+		####################################################
+		## ADD INITIALIZATION OF NEW MODULE VARIABLE HERE ##
+		####################################################
 	fi
 
 	# MAIN NODE
@@ -833,6 +847,10 @@ dcrab_determine_main_process () {
 		dcrab_collect_disk_data
 	
 		dcrab_prepare_data_to_write
+
+		###########################################
+                ## ADD THE CALL TO THE NEW FUNCTION HERE ##
+                ###########################################
 	fi
 
 	# IB data
@@ -871,6 +889,10 @@ dcrab_update_data () {
 		DCRAB_NFS_DATA="[$DCRAB_DIFF_TIMESTAMP,"
 		# DISK data
 		DCRAB_DISK_DATA=""
+
+		####################################################
+                ## ADD INITIALIZATION OF NEW MODULE VARIABLE HERE ##
+                ####################################################
 	fi
 
 	# Collect the data
@@ -1003,6 +1025,10 @@ dcrab_update_data () {
 		
 		# NFS data
 		dcrab_collect_nfs_data
+
+	        ###########################################
+                ## ADD THE CALL TO THE NEW FUNCTION HERE ##
+                ###########################################
 	fi
 
 	# IB data
