@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/dipc-cc/dcrab/master/aux/logos/DCRAB_logo.png" alt="DCRAB Logo"/>
+  <img src="https://raw.githubusercontent.com/dipc-cc/dcrab/master/auxFiles/logos/DCRAB_logo.png" alt="DCRAB Logo"/>
 </p>
 
 DCRAB monitorizes submitted jobs into a scheduler system and creates a real time report based on its execution. The report displays some statistics and charts, such as CPU usage, memory consumed by all the processes, Infiniband statistics etc, which may help to understand the behavior of the job at anytime.
