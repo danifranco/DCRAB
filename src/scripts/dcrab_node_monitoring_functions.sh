@@ -259,11 +259,12 @@ dcrab_node_monitor_init_variables () {
 				DCRAB_DISK_FIRST_WRITE_VALUE[$i]=$(echo "$line" | awk '{print $10}')
 			fi
 		done
-			
-		##########################
-		## ADD NEW MODULES HERE ##
-		##########################
 
+
+		#####################
+                ## NEW MODULE CODE ##
+                #####################
+			
 	else	
 		# Files and directories
 		if [ -d "/sys/class/infiniband/mlx5_0/ports/1/counters_ext/" ]; then

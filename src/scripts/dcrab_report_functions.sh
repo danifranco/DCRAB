@@ -156,6 +156,10 @@ dcrab_prepare_data_to_write () {
     	# DISK
     	printf "%s \n" "sed -i \"$DCRAB_DISK_L1\"'s/.*/'\"$DCRAB_DISK_DATA\"'/' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
 
+	###########################
+        ## NEW MODULE OPERATIONS ##
+	###########################
+
 	# Mark the report to inform the next node that is waiting that all changes has been made
 	printf "%s \n" "sed -i 1's|<!--$DCRAB_PREVIOUS_NODE-->|<!--$DCRAB_NODE_NUMBER-->|' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
 
@@ -230,6 +234,10 @@ dcrab_generate_html () {
 		printf "%s \n" "['Devices', 'Read', 'Write']," >> $DCRAB_HTML
 		printf "\n"  >> $DCRAB_HTML
 		printf "%s \n" "]);" >> $DCRAB_HTML
+
+		#######################
+                ## NEW MODULE CODE 1 ##
+                #######################
 	done
 
 	# TIME
@@ -377,6 +385,9 @@ dcrab_generate_html () {
 	printf "%s \n" "},  " >> $DCRAB_HTML
 	printf "%s \n" "};  " >> $DCRAB_HTML
 
+	#######################
+        ## NEW MODULE CODE 2 ##
+        #######################
 
 	if [ "$DCRAB_NNODES" -gt 1 ]; then
 		printf "%s \n" "var total_mem_options = {" >> $DCRAB_HTML
@@ -445,6 +456,10 @@ dcrab_generate_html () {
 	                printf "%s \n" "});" >> $DCRAB_HTML
 		fi
 		printf "%s \n" "disk_chart_$node.draw(disk_data_$node, disk_options);  " >> $DCRAB_HTML
+	
+		#######################
+        	## NEW MODULE CODE 3 ##
+	        #######################
 	done
 
 	if [ "$DCRAB_NNODES" -gt 1 ]; then
@@ -723,6 +738,11 @@ dcrab_generate_html () {
         printf "%s \n" "<li id=\"diskTab\" class=\"tablinks\"><input id=\"diskButton\" type=\"button\" value=\"Disk I/O\" onclick=\"tabChanges(event, 'diskChart', 'diskTab')\"></input></li>" >> $DCRAB_HTML
         printf "%s \n" "<li id=\"ibTab\" class=\"tablinks\"><input id=\"ibButton\" type=\"button\" value=\"Infiniband\" onclick=\"tabChanges(event, 'ibChart', 'ibTab')\"></input></li>" >> $DCRAB_HTML
         printf "%s \n" "<li id=\"nfsTab\" class=\"tablinks\"><input id=\"nfsButton\" type=\"button\" value=\"NFS\" onclick=\"tabChanges(event, 'nfsChart', 'nfsTab')\"></input></li>" >> $DCRAB_HTML
+
+	#######################
+        ## NEW MODULE CODE 4 ##
+        #######################
+
         printf "%s \n" "</ul>" >> $DCRAB_HTML
         printf "%s \n" "</div>" >> $DCRAB_HTML
         printf "%s \n" "<div id=\"chartDiv\">" >> $DCRAB_HTML
@@ -938,6 +958,13 @@ dcrab_generate_html () {
 	done
 	printf "%s \n" "</div>" >> $DCRAB_HTML
 	printf "%s \n" "</div>" >> $DCRAB_HTML
+
+
+	#######################
+        ## NEW MODULE CODE 5 ##
+        #######################
+
+	
 	printf "%s \n" "</div>" >> $DCRAB_HTML
 
 	# Foot

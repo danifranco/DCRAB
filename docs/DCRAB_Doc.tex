@@ -12,6 +12,16 @@
 \usepackage{pgf}
 \usepackage{float}
 \usepackage{hyperref}
+\usepackage{multicol}
+\usepackage{comment}
+
+\usepackage{lipsum}
+\usepackage{microtype}
+\usepackage{vwcol}
+
+\setlength{\columnseprule}{1pt}
+\def\columnseprulecolor{\color{blue}}
+
 
 \usetikzlibrary{arrows,shapes,positioning,shadows,trees,automata}
 
@@ -36,7 +46,7 @@
 
 \author{CC-Staff}
 \title{User Documentation}
-\date{17 April 2018}
+\date{27 April 2018}
 
 \makeatletter
 \let\thetitle\@title
@@ -88,7 +98,7 @@ CC-Staff \\
 Contact: http://dipc.ehu.es/cc/computing\_resources/staff.html \\
 High Performance Computing \\
 Donostia International Physics Center, Computing Center \\
-Donostia - San Sebastián \\
+Donostia - San Sebasti\'an \\
 \vspace{1cm}
 DCRAB Copyright (C) 2018 CC-Staff
 \end{flushleft}
@@ -100,7 +110,7 @@ DCRAB Copyright (C) 2018 CC-Staff
 
 \begin{abstract}
 
-DCRAB is a tool to monitorize resource utilization in HPC environments. It works side-by-side with the job scheduler to collect runtime information about the processes generated in compute nodes.
+DCRAB is a tool to monitorize resource utilization in HPC environments. It works side-by-side with the job scheduler to collect runtime information about the processes generated in the compute nodes.
 
 Excluding a few cases, the data DCRAB collects is taken from the processes which the job has started, not from the entire node. The tool is able to collect the information listed below:
 
@@ -129,15 +139,25 @@ DCRAB has no installation at all, you have to take the lastest version tarball a
     tar xzvf ./DCRAB-2.0.tar.gz
 \end{verbatim}
 
-This will create a directory called \verb+DCRAB-2.0+ with subdirectories \verb+/src+, which contains the source files of the tool, and \verb+/examples+, where are stored DCRAB's generated report examples of each version since it was created.
+This will create a directory called \verb+DCRAB-2.0+ with some subdirectories:
 
-\chapter{How to use DCRAB}
+\begin{itemize}
+  \item \verb+/auxFiles+ which is used to store the auxiliary files useful for the internal operation mode of the tool as described in \ref{internalReport} section.
+  \item \verb+/config+ folder which only contains a folder to store the current version of the tool.
+  \item \verb+/docs+ which contains this documentation and the \verb+.tex+ used to generate.
+  \item \verb+/examples+ is used to stored DCRAB's generated report examples of each version since it was created.
+  \item \verb+/src+ folder contains the source files of the tool. Inside you will find \verb+dcrab+ script, which is the script that launches DCRAB and a folder called \verb+/script+ that contains the other scripts used by the tool to work.
+\end{itemize}
+
+Also you will find the \verb+readme.md+ file and the GNU GPL 3.0 license file \verb+COPYING+.
+
+\chapter{Using DCRAB}
 
 \section{Data Collection}
+\label{dataCollection}
+DCRAB has two operation modes: normal report operation, which may be the mode used by non-admin users, and internal report operation, which is focused to sysadmins. The second operation mode is going to be explained in \ref{internalReport} section, so firstly we will introduce here the normal report operation which will be the commonly used one.
 
-DCRAB has two operation modes: normal report operation, which may be used by all users, and internal report operation, which is more focused to sysadmins. The second operation mode is going to be explained in \ref{internalreport} section, so let's introduce here the normal report operation which will be the commonly used one. The tool is straightforward to use, you have to add the following lines into your submission script:
-
-\ \
+The tool is straightforward to use, you have to add the following lines into your submission script:
 
 \begin{verbatim}
     export DCRAB_PATH=/PATH_TO_DCRAB/src/
@@ -151,34 +171,34 @@ DCRAB has two operation modes: normal report operation, which may be used by all
     dcrab finish
 \end{verbatim}
 
-Note that the variable \verb+DCRAB_PATH+ must be declared to run DCRAB, so do not omit it.
+Note that the variable \verb+DCRAB_PATH+ must be declared to run DCRAB adn always must be poin to the \verb+/src+ folder of the tool.
 
-DCRAB will start a process in each compute node where the script runs, and will monitorize the processes started by it. The code will run as normal, and meanwhile DCRAB will generate a directory report called \verb+dcrab_report_<jobid>+ where \verb+jobid+ is the job number assigned by the scheduler. This reporting directory is generated in the same folder where the job was submitted.
+DCRAB will start a process in each compute node where the script runs, and will monitorize the processes started by it. The script will run as normal, and meanwhile DCRAB will generate a directory report called \verb+dcrab_report_<jobid>+ where \verb+jobid+ is the job number assigned by the scheduler. This reporting directory is generated in the same folder where the job was submitted.
 
-Inside this reporting directory, DCRAB will create the reporting file called \verb+dcrab_report.html+ (which will be named as "the reporting file" is this document from now on), which is the main purpose of this monitorization, and were you will find statistics and plots to analyze visually the information collected. This report is continuous change (every 10 seconds) because the information collected is stored at the time it is taken. So, you could open it with a browser at the start of the job's execution and refresh to see what is going on with the job.
+\sloppy Inside this reporting directory, DCRAB will create the reporting file called \verb+dcrab_report.html+, which will be named as "the reporting file" is this document from now on. Generate this file is the main purpose of this monitorization and there you will find statistics and plots to analyze visually the information collected. This report is continuous change (every 10 seconds by default) because the information collected is stored at the time it is taken. So, you could open it with a browser at the start of the job's execution and refresh to see what is going on with the job.
 
-The reporting file is completely modular so you could copy only it and move to any location, because it does not need any other file to visualize or open it in a browser. Every plot and image is embedded in the report.
+One goal of the tool was to provide a single file to visualize all the data monitorized. So, the reporting file is completely modular and you can copy and move it to any location. It does not need any other file to visualize or open it in a browser because every plot and image is embedded in the report.
 
-Furthermore, inside this reporting folder you will find some subdirectories, which normally are not relevant at all for the user, because they are generated to guarantee the correct behaviour of the tool. One will be \verb+/data+, which contains for each computing node the files in charge of manage the processes asociated with the job. Another folder called \verb+/auxFile+, which contains auxiliary files needed for the comunication between compute nodes, and \verb+/log+, which contains the output generated by DCRAB process in each node and DCRAB's main process output also in a file called \verb+dcrab.log+ (used mostly for troubleshooting).
+To conclude, say that inside the \verb+dcrab_report_<jobid>+ reporting folder, you will find some subdirectories, which normally are not relevant at all for the user because they are generated to guarantee the correct behaviour of the tool. One will be \verb+/data+, which contains for each computing node the files in charge of the management of the processes asociated with the job. Another folder called \verb+/auxFile+ stores the files used for the comunication between compute nodes, and \verb+/log+, which contains the output generated by DCRAB process in each node and DCRAB's main process output (which may be used for troubleshooting).
 
 \section{Execution Customization}
 
-On DCRAB version 2.0 is not included yet any configuration file to customize the execution, but it is included in the roadmap. However, there are some variables that could be changed inside the code until the configuration file is not released:
+In DCRAB version 2.0 is not included yet any configuration file to customize the execution, but it is included in the roadmap. However, there are some variables that could be changed inside the code until the configuration file is released:
 
 \begin{itemize}
-	\item \texttt{DCRAB\_COLLECT\_TIME}. This variable, inside \verb+src/scripts/dcrab_config.sh+ in \verb+dcrab_init_variables()+ function, configures the time between each data collection. By default it is set to 10 seconds.
-	\item \texttt{DCRAB\_NFS\_MOUNT\_PATH}. This variable, inside \verb+src/scripts/dcrab_node_monitoring_functions.sh+ in \verb+dcrab_node_monitor_init_variables()+ function, configures the path of the NFS filesystem to be monitorized. By defaut, its value is \verb+/scratch+.
+	\item \texttt{DCRAB\_COLLECT\_TIME}: this variable, inside \verb+src/scripts/dcrab_config.sh+ in \texttt{dcrab\_init\_variables()} function, configures the time between each data collection. By default it is set to 10 seconds.
+	\item \texttt{DCRAB\_NFS\_MOUNT\_PATH}: this variable configures the path of the NFS filesystem to be monitorized. It is inside \verb+src/scripts/dcrab_node_monitoring_functions.sh+ in \texttt{dcrab\_node\_monitor\_init\_variables()} function. By defaut its value is \verb+/scratch+.
 \end{itemize}
 
-\section{Crashed jobs}
+\section{Crashed Jobs}
 \label{crash}
-In the case where the job execution fails, as the report is continuosly upgrading every 10 seconds, it will ensure to have a report until the crash, which may contain relevant information about it.
+Update the reporting file continuosly imposed some troubles but it was one of our first goals. In the situation where the job crashes, is when the tool shines. Although the job has crashed, the report has been generating until that moment, so it brings you such a great trace of what has been occurred and it may contain relevant information about the crash.
 
-On the other hand, there a couple of exceptions thrown by DCRAB when some situations occur:
+On the other hand, the tool by itself throws some errors in some situations described below:
 
 \begin{itemize}
-	\item When some of the compute nodes try to write so many times in the reporting file with no success
-	\item When the reporting directory has been deleted or moved
+	\item When some of the compute nodes try to write so many times in the reporting file with no success.
+	\item When the reporting directory has been deleted or moved.
 \end{itemize}
 
 In this cases, a file called \verb+DCRAB_ERROR_<computeNodeHostname>_<jobid>+ will be generated, per each compute node involved in the calculation, in the same folder as the reporting folder: where the job was submitted. The \verb+computeNodeHostname+ refers to the hostname of the compute node that throws the error and \verb+jobid+ is the job number assigned by the scheduler to the job.
@@ -338,34 +358,185 @@ Above, in the figure \ref{dcrabCodeScheme}, is presented a bit modificated state
   \item The last node, called \verb+Finalize+, is reached when some conditions are satisfied as described in \ref{crash} section. Here DCRAB will finish and is going to kill all DCRAB instances inside the compute nodes (those processes launched in background).
 \end{itemize}
 
-\chapter{Creating a new module}
+\chapter{Creating New Module}
 
-The process to create a new module is straightforward. It could be divided into two main steps, the first one the step where you must make the module to collect wanted data, and the second one modify the html report to display the information collected. The second step is not a must so you can decide not to do and store the collected data into a file. You need to add a few lines in \texttt{dcrab\_node\_monitoring\_functions.sh} and \texttt{dcrab\_report\_functions.sh} for the first part, and other lines into \texttt{dcrab\_report\_functions.sh} script to configure the display.
-
-The first thing to think about, in case you want to plot the collected data, is the type of chart you are going to use visualize it. DCRAB is going to upgrade the report file continuously by adding new data to the charts every loop, so you need to know how this data is going to be inserted in the report. The charts we used are made with the \href{https://developers.google.com/chart/interactive/docs/reference}{Google Visualization API} so take a look to the documentation to choose one of them.
-
-Once you have choosen one type of chart, you have to understand the way you could insert data into them. We normally store the information to insert in variables named \verb+DCRAB_MODULENAME_DATA+.
+The process to create a new module is straightforward. It could be divided into two main steps, the first one the step where you must make the module to collect wanted data, and the second one modify the html report to display the information collected. The second step is not a must so you can decide not to do and store the collected data into a file. You need to add a few lines in \texttt{dcrab\_node\_monitoring\_functions.sh} for the first part, and other lines into \texttt{dcrab\_report\_functions.sh} script to configure the display.
 
 Below are presented the steps to insert a new module and the best way to name variables and functions in charge of it, however, the names are only a recommendation to preserve the coherence in the code.
 
 \section{Step 1: Data collection}
 
+The first thing to think about, in case you want to plot the collected data, is the type of chart you are going to use visualize it. DCRAB is going to upgrade the report file continuously by adding new data to the charts every loop, so you need to know how this data is going to be inserted in the report. The charts we used are made with the \href{https://developers.google.com/chart/interactive/docs/reference}{Google Visualization API} so take a look to the documentation to choose one of them.
+
+Once you have choosen one type of chart, you have to understand the way you could insert data into them. We normally store the data to insert in variables named \verb+DCRAB_MODULENAME_DATA+.
+
 Changes in \texttt{dcrab\_node\_monitoring\_functions.sh}:
 
 \begin{itemize}
-  \item In the function \texttt{dcrab\_node\_monitor\_init\_variables()}: the variables needed for your module must be added where the \verb+ADD NEW MODULES HERE+ line is, that is to say, at the end of other variable declarations. We have used the same naming: all the variables starts with \verb+DCRAB_+ . A variable \verb+DCRAB_NEWMODULENAME_DATA+ should be created, which will be used to insert the data of the new module into the report file.
-  \item Create a function, which should name as \texttt{dcrab\_collect\_newModuleName\_data()}, after the last module function defined, where the line \verb+ADD NEW MODULE'S FUNCTION HERE+ stands. Collect the data and fill up the variable \verb+DCRAB_NEWMODULENAME_DATA+ must be the purpose of this function. Remember to generate properly the data on \verb+DCRAB_NEWMODULENAME_DATA+ variable. For example, in most of the cases we fill up the variable with a new point of the charts, which is translated to generate a string with the information of that point using the data collected (you could understand better looking at the examples in \verb+/examples/normalReport/+).
-  \item In the function \texttt{dcrab\_determine\_main\_process()} you have to add at the beginning, where the string \verb+ADD INITIALIZATION OF NEW MODULE VARIABLE HERE+ is, the initialization of the \verb+DCRAB_NEWMODULENAME_DATA+ variable if needed. After that, at the bottom of the same function, add where the string \verb+ADD THE CALL TO THE NEW FUNCTION HERE+ stands, you will need to add the call to the function \texttt{dcrab\_collect\_newModuleName\_data()} created.
-  \item To finish with this file, you must repeat the previous step inside the \texttt{dcrab\_update\_data()} function as the same way you did.
+  \item In the function \texttt{dcrab\_node\_monitor\_init\_variables()}: the variables needed for your module must be added where the \verb+NEW MODULE CODE+ line is, that is to say, at the end of other variable declarations. We have used the same naming: all the variables starts with \verb+DCRAB_+ . A variable \verb+DCRAB_NEWMODULENAME_DATA+ should be created, which will be used to insert the data of the new module into the report file.
+  \item Create a function, which should name as \texttt{dcrab\_collect\_newModuleName\_data()}, after the last module function defined, where the line \verb+ADD NEW MODULE'S FUNCTION HERE+ is. Collect the data and fill up the variable \verb+DCRAB_NEWMODULENAME_DATA+ must be the purpose of this function. Remember to generate properly the data on \verb+DCRAB_NEWMODULENAME_DATA+ variable. For example, in most of the cases we fill up the variable with a new point of the charts, which is translated to generate a string with the information of that point using the data collected (you could understand better looking at the examples in \verb+/examples/normalReport/+).
+  \item In the function \texttt{dcrab\_determine\_main\_process()} you have to add at the beginning, where the string \verb+ADD INITIALIZATION OF NEW MODULE VARIABLE HERE+ is, the initialization of the \verb+DCRAB_NEWMODULENAME_DATA+ variable if needed. After that, at the bottom of the same function, add where the string \verb+ADD THE CALL TO THE NEW FUNCTION HERE+ is, you will need to add the call to the function \texttt{dcrab\_collect\_newModuleName\_data()} created.
+  \item Finally, you must repeat the previous step inside the \texttt{dcrab\_update\_data()} function as the same way you did.
 \end{itemize}
+
+\section{Step 2: Display}
+
+This second step is only needed for display the data into the report, so do not do it if you do not want to visualize the data.
 
 Changes in \texttt{dcrab\_report\_functions.sh}:
 
 \begin{itemize}
-  \item
+  \item We previously store in a file the commands used to make the upgrade into the report and after we execute them at once. The function \texttt{dcrab\_write\_data()} is in charge of this operation and this is where you need to put your own lines. At the bottom of the function there the string \verb+NEW MODULE OPERATIONS+ where you have to add your code. Be sure to write the command into the file named \verb+DCRAB_COMMAND_FILE+ to execute it later.
+  \item In the function \verb+dcrab\_generate\_html+ a few modifications need to be make: 1) At the message \verb+NEW MODULE CODE 1+ you have to add the data of the chart. 2) Where the message \verb+NEW MODULE CODE 2+ is you have to add the options of the chart as defined in \verb+Google Visualization API+. 3) At \verb+NEW MODULE CODE 3+ you have to create the chart object, call to the draw function and create a listener to be executed when ready event is fired (necessary to the correct drawing of the chart). 4) Add the tab of the new module at \verb+NEW MODULE CODE 4+. Copy the structure of the above tabs to generate the new one because the names of li tag's id, button tag's id and tabChanges function's arguments must be named as there. 5) Where \verb+NEW MODULE CODE 5+. is you need to add the chart definition. The required lines to insert correctly the chart are these:
+
+  \begin{verbatim}
+  printf "%s \n" "<div id=\"processesIOChart\" class=\"chart\" style=\"disp-
+  lay:block;\">" >> $DCRAB_HTML
+  printf "%s \n" "<div class=\"overflowDivs\">" >> $DCRAB_HTML
+  i=1
+  while [ $i -le $DCRAB_NNODES ]; do
+     printf "%s \n" "<div class=\"inline\">" >> $DCRAB_HTML
+     printf "%s \n" "<table><tr><td>" >> $DCRAB_HTML
+     printf "%s \n" "<div style=\"width: 1100px;\" class=\"header\">$(echo
+     $DCRAB_NODES | cut -d' ' -f $i)</div>" >> $DCRAB_HTML
+     printf "%s \n" "</td></tr>" >> $DCRAB_HTML
+     printf "%s \n" "<tr><td>" >> $DCRAB_HTML
+
+     #################################
+     ## NEW MODULE CHART DEFINITION ##
+     #################################
+
+     printf "%s \n" "</td></tr>" >> $DCRAB_HTML
+     printf "%s \n" "</table>" >> $DCRAB_HTML
+     printf "%s \n" "</div>" >> $DCRAB_HTML
+     i=$((i+1))
+   done
+   printf "%s \n" "</div>" >> $DCRAB_HTML
+   printf "%s \n" "</div>" >> $DCRAB_HTML
+\end{verbatim}
+
+
 \end{itemize}
-\section{Step 2: Display}
+
 
 \chapter{Internal Report Operation}
+
+This DCRAB's operation was implemented for sysadmins. DCRAB could monitor some aspects that the scheduler is not able to collect, so this operation mode allows the sysadmins to collect some of the data that only could be catch during the job's execution. Currently, at the 2.0 version, some of the modules added (Infiniband and Disk module) to this operation mode are used in the normal mode, so the functions to collect the data are the same.
+
+As the normal operation, it needs a folder to store the necessary files to make the communication between the compute nodes. That file path is set with the variable \verb+DCRAB_REPORT_DIR+, as the normal report operation, but it will point to another path. This report directory will have the same structure as the normal operation one that is explained in \ref{dataCollection} section.
+
+In this operation there is no real-time report generated, because its not necessary, but the data monitorized is going to be stored in a file to generate the report later. That file, which is set with the \verb+DCRAB_IREPORT_DATA_FILE+ variable, is going to be written only by the main node. The rest of the nodes will store its own data in the folders used to write for each module, and the main node will collect their data to write into the file pointed by \verb+DCRAB_IREPORT_DATA_FILE+.
+
+The idea of this mode is to be transparent for the user. If the user decide to not execute DCRAB in his/her job the sysadmin could insert in his/her submission script the above lines to execute DCRAB in internal operation mode. For this purpose was created the file \verb+/auxFiles/dcrab_PBS_comprobation.sh+.
+
+
+\section{Activate Internal Report}
+\label{internalReport}
+The way to activate this operation mode is similar to the normal one:
+
+\ \
+
+\begin{verbatim}
+    export DCRAB_PATH=/PATH_TO_DCRAB/src/
+    export PATH=$PATH:$DCRAB_PATH
+    dcrab istart
+
+    ##################################
+    #    BLOCK OF CODE TO MONITOR    #
+    ##################################
+
+    dcrab ifinish
+\end{verbatim}
+
+Notice that an extra '\verb+i+' must be added to the \verb+start+ and \verb+finish+ commands.
+
+\section{Code Explanation and Customization}
+
+There is not to much to exaplin in this part, because the core of the internal operation is the same as the normal operation one, however, there are some details that must me pointed. The scripts which compose this operation are:
+
+\begin{itemize}
+  \item \verb+dcrab_internal_report_functions.sh+ which two functions: 1) \texttt{dcrab\_internal\_report\_init\_variables()} to initialize the variables needed for the report and 2) \texttt{dcrab\_write\_internal\_data()} to write into the file that will store the data collected, which is pointed by \verb+DCRAB_IREPORT_DATA_FILE+. This function is going to be executed only by the main node.
+  \item \verb+dcrab_internal_report_generation.sh+ which is used to generate the internal report with all the files created per job (with the \verb+DCRAB_IREPORT_DATA_FILE+ variable). This script is adapted to our particular case, so you could create your own one to visualize the data collected with this internal operation mode in the way you want to. However, we will detail the variables you need to change to adapt this script to your own scenario in case you want to use it (in \ref{internalReportCustomization} section).
+\end{itemize}
+
+\section{Internal Report Customization}
+\label{internalReportCustomization}
+
+There are some variables which may be customize in the internal report:
+
+\begin{itemize}
+  \item \texttt{DCRAB\_IREPORT\_DATA\_FILE} inside \texttt{dcrab\_internal\_report\_init\_variables()} function of \verb+dcrab_internal_report_functions.sh+ script. It is used to store the data monitorized. It will only be written by the main node.
+  \item \texttt{DCRAB\_REPORT\_DIR} inside \texttt{dcrab\_init\_variables()} function in \verb+dcrab_config.sh+ script, where the \verb+internalReportCustomization+ message is.
+\end{itemize}
+
+And here the variables defined in \verb+dcrab_internal_report_generation.sh+ which you could customize to adapt the script to your case:
+
+\begin{itemize}
+  \item \texttt{DCRAB\_IREPORT} which is the path to the internal report file.
+  \item \texttt{DCRAB\_IREPORT\_DATA\_DIR} which defined the path where the files pointed by \verb+DCRAB_IREPORT_DATA_FILE+ are been generated. For example, if \verb+DCRAB_IREPORT_DATA_FILE+ is defined as \verb+/home/user/dcrab/data/JOBID+ the \verb+DCRAB\_IREPORT\_DATA\_DIR+ variable must be defined as \verb+/home/user/dcrab/data+.
+  \item \texttt{DCRAB\_IREPORT\_DATA\_BACKUP\_DIR} the directory of the data backup. This variable use is going to be understand in \ref{intReportAuxScripts} section.
+  \item \texttt{DCRAB\_NUMBER\_OF\_BARS} which defined the number of bars to appear in the plot.
+  \item \texttt{DCRAB\_NUMBER\_OF\_CHARACTERS} is used to control the weight of the progress bar displayed during the execution of the script (it is just an stetic feature, you do not need to change it).
+\end{itemize}
+
+\section{Auxiliary Scripts}
+\label{intReportAuxScripts}
+
+There are a few more scripts implemented to make some operations on the internal report:
+
+\begin{itemize}
+  \item \verb+dcrab_internal_report_clean.sh+ which recollects all the data generated by all the DCRAB jobs into one file to decrease the number of folders. Furthermore, it makes a tarball of all of those files and their report folder which will be stored in the directory pointed by \texttt{DCRAB\_IREPORT\_DATA\_BACKUP\_DIR} variable. It also removes the bad files, which may be generated from exited o crashed jobs.
+  \item \verb+dcrab_PBS_comprobation.sh+ is used to insert into users' jobs script the required lines to execute DCRAB in internal operation mode on PBS scheduler type file. This script modify the file entered as the first argument and prepare it to submmit to the scheduler. It also checks a few scenarios where the user forget some lines of DCRAB and trys to fix it. Example of usage:
+
+\begin{verbatim}
+./dcrab_PBS_comprobation.sh script.pbs  -->  Which modifyes script.pbs file as below
+\end{verbatim}
+\end{itemize}
+
+\pagebreak
+
+\begin{multicols}{2}
+\begin{verbatim}
+BEFORE
+
+#!/bin/bash
+#PBS -q parallel
+#PBS -l nodes=1:ppn=24
+#PBS -l mem=150gb
+#PBS -l cput=1000:00:00
+#PBS -N daniTestJob
+
+module load QuantumESPRESSO
+cd $PBS_O_WORKDIR
+
+mpirun -np 24 pw.x < ausurf.in >& OUT
+
+\end{verbatim}
+
+\columnbreak
+
+\begin{verbatim}
+
+AFTER
+
+#!/bin/bash
+#PBS -q parallel
+#PBS -l nodes=1:ppn=24
+#PBS -l mem=150gb
+#PBS -l cput=1000:00:00
+#PBS -N daniTestJob
+export DCRAB_PATH=/home/user/dcrab/software/src/
+export PATH=$PATH:$DCRAB_PATH
+dcrab istart
+
+module load QuantumESPRESSO
+cd $PBS_O_WORKDIR
+
+mpirun -np 24 pw.x < ausurf.in >& OUT
+
+dcrab ifinish
+\end{verbatim}
+\end{multicols}
+
 
 \end{document}

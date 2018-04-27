@@ -6,7 +6,7 @@
 #
 # ===============================================================================================================
 #
-# Check submission script to activate the internal report of DCRAB if it isn't defined yet
+# Check submission script to activate the internal report of DCRAB if it isn't defined yet in PBS scheduler
 #
 # ===============================================================================================================
 
