@@ -72,7 +72,7 @@ dcrab_check_scheduler () {
 		DCRAB_JOBFILE=`ps $PPID | awk '{printf $6}'`
 		DCRAB_REQ_MEM=`cat $DCRAB_JOBFILE | grep "\-l mem=" | cut -d'=' -f2 | sed 's/[^0-9]*//g'`
 		DCRAB_REQ_CPUT=$(cat $DCRAB_JOBFILE | grep "\-l cput" | cut -d'=' -f2)
-		DCRAB_REQ_PPN=$(cat $DCRAB_JOBFILE | grep ":ppn" | cut -d'=' -f3)
+		DCRAB_REQ_PPN=$(cat $DCRAB_JOBFILE | grep ":ppn" | grep "^#P" | cut -d'=' -f3)
 	else
 		DCRAB_SCHEDULER="none"
 		DCRAB_JOB_ID=`date +%s`
