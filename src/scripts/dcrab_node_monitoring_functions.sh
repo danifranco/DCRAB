@@ -766,8 +766,15 @@ dcrab_determine_main_process () {
 	
 			i=$((i + 1))
 
+			# Exit DCRAB if no control_port.txt was created  
+                        if [ "$i" -eq "$DCRAB_NUMBERS_OF_LOOPS_CONTROL" ]; then
+                                echo "The process does not start. Exiting DCRAB . . ."
+                                exit 1
+                        fi
+
 			# Wait if it is not the first loop
 			[[ "$i" -gt 1 ]] && sleep 5
+		
 			
 			for line in $(ps axo stat,euid,ruid,sess,ppid,pid,pcpu,command | sed 's|\s\s*| |g' | awk '{if ($2 == '"$DCRAB_USER_ID"'){print}}' | grep "Ss")
 			do
