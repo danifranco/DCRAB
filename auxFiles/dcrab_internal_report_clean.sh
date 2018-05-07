@@ -33,18 +33,20 @@ while read i; do
 	date=$(ls -lt --time-style="+%s" $jobid 2> /dev/null | grep -v total | head -1 | sed 's|\s\s*| |g' |  cut -d' ' -f6 )
 	content=$(cat $jobid)
 	ibValue=$(echo $content | cut -d ' ' -f3)
-	
-	if [ $ibValue -ge 0 ]; then
-		printf "%s %s\n" "$content $date" >> $DCRAB_IREPORT_COLLECT_FILE
-		selectedJobs="$selectedJobs $jobid"
-		if [ -d $DCRAB_IREPORT_JOB_DIR/$jobid ]; then
-			selectedJobs2="$selectedJobs2 $jobid"
-		fi
-	else 
-		echo "Error in the job ${jobid}. Omitting directory"
-		errorJobs="$errorJobs $jobid"
-		if [ -d $DCRAB_IREPORT_JOB_DIR/$jobid ]; then
-			errorJobs2="$errorJobs2 $jobid"
+
+	if [ "$ibValue" != "" ]; then	
+		if [ $ibValue -ge 0 ]; then
+			printf "%s %s\n" "$content $date" >> $DCRAB_IREPORT_COLLECT_FILE
+			selectedJobs="$selectedJobs $jobid"
+			if [ -d $DCRAB_IREPORT_JOB_DIR/$jobid ]; then
+				selectedJobs2="$selectedJobs2 $jobid"
+			fi
+		else 
+			echo "Error in the job ${jobid}. Omitting directory"
+			errorJobs="$errorJobs $jobid"
+			if [ -d $DCRAB_IREPORT_JOB_DIR/$jobid ]; then
+				errorJobs2="$errorJobs2 $jobid"
+			fi
 		fi
 	fi
 done < <(find . -maxdepth 1 -mtime +1)
@@ -65,6 +67,7 @@ mv $DCRAB_IREPORT_TAR_FILE2 $DCRAB_IREPORT_DATA_BACKUP_DIR
 cd $DCRAB_IREPORT_DATA_DIR
 echo "Deleting data files . . . (6/8)"
 \rm -f $selectedJobs $errorJobs
+rm -f sed*
 
 cd $DCRAB_IREPORT_JOB_DIR
 echo "Deleting jobs' folders . . . (7/8)"

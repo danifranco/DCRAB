@@ -310,7 +310,7 @@ done
 for j in $(seq 0 $((days-1)) )
 do
 	# Calculate the day
-	d=$(echo "$firstDateReduced * ($j * 3600*24)" | bc)
+	d=$(echo "$firstDateReduced + ($j * 3600*24)" | bc)
 	d=$(date -d@$d +%d/%m/%y)
 
 	ibStringPerDay="$ibStringPerDay ['$d', ${ibDataPerDay[$j]}],"	
