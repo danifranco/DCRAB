@@ -20,8 +20,7 @@
 \usepackage{vwcol}
 
 \setlength{\columnseprule}{1pt}
-\def\columnseprulecolor{\color{blue}}
-
+\def\columnseprulecolor{\color{black!0}}
 
 \usetikzlibrary{arrows,shapes,positioning,shadows,trees,automata}
 
@@ -46,7 +45,7 @@
 
 \author{CC-Staff}
 \title{User Documentation}
-\date{27 April 2018}
+\date{8 May 2018}
 
 \makeatletter
 \let\thetitle\@title
@@ -81,7 +80,7 @@
 	\begin{minipage}{0.4\textwidth}
 		\begin{flushleft} \large
 			Document Revision 1.0\\
-			17 April 2018\\
+			8 May 2018\\
 			\end{flushleft}
 			\end{minipage}
 			\begin{minipage}{0.4 \textwidth}
@@ -495,7 +494,7 @@ There are a few more scripts implemented to make some operations on the internal
   \item \texttt{dcrab\_PBS\_comprobation.sh} is used to insert into users' jobs script the required lines to execute DCRAB in internal operation mode on PBS scheduler type file. This script modify the file entered as the first argument and prepares it to submmit to the scheduler. It also checks a few scenarios where the user forgets some lines of DCRAB and trys to fix the file. Example of usage:
 
 \begin{verbatim}
-./dcrab_PBS_comprobation.sh script.pbs  -->  Which modifyes script.pbs file as below
+./dcrab_PBS_comprobation.sh script.pbs  --> Modifies script.pbs file as below
 \end{verbatim}
 \end{itemize}
 
