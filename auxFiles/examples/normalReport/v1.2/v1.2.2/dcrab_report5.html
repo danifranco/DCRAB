@@ -1,0 +1,373 @@
+<html> 
+<head><title>DCRAB REPORT</title> 
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>  
+<script type="text/javascript">  
+google.charts.load('current', {'packages':['corechart']});  
+google.charts.setOnLoadCallback(plot_all);  
+function plot_all() {  
+var cpu_data_atlas163 = new google.visualization.DataTable();  
+cpu_data_atlas163.addColumn('number', 'Execution Time (s)'); 
+/* atlas163 addColumn space */ 
+cpu_data_atlas163.addColumn('number', 'vasp'); cpu_data_atlas163.addColumn('number', 'vasp'); cpu_data_atlas163.addColumn('number', 'vasp'); cpu_data_atlas163.addColumn('number', 'vasp'); cpu_data_atlas163.addColumn('number', 'ssh'); cpu_data_atlas163.addColumn('number', 'dcrab'); 
+/* atlas163 addRow space */ 
+var cpu_atlas163 = [ 
+[0, , , , , 6.0, 9.0 ],[10, , , , ,  ,  0],[22, 98.0, 97.9, 97.9, 98.0,  ,  0],[35, 98.7, 98.6, 98.6, 98.7,  ,  0],[49, 99.0, 98.9, 98.8, 99.0,  ,  0],[63, 99.2, 99.1, 99.0, 99.2,  ,  0],
+]; 
+var mem1_atlas163 = google.visualization.arrayToDataTable([ 
+['Execution Time (s)', 'Node Memory', 'Requested Memory', 'Consumed Memory Peak (of VmRSS)', 'Consumed Memory (VmSize)', 'Resident Memory (VmRSS)'], 
+[0,252, 10, 0.005, 0.061, 0.005 ],[10,252, 10, 0.005, 0.000, 0.000 ],[22,252, 10, 3.574, 4.746, 3.574 ],[35,252, 10, 3.574, 4.746, 3.574 ],[49,252, 10, 3.574, 4.746, 3.574 ],[63,252, 10, 3.574, 4.746, 3.574 ],
+]); 
+var mem2_atlas163 = google.visualization.arrayToDataTable([ 
+['Mem class', 'Percentage'], 
+['Used memory', 35.740], 
+['Not utilized memory', 64.260], 
+]); 
+cpu_data_atlas163.addRows(cpu_atlas163); 
+var cpu_data_atlas162 = new google.visualization.DataTable();  
+cpu_data_atlas162.addColumn('number', 'Execution Time (s)'); 
+/* atlas162 addColumn space */ 
+cpu_data_atlas162.addColumn('number', 'vasp'); cpu_data_atlas162.addColumn('number', 'vasp'); cpu_data_atlas162.addColumn('number', 'vasp'); cpu_data_atlas162.addColumn('number', 'vasp'); 
+/* atlas162 addRow space */ 
+var cpu_atlas162 = [ 
+[0, 96.3, 96.6, 96.3, 96.3 ],[10, 97.8, 97.9, 97.7, 97.7],[20, 98.4, 98.4, 98.3, 98.3],[30, 98.7, 98.8, 98.7, 98.7],[40, 98.9, 99.0, 98.9, 98.9],[51, 99.0, 99.1, 99.0, 99.0],
+]; 
+var mem1_atlas162 = google.visualization.arrayToDataTable([ 
+['Execution Time (s)', 'Node Memory', 'Requested Memory', 'Consumed Memory Peak (of VmRSS)', 'Consumed Memory (VmSize)', 'Resident Memory (VmRSS)'], 
+[0,252, 10, 3.170, 4.739, 3.170 ],[10,252, 10, 3.578, 4.741, 3.578 ],[20,252, 10, 3.578, 4.741, 3.578 ],[30,252, 10, 3.578, 4.741, 3.578 ],[40,252, 10, 3.578, 4.741, 3.578 ],[51,252, 10, 3.578, 4.741, 3.578 ],
+]); 
+var mem2_atlas162 = google.visualization.arrayToDataTable([ 
+['Mem class', 'Percentage'], 
+['Used memory', 35.780], 
+['Not utilized memory', 64.220], 
+]); 
+cpu_data_atlas162.addRows(cpu_atlas162); 
+var total_mem = google.visualization.arrayToDataTable([ 
+['Mem class', 'Percentage'], 
+['Used memory', 71.520], 
+['Not utilized memory', 28.480], 
+]); 
+var cpu_options = { 
+title: 'CPU Utilization', 
+width: '800', 
+height: '600', 
+hAxis: { 
+title: 'Execution Time (s)', 
+titleTextStyle: { 
+color: '#757575', 
+fontSize: 16, 
+fontName: 'Arial', 
+bold: false, 
+italic: true 
+} 
+}, 
+vAxis: { 
+title: 'CPU used (%)', 
+titleTextStyle: { 
+color: '#757575', 
+fontSize: 16, 
+fontName: 'Arial', 
+bold: false, 
+italic: true 
+} 
+}, 
+chartArea: {  width: "70%", height: "80%" }, 
+}; 
+var mem1_options = {   
+title : 'Memory Utilization',  
+vAxis: {title: 'GB'},  
+hAxis: {title: 'Time (s)'},  
+width: 800,   
+height: 600,   
+axes: {   
+x: {   
+0: {side: 'top'}   
+}   
+},   
+};   
+var mem2_options = { 
+title: 'Requested memory usage', 
+width: 400, 
+height: 300, 
+colors: ['#3366CC', '#109618'], 
+is3D: true 
+}; 
+var total_mem_options = { 
+ title: 'Requested memory usage', 
+ width: 650, 
+ height: 450, 
+ colors: ['#3366CC', '#109618'], 
+ is3D: true 
+}; 
+var cpu_chart_atlas163 = new google.visualization.LineChart(document.getElementById('plot_cpu_atlas163')); 
+cpu_chart_atlas163.draw(cpu_data_atlas163, cpu_options);   
+var mem1_chart_atlas163 = new google.visualization.AreaChart(document.getElementById('plot1_mem_atlas163')); 
+var mem2_chart_atlas163 = new google.visualization.PieChart(document.getElementById('plot2_mem_atlas163')); 
+mem1_chart_atlas163.draw(mem1_atlas163, mem1_options);   
+mem2_chart_atlas163.draw(mem2_atlas163, mem2_options);   
+var cpu_chart_atlas162 = new google.visualization.LineChart(document.getElementById('plot_cpu_atlas162')); 
+cpu_chart_atlas162.draw(cpu_data_atlas162, cpu_options);   
+var mem1_chart_atlas162 = new google.visualization.AreaChart(document.getElementById('plot1_mem_atlas162')); 
+var mem2_chart_atlas162 = new google.visualization.PieChart(document.getElementById('plot2_mem_atlas162')); 
+mem1_chart_atlas162.draw(mem1_atlas162, mem1_options);   
+mem2_chart_atlas162.draw(mem2_atlas162, mem2_options);   
+var total_mem_chart = new google.visualization.PieChart(document.getElementById('plot_total_mem')); 
+total_mem_chart.draw(total_mem, total_mem_options); 
+} 
+</script> 
+<style> 
+body { 
+background: #25c481; /* Old browsers */ 
+background: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/Pgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgdmlld0JveD0iMCAwIDEgMSIgcHJlc2VydmVBc3BlY3RSYXRpbz0ibm9uZSI+CiAgPGxpbmVhckdyYWRpZW50IGlkPSJncmFkLXVjZ2ctZ2VuZXJhdGVkIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMCUiPgogICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzI1YzQ4MSIgc3RvcC1vcGFjaXR5PSIxIi8+CiAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMyNWI3YzQiIHN0b3Atb3BhY2l0eT0iMSIvPgogIDwvbGluZWFyR3JhZGllbnQ+CiAgPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0idXJsKCNncmFkLXVjZ2ctZ2VuZXJhdGVkKSIgLz4KPC9zdmc+); 
+background: -moz-linear-gradient(left,  #25c481 0%, #25b7c4 100%); /* FF3.6-15 */ 
+background: -webkit-linear-gradient(left,  #25c481 0%,#25b7c4 100%); /* Chrome10-25,Safari5.1-6 */ 
+background: linear-gradient(to right,  #25c481 0%,#25b7c4 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */ 
+filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#25c481', endColorstr='#25b7c4',GradientType=1 ); /* IE6-8 */ 
+margin: 0px; 
+} 
+ 
+.inline { 
+display:inline-block; 
+} 
+ 
+.text { 
+font-family: Consolas,monospace; 
+font-size: 14px; 
+} 
+ 
+.vl { 
+display: inline;  
+border-left: 2px solid black; 
+height: 10px; 
+padding-right:5em; 
+margin-left:5em; 
+} 
+ 
+table { 
+border-collapse: collapse; 
+margin: 15px; 
+margin-top: 2px; 
+margin-bottom: 2px; 
+} 
+ 
+tr { 
+border: 1px solid rgba(254, 254, 254, 0.3); 
+} 
+ 
+.overflowDivs { 
+overflow:auto; 
+white-space: nowrap; 
+} 
+ 
+.header { 
+width: 800px; 
+border: 1px solid rgba(254, 254, 254, 0.3); 
+float: left; 
+text-align: center; 
+font-family: 'Roboto', sans-serif; 
+font-size: 16px; 
+color: #fff; 
+text-transform: uppercase; 
+vertical-align: middle; 
+background-color: rgba(255,255,255,0.3); 
+} 
+ 
+.plot{ 
+vertical-align:middle; 
+} 
+ 
+.space { 
+width: px; 
+border: 0px; 
+background-color: none; 
+} 
+ 
+#foot { 
+background-color: rgba(255,255,255,0.3); 
+margin-top: 180px; 
+display: table; 
+width:100%; 
+} 
+ 
+#textmem2 { 
+border-spacing: 5px; 
+border-collapse: separate; 
+margin: 0 auto; 
+border: 1px solid rgba(254, 254, 254, 0.3);  
+} 
+ 
+#detailedText { 
+vertical-align: top; 
+padding-top: 230px; 
+font-family: 'Roboto', sans-serif; 
+font-size: 56px; 
+color: #fff; 
+text-transform: uppercase; 
+} 
+</style> 
+<body> 
+<center><h1>DCRAB REPORT - JOB 422649.maui01 </h1></center> 
+<div style="padding-left: 15px;" class="text"> 
+<p> 
+<br><br> 
+<b><u>Name of the job</u></b>: danipruebaCRAB <br> 
+<b><u>JOBID</u></b>: 422649.maui01 <br> 
+<b><u>User</u></b>: dfranco <br> 
+<b><u>Working directory</u></b>: /scratch/dfranco/pruebaDCRAB/candidate <br> 
+<b><u>Node list</u></b>: <br> 
+ atlas-163 atlas-162 <br> 
+<br><br><br><br> 
+</p> 
+</div> 
+<div class="overflowDivs"> 
+<div class="inline"> 
+<table><tr><td> 
+<div class="header">atlas-163</div> 
+</td></tr> 
+<tr><td> 
+<div class="plot" id='plot_cpu_atlas163'></div> 
+</td></tr> 
+</table> 
+</div> 
+<div class="inline"> 
+<table><tr><td> 
+<div class="header">atlas-162</div> 
+</td></tr> 
+<tr><td> 
+<div class="plot" id='plot_cpu_atlas162'></div> 
+</td></tr> 
+</table> 
+</div> 
+</div> 
+<br><br><br> 
+<div class="overflowDivs"> 
+<div class="inline" style="margin-right: 50px;"> 
+<table><tr><td> 
+<div style="width: 1009px;" class="header">TOTAL MEMORY (PEAK)</div> 
+</td></tr> 
+<tr><td> 
+<div style="padding-top: 75px;padding-bottom: 75px;padding-left: 15px;padding-right: 15px;" class="plot inline" id='plot_total_mem'></div> 
+<div style="border: 0px;padding-right: 15px;" class="plot inline"> 
+<div class="text"> 
+<table id="textmem2"> 
+<tr style="border: 0px;"><td><b><u>Requested memory</u></b>:&nbsp;&nbsp;&nbsp;&nbsp;</td><td>10 GB</td></tr> 
+<tr style="border: 0px;"><td><b><u>VmRSS (peak)</u></b>:&nbsp;&nbsp;&nbsp;&nbsp;</td><td>7.152 GB</td></tr> 
+<tr style="border: 0px;"><td><b><u>VmSize (peak)</u></b>:&nbsp;&nbsp;&nbsp;&nbsp;</td><td>9.487 GB</td></tr> 
+</table> 
+</div> 
+<br><br><br> 
+</div> 
+</td></tr> 
+</table> 
+</div> 
+ 
+<div class="inline" id="detailedText"> 
+<pre style="margin: 0px;">MORE DETAILED  
+    DATA </pre> 
+<p style="margin: 0px; font-size: 115px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#8594;</p> 
+</div> 
+<div class="inline"> 
+<table><tr><td> 
+<div style="width: 1207px;" class="header">atlas-163</div> 
+</td></tr> 
+<tr><td> 
+<div class="plot inline" id='plot1_mem_atlas163'></div> 
+<div style="border: 0px;" class="plot inline"> 
+<div class="text"> 
+<table id="textmem2"> 
+<tr style="border: 0px;"><td><b><u>Node memory</u></b>:&nbsp;&nbsp;&nbsp;&nbsp;</td><td>252 GB</td></tr> 
+<tr style="border: 0px;"><td><b><u>Requested memory</u></b>:&nbsp;&nbsp;&nbsp;&nbsp;</td><td>10 GB</td></tr> 
+<tr style="border: 0px;"><td><b><u>VmRSS (peak)</u></b>:&nbsp;&nbsp;&nbsp;&nbsp;</td><td>3.574 GB</td></tr> 
+<tr style="border: 0px;"><td><b><u>VmSize (peak)</u></b>:&nbsp;&nbsp;&nbsp;&nbsp;</td><td>4.746 GB</td></tr> 
+</table> 
+</div> 
+<br><br><br> 
+<div class="plot inline" id='plot2_mem_atlas163'></div> 
+</div> 
+</td></tr> 
+</table> 
+</div> 
+<div class="inline"> 
+<table><tr><td> 
+<div style="width: 1207px;" class="header">atlas-162</div> 
+</td></tr> 
+<tr><td> 
+<div class="plot inline" id='plot1_mem_atlas162'></div> 
+<div style="border: 0px;" class="plot inline"> 
+<div class="text"> 
+<table id="textmem2"> 
+<tr style="border: 0px;"><td><b><u>Node memory</u></b>:&nbsp;&nbsp;&nbsp;&nbsp;</td><td>0 GB</td></tr> 
+<tr style="border: 0px;"><td><b><u>Requested memory</u></b>:&nbsp;&nbsp;&nbsp;&nbsp;</td><td>0 GB</td></tr> 
+<tr style="border: 0px;"><td><b><u>VmRSS (peak)</u></b>:&nbsp;&nbsp;&nbsp;&nbsp;</td><td>3.578 GB</td></tr> 
+<tr style="border: 0px;"><td><b><u>VmSize (peak)</u></b>:&nbsp;&nbsp;&nbsp;&nbsp;</td><td>4.741 GB</td></tr> 
+</table> 
+</div> 
+<br><br><br> 
+<div class="plot inline" id='plot2_mem_atlas162'></div> 
+</div> 
+</td></tr> 
+</table> 
+</div> 
+</div> 
+<div id='foot'> 
+<div class="inline">&nbsp;&nbsp;&nbsp;</div> 
+<div class="inline"> 
+<a href="http://dipc.ehu.es/" target="_blank"> 
+<svg version="1.1" x="0px" y="0px" width="90px" height="45px" viewBox="0 0 90 45" enable-background="new 0 0 90 45" xml:space="preserve" style="margin-top: 10px;"><image width="90" height="45" x="0" y="0" 
+xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHgAAABFCAMAAAC2XtKTAAAABGdBTUEAALGPC/xhBQAAACBjSFJN 
+AAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAACvlBMVEUAAAAAAAAAAAAAAAAA 
+AAAAAAAAAAAAAAAAAAAAkt0ClN4ClN0ClN0Ak+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA 
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlN0Cld0ClN4AkdoAAAAAAAAAAAAAAAAAAAAA 
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA 
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA 
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAClN4ClN0AAAAAAAAAAAAAAAAAAAAAAAAAkdoC 
+ld0Ck90ClN0Ak+QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA 
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA 
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA 
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA 
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA 
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA 
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD 
+ld7///8fboK2AAAA53RSTlMAudnOlm9AGAE20d/OMjLf0TYvydjMtJFoORNu/vHPThE88/A4OPDz 
+PDTu/e3Gh0MLEPQXrVwNuPy7Xwf4rlGbiyIz98dYtkfk1F564WP2+XbiYOxivy6Yr97y/ntlqPXb 
+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"/> 
+</a> 
+</div> 
+<div style="font-size: 12px; display: table-cell; vertical-align: middle;" class="text inline"> 
+Copyright &copy; 2017 DIPC (Donostia International Physics Center) 
+<div class="vl"></div> 
+<a href="http://dipc.ehu.es/cc/computing_resources/index.html" target="_blank"  style="text-decoration: none; color: black;"><b>Wiki</b></a> 
+<div class="vl"></div> 
+<a href="http://dipc.ehu.es/" target="_blank"  style="text-decoration: none; color: black;"><b>DIPC Home Page</b></a> 
+<div class="vl"></div> 
+</div> 
+</body>  
+</html>  
