@@ -59,7 +59,7 @@ while [ 1 ]; do
 	[ $DCRAB_INTERNAL_MODE -eq 0 ] && dcrab_update_report
 	
 	# The main node must write some data for the internal report
-	[ $DCRAB_NODE_NUMBER -eq 0 ] && dcrab_write_internal_data
+	[ $DCRAB_NODE_EXECUTION_NUMBER -eq 0 ] && dcrab_write_internal_data
 
 	# Sleep to the next data collection
 	sleep $DCRAB_COLLECT_TIME

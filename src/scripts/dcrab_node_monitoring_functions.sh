@@ -21,12 +21,14 @@
 dcrab_node_monitor_init_variables () {
 	
 	# Host
-	DCRAB_NODE_NUMBER=$1
+	DCRAB_NODE_EXECUTION_NUMBER=$1
         DCRAB_DCRAB_SESSION=$(ps axo sess,pid,comm | grep "dcrab" | awk '{if ($2 == '"$$"'){print}}' | awk '{print $1}')
         DCRAB_NODE_HOSTNAME=`hostname`
+	DCRAB_NODE_NUMBER=${DCRAB_NODE_HOSTNAME#*-}
+	DCRAB_NODE_NUMBER=$(echo "$DCRAB_NODE_NUMBER +1 -1" | bc) # To ommit tthe zeros in the name
         DCRAB_NODE_HOSTNAME_MOD=`echo $DCRAB_NODE_HOSTNAME | sed 's|-||g'`
         DCRAB_NODE_TOTAL_MEM=`free -g | grep "Mem" | awk ' {printf $2}'`
-        [ "$DCRAB_NODE_NUMBER" -eq 0 ] && DCRAB_PREVIOUS_NODE=$((DCRAB_NNODES - 1)) || DCRAB_PREVIOUS_NODE=$((DCRAB_NODE_NUMBER - 1))
+        [ "$DCRAB_NODE_EXECUTION_NUMBER" -eq 0 ] && DCRAB_PREVIOUS_NODE=$((DCRAB_NNODES - 1)) || DCRAB_PREVIOUS_NODE=$((DCRAB_NODE_EXECUTION_NUMBER - 1))
 
         # Time control
         DCRAB_WAIT_TIME_CONTROL=180
@@ -80,7 +82,8 @@ dcrab_node_monitor_init_variables () {
 		DCRAB_TOTAL_DISK_DIR=$DCRAB_REPORT_DIR/aux/ldisk
 	        DCRAB_TOTAL_DISK_FILE=$DCRAB_TOTAL_DISK_DIR/$DCRAB_NODE_HOSTNAME.txt
 		echo "" > $DCRAB_TOTAL_DISK_FILE
-	
+		DCRAB_CONTROL_PORT_FILE=$DCRAB_REPORT_DIR/aux/control_port.txt
+
 		# Main session and PIDs
 		DCRAB_MAIN_SESSION=0
 		DCRAB_TOTAL_PROCESSES=1
@@ -91,8 +94,8 @@ dcrab_node_monitor_init_variables () {
 		#DCRAB_RANGE_PIDs=1
 	
 		# MPI
-		DCRAB_CONTROL_PORT_MAIN_NODE="none1"
-		DCRAB_CONTROL_PORT_OTHER_NODE="none2"
+		DCRAB_MPI_CONTROL_PORT_MAIN_NODE="none1"
+		DCRAB_MPI_CONTROL_PORT_OTHER_NODE="none2"
 		
 		# CPU
 		DCRAB_CPU_DATA=""
@@ -118,7 +121,7 @@ dcrab_node_monitor_init_variables () {
 		DCRAB_MEM2_UNUSED=0
 		DCRAB_MEM2_USED=0
 		# Total pie chart
-		if [ "$DCRAB_NODE_NUMBER" -eq 0 ] && [ "$DCRAB_NNODES" -gt 1 ]; then
+		if [ "$DCRAB_NODE_EXECUTION_NUMBER" -eq 0 ] && [ "$DCRAB_NNODES" -gt 1 ]; then
 			DCRAB_MEM_TOTAL_BASELINE=$(grep -n -m 1 "var total_mem" $DCRAB_HTML | cut -f1 -d:)
 			DCRAB_MEM_TOTAL_L1=$((DCRAB_MEM_TOTAL_BASELINE + 2))
 			DCRAB_MEM_TOTAL_L2=$((DCRAB_MEM_TOTAL_BASELINE + 3))
@@ -376,7 +379,7 @@ dcrab_collect_mem_data () {
 	fi
 
 	if [ "$DCRAB_NNODES" -gt 1 ]; then
-		if [ "$DCRAB_NODE_NUMBER" -eq 0 ]; then
+		if [ "$DCRAB_NODE_EXECUTION_NUMBER" -eq 0 ]; then
 			DCRAB_MEM_TOTAL_VMRSS=0
 			DCRAB_MEM_TOTAL_VMSIZE=0
 			
@@ -719,7 +722,7 @@ dcrab_determine_main_process () {
 	fi
 
 	# MAIN NODE
-	if [ "$DCRAB_NODE_NUMBER" -eq 0 ]; then
+	if [ "$DCRAB_NODE_EXECUTION_NUMBER" -eq 0 ]; then
 		IFS=$'\n'
 		ps axo euid,sess,pid,comm,command | awk '{if ($1 == '"$DCRAB_USER_ID"'){print}}' | awk '{if ($2 != '"$DCRAB_DCRAB_SESSION"'){print}}' > $DCRAB_USER_PROCESSES_FILE
 		for line in $(cat $DCRAB_USER_PROCESSES_FILE)
@@ -738,7 +741,7 @@ dcrab_determine_main_process () {
 		i=1
 		# Wait until the main node creates control port file
 		echo "Waiting until control_port.txt has been created"
-		while [ ! -f $DCRAB_REPORT_DIR/aux/control_port.txt ]; do 
+		while [ ! -f $DCRAB_CONTROL_PORT_FILE ]; do 
 			echo "Loop number ($i/$DCRAB_NUMBERS_OF_LOOPS_CONTROL). No control_port.txt created yet. Waiting a bit more . . . "
 			sleep 5
 
@@ -753,8 +756,8 @@ dcrab_determine_main_process () {
 
 		# Wait until the processes of the job start
 		IFS=$'\n'; i=0
-		DCRAB_CONTROL_PORT_MAIN_NODE=$(cat $DCRAB_REPORT_DIR/aux/control_port.txt)
-		while [ "$DCRAB_CONTROL_PORT_MAIN_NODE" != "$DCRAB_CONTROL_PORT_OTHER_NODE" ]; do
+		DCRAB_MPI_CONTROL_PORT_MAIN_NODE=$(cat $DCRAB_CONTROL_PORT_FILE)
+		while [ "$DCRAB_MPI_CONTROL_PORT_MAIN_NODE" != "$DCRAB_MPI_CONTROL_PORT_OTHER_NODE" ]; do
 			echo "Waiting until the process in the node $DCRAB_NODE_HOSTNAME starts" 
 	
 			i=$((i + 1))
@@ -771,16 +774,28 @@ dcrab_determine_main_process () {
 			
 			for line in $(ps axo stat,euid,sess,pid,comm,command | awk '{if ($2 == '"$DCRAB_USER_ID"'){print}}' | grep "Ss")
 			do
-				DCRAB_CONTROL_PORT_OTHER_NODE=`echo ${line#*control-port} | awk '{print $1}'`
-				if [ "$DCRAB_CONTROL_PORT_OTHER_NODE" == "$DCRAB_CONTROL_PORT_MAIN_NODE" ]; then
+				DCRAB_MPI_CONTROL_PORT_OTHER_NODE=`echo ${line#*control-port} | awk '{print $1}'`
+
+				# Intel MPI
+				if [ "$DCRAB_MPI_CONTROL_PORT_OTHER_NODE" == "$DCRAB_MPI_CONTROL_PORT_MAIN_NODE" ]; then
 					DCRAB_MAIN_SESSION=$(echo "$line" | awk '{print $3}')	
 					DCRAB_FIRST_MAIN_PROCESS_PID=$(echo "$line" | awk '{print $4}')
 					DCRAB_FIRST_MAIN_PROCESS_NAME=$(echo "$line" | awk '{print $5}')	
 					break
 				fi
+		
+				# Open MPI
+				echo $line |  awk '{if ($5 == "orted"){print}}' | grep "orted" | grep -q "$(cat $DCRAB_CONTROL_PORT_FILE)"
+				if [ $? -eq 0 ]; then
+					DCRAB_MPI_CONTROL_PORT_OTHER_NODE=$(cat $DCRAB_CONTROL_PORT_FILE)
+					DCRAB_MAIN_SESSION=$(echo "$line" | awk '{print $3}')
+					DCRAB_FIRST_MAIN_PROCESS_PID=$(echo "$line" | awk '{print $4}')
+                                        DCRAB_FIRST_MAIN_PROCESS_NAME=$(echo "$line" | awk '{print $5}')
+					break
+				fi
 			done
 		done
-		echo "Processes in node $DCRAB_NODE_HOSTNAME started with '$DCRAB_CONTROL_PORT_OTHER_NODE' control port"
+		echo "Processes in node $DCRAB_NODE_HOSTNAME started with '$DCRAB_MPI_CONTROL_PORT_OTHER_NODE' control port"
 	fi
 
 	# Initialize data file
@@ -804,12 +819,25 @@ dcrab_determine_main_process () {
 			fi
 		fi
 
-		# If it is the control process the main node must store it. Needed for multinode statistics. 
-		echo $line | grep -q "control-port"
-		if [ "$?" -eq 0 ] && [ "$DCRAB_NODE_NUMBER" -eq 0 ]; then
-	       		DCRAB_CONTROL_PORT_MAIN_NODE=$(echo ${line#*control-port} | awk '{print $1}')
-			echo "$DCRAB_CONTROL_PORT_MAIN_NODE" > $DCRAB_REPORT_DIR/aux/control_port.txt
+		# If it is the control process the main node must store it. Needed for multinode statistics
+		if [ "$DCRAB_NODE_EXECUTION_NUMBER" -eq 0 ]; then
+			
+			# Intel MPI
+			echo $line | grep -q "control-port"
+			if [ "$?" -eq 0 ]; then
+		       		DCRAB_MPI_CONTROL_PORT_MAIN_NODE=$(echo ${line#*control-port} | awk '{print $1}')
+				echo "$DCRAB_MPI_CONTROL_PORT_MAIN_NODE" > $DCRAB_CONTROL_PORT_FILE
+			fi
+	
+			# Open MPI
+			echo $line | grep "mpirun" | grep "\--map-by" | grep -q 'ppr:.*:node' 
+			if [ "$?" -eq 0 ]; then
+				DCRAB_MPI_CONTROL_PORT_MAIN_NODE=$(/usr/sbin/lsof -Pan -p $(echo $line | awk '{print $3}') -i | grep "LISTEN" | awk '{print $9}')
+				DCRAB_MPI_CONTROL_PORT_MAIN_NODE=${DCRAB_MPI_CONTROL_PORT_MAIN_NODE##*:}
+				echo "tcp://192.168.10.$DCRAB_NODE_NUMBER,10.10.1.$DCRAB_NODE_NUMBER:$DCRAB_MPI_CONTROL_PORT_MAIN_NODE;" > $DCRAB_CONTROL_PORT_FILE 
+			fi
 		fi
+		
 	done
 
 	# If the file is empty is because all the processes generated are not still relevant (they are not greater than the threshold value).
@@ -947,10 +975,22 @@ dcrab_update_data () {
 		fi
 
 		# If the new process is the control process. Needed for multinode statistics.
-		echo $line | grep -q "control-port"
-		if [ "$?" -eq 0 ] && [ "$DCRAB_NODE_NUMBER" -eq 0 ]; then
-			DCRAB_CONTROL_PORT_MAIN_NODE=$(echo ${line#*control-port} | awk '{print $1}')
-			echo "$DCRAB_CONTROL_PORT_MAIN_NODE" > $DCRAB_REPORT_DIR/aux/control_port.txt
+		if  [ "$DCRAB_NODE_EXECUTION_NUMBER" -eq 0 ]; then
+			
+			# Intel MPI
+			echo $line | grep -q "control-port"
+			if [ "$?" -eq 0 ]; then
+				DCRAB_MPI_CONTROL_PORT_MAIN_NODE=$(echo ${line#*control-port} | awk '{print $1}')
+				echo "$DCRAB_MPI_CONTROL_PORT_MAIN_NODE" > $DCRAB_CONTROL_PORT_FILE
+			fi
+		
+			# Open MPI
+	                echo $line | grep "mpirun" | grep "\--map-by" | grep -q 'ppr:.*:node'
+	                if [ "$?" -eq 0 ]; then
+	                        DCRAB_MPI_CONTROL_PORT_MAIN_NODE=$(/usr/sbin/lsof -Pan -p $(echo $line | awk '{print $3}') -i | grep "LISTEN" | awk '{print $9}')
+	                        DCRAB_MPI_CONTROL_PORT_MAIN_NODE=${DCRAB_MPI_CONTROL_PORT_MAIN_NODE##*:}
+	                        echo "tcp://192.168.10.$DCRAB_NODE_NUMBER,10.10.1.$DCRAB_NODE_NUMBER:$DCRAB_MPI_CONTROL_PORT_MAIN_NODE;" > $DCRAB_CONTROL_PORT_FILE
+	                fi
 		fi
 	done
 
@@ -970,7 +1010,7 @@ dcrab_update_data () {
 		dcrab_collect_mem_data
 		
 		# TIME data (only the main node)
-		if [ "$DCRAB_NODE_NUMBER" -eq 0 ]; then
+		if [ "$DCRAB_NODE_EXECUTION_NUMBER" -eq 0 ]; then
 			dcrab_format_time
 		fi
 		

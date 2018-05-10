@@ -15,7 +15,7 @@
 
 #
 # This function makes the necessary wait time to allow a node to write in the report. Each node waits the previous one
-# and the master node (DCRAB_NODE_NUMBER=0) waits for the last node. It ensures the write will be secuential and atomic,
+# and the master node (DCRAB_NODE_EXECUTION_NUMBER=0) waits for the last node. It ensures the write will be secuential and atomic,
 # resolving any problem related to the updating delay present in parallel filesystems like Beegfs, Lustre etc. 
 #
 dcrab_wait_and_write () {
@@ -30,7 +30,7 @@ dcrab_wait_and_write () {
 			break
 		else		
 			j=$((j+1))
-			echo "Node $DCRAB_NODE_NUMBER : not my turn to write (turn of 'Node $n'). Making a sort sleep... ($j times asleep)"
+			echo "Node $DCRAB_NODE_EXECUTION_NUMBER : not my turn to write (turn of 'Node $n'). Making a sort sleep... ($j times asleep)"
 			
 			# Check exit
 			dcrab_check_exit 0
@@ -54,7 +54,7 @@ dcrab_update_report () {
 	# Empty command file
 	:> $DCRAB_COMMAND_FILE
 
-	case "$DCRAB_NODE_NUMBER" in
+	case "$DCRAB_NODE_EXECUTION_NUMBER" in
 
 	### MAIN NODE ###
 	0)	
@@ -161,7 +161,7 @@ dcrab_update_report () {
 	###########################
 
 	# Mark the report to inform the next node that is waiting that all changes has been made
-	printf "%s \n" "sed -i 1's|<!--$DCRAB_PREVIOUS_NODE-->|<!--$DCRAB_NODE_NUMBER-->|' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
+	printf "%s \n" "sed -i 1's|<!--$DCRAB_PREVIOUS_NODE-->|<!--$DCRAB_NODE_EXECUTION_NUMBER-->|' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
 
 	# Execute commands
 	dcrab_wait_and_write
