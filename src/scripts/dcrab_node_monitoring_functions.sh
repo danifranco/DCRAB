@@ -23,7 +23,7 @@ dcrab_node_monitor_init_variables () {
 	# Host
 	DCRAB_NODE_EXECUTION_NUMBER=$1
         DCRAB_DCRAB_SESSION=$(ps axo sess,pid,comm | grep "dcrab" | awk '{if ($2 == '"$$"'){print}}' | awk '{print $1}')
-        DCRAB_NODE_HOSTNAME=`hostname`
+        DCRAB_NODE_HOSTNAME=$(hostname)
 	DCRAB_NODE_NUMBER=${DCRAB_NODE_HOSTNAME#*-}
 	DCRAB_NODE_NUMBER=$(echo "$DCRAB_NODE_NUMBER +1 -1" | bc) # To ommit tthe zeros in the name
         DCRAB_NODE_HOSTNAME_MOD=`echo $DCRAB_NODE_HOSTNAME | sed 's|-||g'`
@@ -96,6 +96,7 @@ dcrab_node_monitor_init_variables () {
 		# MPI
 		DCRAB_MPI_CONTROL_PORT_MAIN_NODE="none1"
 		DCRAB_MPI_CONTROL_PORT_OTHER_NODE="none2"
+		DCRAB_MPI_CONTROL_WRITED=0
 		
 		# CPU
 		DCRAB_CPU_DATA=""
@@ -824,6 +825,7 @@ dcrab_determine_main_process () {
 			if [ "$?" -eq 0 ]; then
 		       		DCRAB_MPI_CONTROL_PORT_MAIN_NODE=$(echo ${line#*control-port} | awk '{print $1}')
 				echo "$DCRAB_MPI_CONTROL_PORT_MAIN_NODE" > $DCRAB_CONTROL_PORT_FILE
+				DCRAB_MPI_CONTROL_WRITED=1
 			fi
 	
 			# Open MPI
@@ -832,6 +834,7 @@ dcrab_determine_main_process () {
 				DCRAB_MPI_CONTROL_PORT_MAIN_NODE=$(/usr/sbin/lsof -Pan -p $(echo $line | awk '{print $3}') -i | grep "LISTEN" | awk '{print $9}')
 				DCRAB_MPI_CONTROL_PORT_MAIN_NODE=${DCRAB_MPI_CONTROL_PORT_MAIN_NODE##*:}
 				echo "tcp://192.168.10.$DCRAB_NODE_NUMBER,10.10.1.$DCRAB_NODE_NUMBER:$DCRAB_MPI_CONTROL_PORT_MAIN_NODE;" > $DCRAB_CONTROL_PORT_FILE 
+				DCRAB_MPI_CONTROL_WRITED=1
 			fi
 		fi
 		
@@ -979,6 +982,7 @@ dcrab_update_data () {
 			if [ "$?" -eq 0 ]; then
 				DCRAB_MPI_CONTROL_PORT_MAIN_NODE=$(echo ${line#*control-port} | awk '{print $1}')
 				echo "$DCRAB_MPI_CONTROL_PORT_MAIN_NODE" > $DCRAB_CONTROL_PORT_FILE
+				DCRAB_MPI_CONTROL_WRITED=1
 			fi
 		
 			# Open MPI
@@ -987,6 +991,7 @@ dcrab_update_data () {
 	                        DCRAB_MPI_CONTROL_PORT_MAIN_NODE=$(/usr/sbin/lsof -Pan -p $(echo $line | awk '{print $3}') -i | grep "LISTEN" | awk '{print $9}')
 	                        DCRAB_MPI_CONTROL_PORT_MAIN_NODE=${DCRAB_MPI_CONTROL_PORT_MAIN_NODE##*:}
 	                        echo "tcp://192.168.10.$DCRAB_NODE_NUMBER,10.10.1.$DCRAB_NODE_NUMBER:$DCRAB_MPI_CONTROL_PORT_MAIN_NODE;" > $DCRAB_CONTROL_PORT_FILE
+				DCRAB_MPI_CONTROL_WRITED=1
 	                fi
 		fi
 	done

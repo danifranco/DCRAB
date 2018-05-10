@@ -25,6 +25,11 @@ dcrab_wait_and_write () {
 		# Take the first line of the report 
 		local n=$(head -1 $DCRAB_HTML | cut -d'-' -f3)
 
+		if [ "$DCRAB_NODE_EXECUTION_NUMBER" -eq 0 ] && [ "$DCRAB_MPI_CONTROL_WRITED" -eq 0 ]; then
+                        echo "No control_port has been written yet so the other nodes are still waiting!"     
+                        break
+                fi
+
 		# Break the loop when is the turn of the node
 		if [ "$n" -eq "$DCRAB_PREVIOUS_NODE" ]; then
 			break
