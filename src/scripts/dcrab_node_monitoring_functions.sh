@@ -359,9 +359,9 @@ dcrab_collect_mem_data () {
 
 	# Collect memory data of the file
    	DCRAB_MEM_VMSIZE=$(grep VmSize $DCRAB_MEM_FILE | awk '{sum+=$2} END {print sum/1024/1024}') 
-	DCRAB_MEM_VMSIZE=$(printf "%.3f\n" "$DCRAB_MEM_VMSIZE") # 3 decimmals only
+	DCRAB_MEM_VMSIZE=$(printf "%.3f\n" "$DCRAB_MEM_VMSIZE") # 3 decimals only
 	DCRAB_MEM_VMRSS=$(grep VmRSS $DCRAB_MEM_FILE | awk '{sum+=$2} END {print sum/1024/1024}')
-	DCRAB_MEM_VMRSS=$(printf "%.3f\n" "$DCRAB_MEM_VMRSS") # 3 decimmals only
+	DCRAB_MEM_VMRSS=$(printf "%.3f\n" "$DCRAB_MEM_VMRSS") # 3 decimals only
 	if [ $(echo "$DCRAB_MEM_VMRSS > $DCRAB_MEM_MAX_VMRSS" | bc) -eq 1 ]; then
 		DCRAB_MEM_MAX_VMRSS=$DCRAB_MEM_VMRSS
 	fi
@@ -383,18 +383,15 @@ dcrab_collect_mem_data () {
 			DCRAB_MEM_TOTAL_VMRSS=0
 			DCRAB_MEM_TOTAL_VMSIZE=0
 			
-			echo "$DCRAB_MEM_VMRSS $DCRAB_MEM_VMSIZE" > $DCRAB_TOTAL_MEM_FILE
-
-			# For the PBS scheduler the total memory monitored is the amount of memory used in the main node only
-			# So we do not need the memory used in slave nodes. However, we will maintain these lines because in a
-			# future we could use when adding support for other schedulers 
-			#for file in $DCRAB_TOTAL_MEM_DIR/*
-			#do
-			#	DCRAB_MEM_TOTAL_VMRSS=$(echo "$DCRAB_MEM_TOTAL_VMRSS + $(cat $file | awk '{print $1}')" | bc)
-			#	DCRAB_MEM_TOTAL_VMSIZE=$(echo "$DCRAB_MEM_TOTAL_VMSIZE + $(cat $file | awk '{print $2}')" | bc)
-			#done
-			DCRAB_MEM_TOTAL_VMRSS=$(cat $DCRAB_TOTAL_MEM_FILE | awk '{print $1}')
-			DCRAB_MEM_TOTAL_VMSIZE=$(cat $DCRAB_TOTAL_MEM_FILE | awk '{print $2}')
+			echo "$DCRAB_MEM_MAX_VMRSS $DCRAB_MEM_MAX_VMSIZE" > $DCRAB_TOTAL_MEM_FILE
+			
+			for file in $DCRAB_TOTAL_MEM_DIR/*
+			do
+				DCRAB_MEM_TOTAL_VMRSS=$(echo "$DCRAB_MEM_TOTAL_VMRSS + $(cat $file | awk '{print $1}')" | bc)
+				DCRAB_MEM_TOTAL_VMSIZE=$(echo "$DCRAB_MEM_TOTAL_VMSIZE + $(cat $file | awk '{print $2}')" | bc)
+			done
+			# DCRAB_MEM_TOTAL_VMRSS=$(cat $DCRAB_TOTAL_MEM_FILE | awk '{print $1}')
+			# DCRAB_MEM_TOTAL_VMSIZE=$(cat $DCRAB_TOTAL_MEM_FILE | awk '{print $2}')
 		
 			if [ $(echo "$DCRAB_MEM_TOTAL_VMSIZE > $DCRAB_MEM_TOTAL_MAX_VMSIZE" | bc) -eq 1 ]; then
 				DCRAB_MEM_TOTAL_MAX_VMSIZE=$DCRAB_MEM_TOTAL_VMSIZE
@@ -413,7 +410,7 @@ dcrab_collect_mem_data () {
 			fi
 			
 		else
-			echo "$DCRAB_MEM_VMRSS $DCRAB_MEM_VMSIZE" > $DCRAB_TOTAL_MEM_FILE
+			echo "$DCRAB_MEM_MAX_VMRSS $DCRAB_MEM_MAX_VMSIZE" > $DCRAB_TOTAL_MEM_FILE
 		fi
 	fi
 

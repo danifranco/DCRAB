@@ -61,7 +61,7 @@ dcrab_check_exit () {
 
 
 #
-# Stops DCRAB execution
+# Stops DCRAB's processes 
 #
 dcrab_finalize () {
 
@@ -71,12 +71,10 @@ dcrab_finalize () {
 	
 		# Kill remote processes running in background
 	        i=0
-	        echo "PID: "${DCRAB_PIDs[*]}
+	        echo "DCRAB processes started in compute nodes have these PIDs: "${DCRAB_PIDs[*]}
 	
 	        for node in $DCRAB_NODES; do
-	                echo "Node: $node"
-	                COMMAND="kill ${DCRAB_PIDs[$i]}"
-	                echo "Comando: $COMMAND"
+	                echo "Killing the DCRAB's process with PID ${DCRAB_PIDs[$i]} in the node $node"
 	                ssh -f $node "$COMMAND"
 	                i=$((i+1))
 	        done	
