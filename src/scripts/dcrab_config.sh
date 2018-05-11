@@ -108,6 +108,7 @@ dcrab_init_variables () {
         fi
 	
 	DCRAB_LOG_DIR=$DCRAB_REPORT_DIR/log
+	DCRAB_WAIT_MPI_PROCESSES_DIR=$DCRAB_REPORT_DIR/aux/waitMPI
 	
         DCRAB_USER_ID=`id -u $USER`
         DCRAB_HOST_OS=$(cat /etc/*release | head -1 | awk '{print $1}')
@@ -117,7 +118,7 @@ dcrab_init_variables () {
 		
         # Used to calculate the numbers of loops a node must be done until found 
         # the control port process, which is the first step to start collecting data
-        DCRAB_SLEEP_TIME_CONTROL=5
+        DCRAB_SLEEP_TIME_CONTROL=10
 }
 
 
@@ -134,6 +135,7 @@ dcrab_create_report_files () {
 	[ $DCRAB_INTERNAL_MODE -eq 0 ] && mkdir $DCRAB_REPORT_DIR/aux/mem
 	mkdir $DCRAB_REPORT_DIR/aux/ib
 	mkdir $DCRAB_REPORT_DIR/aux/ldisk
+	mkdir $DCRAB_WAIT_MPI_PROCESSES_DIR
 
 	if [ $DCRAB_INTERNAL_MODE -eq 0 ]; then		
 		# Generate the first steps of the report

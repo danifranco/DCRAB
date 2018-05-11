@@ -38,7 +38,7 @@ source $DCRAB_PATH/scripts/dcrab_report_functions.sh
 dcrab_node_monitor_init_variables $2 
 
 # Determines the main processes of the job and initializes html file first time 
-dcrab_determine_main_process 
+dcrab_determine_main_process
 
 sleep $DCRAB_COLLECT_TIME
 
@@ -52,8 +52,8 @@ while [ 1 ]; do
 	loopNumber=$((loopNumber + 1))	
 	echo "H: $DCRAB_NODE_MONITOR - loop $loopNumber" 
 
-	# Update and collect data
-	dcrab_update_data 
+	# Collects new data
+	dcrab_collect_data 
 
 	# Insert collected data in the main .html page
 	[ $DCRAB_INTERNAL_MODE -eq 0 ] && dcrab_update_report
@@ -66,4 +66,6 @@ while [ 1 ]; do
 	
 	# To avoid block in the loop 
 	dcrab_check_exit 1
+
+	[ $DCRAB_SLEEP_FOR_NEXT_MPI_JOB -eq 1 ] && dcrab_wait_control_port
 done

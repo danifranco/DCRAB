@@ -260,7 +260,7 @@ This are the scripts that compose DCRAB. Here does not appear the internal repor
 \node [level 3, below of = c2, xshift=40pt, rounded corners=6pt, fill=orange!30, text width=15em] (c21) {dcrab\_node\_monitoring\_functions.sh};
 \node [level 4, below of = c21, xshift=20pt] (c211) {dcrab\_node\_monitor\_init\_variables};
 \node [level 4, below of = c211] (c212) {dcrab\_determine\_main\_process};
-\node [level 4, below of = c212] (c213) {dcrab\_update\_data};
+\node [level 4, below of = c212] (c213) {dcrab\_collect\_data};
 \node [level 4, below of = c213, yshift=-35pt, fill=blue!20] (c214) {dcrab\_collect\_mem\_data \\ dcrab\_collect\_ib\_data \\ dcrab\_format\_time \\ dcrab\_collect\_processesIO\_data \\ dcrab\_collect\_nfs\_data \\ dcrab\_collect\_disk\_data \\ dcrab\_collect\_beegfs\_data };
 
 \node [level 3, below of = c214, xshift=-20pt, yshift=-35pt, rounded corners=6pt, fill=orange!30, text width=15em] (c22) {dcrab\_report\_functions.sh};
@@ -341,7 +341,7 @@ This are the scripts that compose DCRAB. Here does not appear the internal repor
 \draw [->, rounded corners, thick, black, yshift=-8.5cm, xshift=12cm]  (0,0) -- (0.4, -0.6);
 
 \node[cm={cos(27) ,sin(27) ,-sin(27) ,cos(27) ,(0 cm,0 cm)}, yshift=-3.3cm, xshift=2.5cm] (t80) {dcrab\_start\_data\_collection};
-\node[cm={cos(27) ,sin(27) ,-sin(27) ,cos(27) ,(0 cm,0 cm)}, yshift=-9.7cm, xshift=1.5cm] (t81) {dcrab\_update\_data (every 10s)};
+\node[cm={cos(27) ,sin(27) ,-sin(27) ,cos(27) ,(0 cm,0 cm)}, yshift=-9.7cm, xshift=1.5cm] (t81) {dcrab\_collect\_data (every 10s)};
 \node[cm={cos(37) ,-sin(37) ,sin(37) ,cos(37) ,(0 cm,0 cm)}, yshift=-6.5cm, xshift=9.5cm] (t82) {dcrab\_update\_report};
 \node[yshift=-10cm, xshift=9.5cm] (t83) {Exit};
 \node[yshift=-14.3cm, xshift=11.3cm] (t84) {(waiting until its turn reached)};
@@ -382,7 +382,7 @@ The changes that must be made in \texttt{dcrab\_node\_monitoring\_functions.sh} 
   \item In the function \texttt{dcrab\_node\_monitor\_init\_variables()}: the variables needed for your module must be added where the \verb+## NEW MODULE CODE ##+ line is, that is, at the end of other variable declarations. You should use the naming we have used in all the variables of the tool which starts with \verb+DCRAB_+. A variable \verb+DCRAB_NEWMODULENAME_DATA+ should be created, which will be used to insert the data of the new module into the report file.
   \item Create a function, which should name as \texttt{dcrab\_collect\_newModuleName\_data()}, after the last module function defined, where the line \verb+## ADD NEW MODULE'S FUNCTION HERE ##+ is. Collect the data and fill up the variable \verb+DCRAB_NEWMODULENAME_DATA+ must be the purpose of this function. As we have pointed out, remember to generate properly the data on \verb+DCRAB_NEWMODULENAME_DATA+ variable. For example, in most of the cases we fill up the variable with a new point of the charts, which is translated to generate a string with the information of that point using the data collected (you could understand better looking how the data is inserted at the examples in \verb+/examples/normalReport/+ or in the \href{https://developers.google.com/chart/interactive/docs/reference}{Google Visualization API Documentation}).
   \item In the function \texttt{dcrab\_determine\_main\_process()} you have to add at the beginning, where the string \verb+## ADD INITIALIZATION OF NEW MODULE VARIABLE HERE ##+ is, the initialization of the \verb+DCRAB_NEWMODULENAME_DATA+ variable if needed. After that, at the bottom of the same function, add where the string \verb+## ADD THE CALL TO THE NEW FUNCTION HERE ##+ is, the call to the function \texttt{dcrab\_collect\_newModuleName\_data()} created.
-  \item Finally, you must repeat the previous step inside the \texttt{dcrab\_update\_data()} function in the same way.
+  \item Finally, you must repeat the previous step inside the \texttt{dcrab\_collect\_data()} function in the same way.
 \end{itemize}
 
 \section{Step 2: Display}

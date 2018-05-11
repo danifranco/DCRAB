@@ -34,6 +34,19 @@ dcrab_wait_and_write () {
 		if [ "$n" -eq "$DCRAB_PREVIOUS_NODE" ]; then
 			break
 		else		
+			# If every node, apart from the main node, is waiting for a new MPI job break the loop
+        	        if [ "$DCRAB_NODE_EXECUTION_NUMBER" -eq 0 ]; then
+	               	        breakLoop=1
+	                        for file in $DCRAB_WAIT_MPI_PROCESSES_DIR/*
+	                        do
+	                                if [ $(cat $file) -eq 0 ]; then
+	                                        breakLoop=0
+	                                        break
+	                                fi
+	                        done
+	                        [ $breakLoop -eq 1 ] && echo "Every nodes are waiting to the new MPI process so continue writing" && break
+	                fi
+
 			j=$((j+1))
 			echo "Node $DCRAB_NODE_EXECUTION_NUMBER : not my turn to write (turn of 'Node $n'). Making a sort sleep... ($j times asleep)"
 			
