@@ -1,0 +1,43 @@
+#!/bin/bash
+
+OK=0
+WARNING=1
+CRITICAL=2
+UNKNOWN=3
+TMPFILE1=/tmp/check_DCRAB_processes
+DCRAB_SCRIPT_PATH="/scratch/administracion/admin/dcrab/software/src/scripts/dcrab_node_monitor.sh"
+pbs_mom_pid=$(cat /var/spool/torque/mom_priv/mom.lock)
+message="Procesos de DCRAB zombies:"
+cont=0
+
+pstree -p $pbs_mom_pid > $TMPFILE1
+
+while read line; do
+	pid=$(echo $line | cut -d' ' -f2)
+	job=$(echo $line | cut -d' ' -f10)
+	controlPortFile=$(echo "${job%env.txt}control_port.txt")
+	controlPortString=$(cat $controlPortFile)
+	job=$(echo $job | cut -d'/' -f7)	
+
+	cat $TMPFILE1 | grep -q "${job}.maui01."
+	r=$?
+	ps -fea | sed 's|\s\s*| |g' |  grep -v grep | grep -q "$controlPortString"
+	if [ "$r" -ne 0 ] && [ "$?" -ne 0 ]; then
+		message="${message} $pid,"
+		cont=$((cont + 1))
+	fi
+		
+done < <(ps -fea | grep "$DCRAB_SCRIPT_PATH" | grep -v grep | sed 's|\s\s*| |g')
+message=${message%,}
+
+if [ "$cont" -ne 0 ]; then
+        echo -e "$message"
+        exit $CRITICAL
+elif [ "$cont" -eq 0 ]; then
+        echo -e "No hay procesos de DCRAB zombies"
+        exit $OK
+else
+        echo "El script no se ha ejecutado correctamente"
+        exit $WARNING
+fi
+

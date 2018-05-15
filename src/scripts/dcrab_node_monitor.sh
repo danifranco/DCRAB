@@ -20,11 +20,18 @@
 
 
 # Redirect all the output to DCRAB log file
-exec >> $3 ; exec 2>&1
+exec 1>$3 2>&1
 echo "--- DCRAB `hostname` log ---" 
 
 # Sets environment
 source "$1"
+
+# To ensure the environment has been set up correctly 
+if [ "$DCRAB_WORKDIR" == "" ]; then
+	echo "$(date "+%Y-%m-%d %H:%M:%S") [JOB: $DCRAB_JOB_ID] ERROR: An error occurred while setting up the environmet sourcing $1 file"	
+	echo "$(date "+%Y-%m-%d %H:%M:%S") [JOB: $DCRAB_JOB_ID] ERROR: DCRAB stop \(3\)"
+	exit 3
+fi
 
 cd $DCRAB_WORKDIR
 
@@ -50,7 +57,7 @@ updates=0
 while [ 1 ]; do
 
 	loopNumber=$((loopNumber + 1))	
-	echo "H: $DCRAB_NODE_MONITOR - loop $loopNumber" 
+	eval $DCRAB_LOG_INFO "Loop number: $loopNumber" 
 
 	# Collects new data
 	dcrab_collect_data 

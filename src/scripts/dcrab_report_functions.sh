@@ -19,6 +19,8 @@
 # resolving any problem related to the updating delay present in parallel filesystems like Beegfs, Lustre etc. 
 #
 dcrab_wait_and_write () {
+
+	eval $DCRAB_LOG_INFO "Ready to write"
 	
 	j=0
 	while [ 1 ]; do
@@ -26,7 +28,7 @@ dcrab_wait_and_write () {
 		local n=$(head -1 $DCRAB_HTML | cut -d'-' -f3)
 
 		if [ "$DCRAB_NODE_EXECUTION_NUMBER" -eq 0 ] && [ "$DCRAB_MPI_CONTROL_WRITED" -eq 0 ]; then
-                        echo "No control_port has been written yet so the other nodes are still waiting!"     
+                        eval $DCRAB_LOG_INFO "No control_port has been written yet so the rest of nodes are still waiting!"     
                         break
                 fi
 
@@ -34,7 +36,7 @@ dcrab_wait_and_write () {
 		if [ "$n" -eq "$DCRAB_PREVIOUS_NODE" ]; then
 			break
 		else		
-			# If every node, apart from the main node, is waiting for a new MPI job break the loop
+			# If every node, apart of the main node, is waiting for a new MPI job break the loop
         	        if [ "$DCRAB_NODE_EXECUTION_NUMBER" -eq 0 ]; then
 	               	        breakLoop=1
 	                        for file in $DCRAB_WAIT_MPI_PROCESSES_DIR/*
@@ -44,11 +46,11 @@ dcrab_wait_and_write () {
 	                                        break
 	                                fi
 	                        done
-	                        [ $breakLoop -eq 1 ] && echo "Every nodes are waiting to the new MPI process so continue writing" && break
+	                        [ $breakLoop -eq 1 ] && eval $DCRAB_LOG_INFO "Every node is waiting to the new MPI process so continue writing" && break
 	                fi
 
 			j=$((j+1))
-			echo "Node $DCRAB_NODE_EXECUTION_NUMBER : not my turn to write (turn of 'Node $n'). Making a sort sleep... ($j times asleep)"
+			eval $DCRAB_LOG_INFO "Node $DCRAB_NODE_EXECUTION_NUMBER : not my turn to write \(turn of 'Node $n'\). Making a sort sleep... \($j times asleep\)"
 			
 			# Check exit
 			dcrab_check_exit 0
@@ -57,7 +59,7 @@ dcrab_wait_and_write () {
 		fi
 	done
 	
-	echo "My turn has reached! Write second: $(date +"%s")"
+	eval $DCRAB_LOG_INFO "My turn has reached!"
 
 	# Execute all the commands
 	$DCRAB_COMMAND_FILE

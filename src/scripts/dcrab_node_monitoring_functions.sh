@@ -51,6 +51,8 @@ dcrab_node_monitor_init_variables () {
 	DCRAB_WAIT_MPI_PROCESSES_FILE=$DCRAB_WAIT_MPI_PROCESSES_DIR/$DCRAB_NODE_HOSTNAME
 	[ "$DCRAB_NODE_EXECUTION_NUMBER" -ne 0 ] && echo "1" > $DCRAB_WAIT_MPI_PROCESSES_FILE
 	DCRAB_ACTIVE_JOB_IN_MAIN_NODE_FILE=$DCRAB_REPORT_DIR/aux/activeJobMainNode
+	DCRAB_CONTROL_PORT_FILE_PREFIX=$DCRAB_REPORT_DIR/aux/control_port
+        DCRAB_CONTROL_PORT_FILE=""
 
 	if [ $DCRAB_INTERNAL_MODE -eq 0 ]; then
 		# Files and directories	
@@ -92,8 +94,6 @@ dcrab_node_monitor_init_variables () {
 		DCRAB_TOTAL_DISK_DIR=$DCRAB_REPORT_DIR/aux/ldisk
 	        DCRAB_TOTAL_DISK_FILE=$DCRAB_TOTAL_DISK_DIR/$DCRAB_NODE_HOSTNAME.txt
 		echo "" > $DCRAB_TOTAL_DISK_FILE
-		DCRAB_CONTROL_PORT_FILE_PREFIX=$DCRAB_REPORT_DIR/aux/control_port
-		DCRAB_CONTROL_PORT_FILE=""
 
 		# Main session and PIDs
 		DCRAB_MAIN_SESSION=0
@@ -105,8 +105,8 @@ dcrab_node_monitor_init_variables () {
 		#DCRAB_RANGE_PIDs=1
 	
 		# MPI
-		DCRAB_MPI_CONTROL_PORT_MAIN_NODE="none1"
-		DCRAB_MPI_CONTROL_PORT_OTHER_NODE="none2"
+		DCRAB_MPI_CONTROL_PORT_MAIN_NODE=""
+		DCRAB_MPI_CONTROL_PORT_OTHER_NODE=""
 		DCRAB_MPI_CONTROL_WRITED=0
 		
 		# CPU
@@ -719,9 +719,9 @@ dcrab_wait_control_port () {
 	
         i=1
         # Wait until the main node creates control port file
-        echo "Waiting until control_port$DCRAB_NUMBER_OF_MPI_COMMANDS file has been created"
+        eval $DCRAB_LOG_INFO "Waiting until control_port$DCRAB_NUMBER_OF_MPI_COMMANDS file has been created"
         while [ ! -f $DCRAB_CONTROL_PORT_FILE ]; do
-        	echo "Loop number ($i/$DCRAB_NUMBERS_OF_LOOPS_CONTROL). No control_port$DCRAB_NUMBER_OF_MPI_COMMANDS file created yet. Waiting a bit more . . . "
+        	eval $DCRAB_LOG_INFO "Loop number \($i/$DCRAB_NUMBERS_OF_LOOPS_CONTROL\). No control_port$DCRAB_NUMBER_OF_MPI_COMMANDS file created yet. Waiting a bit more . . . "
                 sleep $DCRAB_SLEEP_TIME_CONTROL
 
                 # Exit DCRAB if no control_port file was created and the main node processes have been stopped
@@ -733,20 +733,20 @@ dcrab_wait_control_port () {
                 fi
                 i=$((i + 1))
         done
-        echo "File control_port$DCRAB_NUMBER_OF_MPI_COMMANDS file created!"
+        eval $DCRAB_LOG_INFO "File control_port$DCRAB_NUMBER_OF_MPI_COMMANDS file created!"
 
         # Wait until the processes of the job start
         IFS=$'\n'; i=0
         DCRAB_MPI_CONTROL_PORT_MAIN_NODE=$(cat $DCRAB_CONTROL_PORT_FILE)
         while [ "$DCRAB_MPI_CONTROL_PORT_MAIN_NODE" != "$DCRAB_MPI_CONTROL_PORT_OTHER_NODE" ]; do
-        	echo "Waiting until the process in the node $DCRAB_NODE_HOSTNAME starts" 
+        	eval $DCRAB_LOG_INFO "Waiting until the process in the node $DCRAB_NODE_HOSTNAME starts" 
 
                 i=$((i + 1))
 
                 # Exit DCRAB if no control_port file was created  
                 if [ "$i" -eq "$DCRAB_NUMBERS_OF_LOOPS_CONTROL" ]; then
-                	echo "The process does not start"
-			echo "DCRAB stop"
+                	eval $DCRAB_LOG_INFO "The process does not start"
+			eval $DCRAB_LOG_INFO "DCRAB stop \(3\)"
                 	exit 3
                 fi
 
@@ -776,7 +776,7 @@ dcrab_wait_control_port () {
                         fi
                         done
                 done
-                echo "Processes in node $DCRAB_NODE_HOSTNAME started with '$DCRAB_MPI_CONTROL_PORT_OTHER_NODE' control port"
+                eval $DCRAB_LOG_INFO "Processes in node $DCRAB_NODE_HOSTNAME started with '$DCRAB_MPI_CONTROL_PORT_OTHER_NODE' control port"
 		
 		DCRAB_SLEEP_FOR_NEXT_MPI_JOB=0
 		# Indicate the main node that this node has started to monitor the MPI job
@@ -873,11 +873,17 @@ dcrab_determine_main_process () {
 				DCRAB_NUMBER_OF_MPI_COMMANDS=$((DCRAB_NUMBER_OF_MPI_COMMANDS + 1))
 		                DCRAB_CONTROL_PORT_FILE="${DCRAB_CONTROL_PORT_FILE_PREFIX}${DCRAB_NUMBER_OF_MPI_COMMANDS}"
 
-				DCRAB_MPI_CONTROL_PORT_MAIN_NODE=$(/usr/sbin/lsof -Pan -p $(echo $line | awk '{print $3}') -i | grep "LISTEN" | awk '{print $9}')
-				DCRAB_MPI_CONTROL_PORT_MAIN_NODE=${DCRAB_MPI_CONTROL_PORT_MAIN_NODE##*:}
+				while [ "$DCRAB_MPI_CONTROL_PORT_MAIN_NODE" == "" ]; do
+                                        DCRAB_MPI_CONTROL_PORT_MAIN_NODE=$(/usr/sbin/lsof -Pan -p $(echo $line | awk '{print $3}') -i | grep "LISTEN" | awk '{print $9}')
+                                        DCRAB_MPI_CONTROL_PORT_MAIN_NODE=${DCRAB_MPI_CONTROL_PORT_MAIN_NODE##*:}
+
+	                                [ "$DCRAB_MPI_CONTROL_PORT_MAIN_NODE" == "" ] && eval $DCRAB_LOG_INFO "Wait to control port conections to be active" && sleep 1
+                                done
+				
 				echo "tcp://192.168.10.$DCRAB_NODE_NUMBER,10.10.1.$DCRAB_NODE_NUMBER:$DCRAB_MPI_CONTROL_PORT_MAIN_NODE;" > $DCRAB_CONTROL_PORT_FILE 
 
 				DCRAB_MPI_CONTROL_WRITED=1
+				DCRAB_MPI_CONTROL_PORT_MAIN_NODE=""
 				
 				echo "$pid" >> $DCRAB_MPI_PROCESSES_FILE
 			fi
@@ -888,6 +894,7 @@ dcrab_determine_main_process () {
 	# If the file is empty is because all the processes generated are not still relevant (they are not greater than the threshold value).
 	# So we initialize it with a first value 
 	if [ ! -f $DCRAB_JOB_PROCESSES_FILE ]; then
+		eval $DCRAB_LOG_INFO "Initializing file $DCRAB_JOB_PROCESSES_FILE" 
 		echo "$DCRAB_FIRST_MAIN_PROCESS_PID $DCRAB_FIRST_MAIN_PROCESS_NAME" > $DCRAB_JOB_PROCESSES_FILE
 
 		if [ $DCRAB_INTERNAL_MODE -eq 0 ]; then
@@ -947,6 +954,8 @@ dcrab_determine_main_process () {
 # Also checks if there are new processes involved in the calculation and adds them onto the charts. 
 #
 dcrab_collect_data () {
+
+	eval $DCRAB_LOG_INFO "Starting data collection"
 	
 	# Init. variables
 	IFS=$'\n'
@@ -1053,16 +1062,22 @@ dcrab_collect_data () {
 	                if [ "$?" -eq 0 ]; then
 				
 				# Check if is a new MPI job
-                                cat $DCRAB_MPI_PROCESSES_FILE | grep -q "^${pid}$"
+                                cat $DCRAB_MPI_PROCESSES_FILE 2> /dev/null | grep -q "^${pid}$"
                                 if [ "$?" -ne 0 ]; then
 					DCRAB_NUMBER_OF_MPI_COMMANDS=$((DCRAB_NUMBER_OF_MPI_COMMANDS + 1))
 		                	DCRAB_CONTROL_PORT_FILE="${DCRAB_CONTROL_PORT_FILE_PREFIX}${DCRAB_NUMBER_OF_MPI_COMMANDS}"
+				
+					while [ "$DCRAB_MPI_CONTROL_PORT_MAIN_NODE" == "" ]; do
+	                                        DCRAB_MPI_CONTROL_PORT_MAIN_NODE=$(/usr/sbin/lsof -Pan -p $(echo $line | awk '{print $3}') -i | grep "LISTEN" | awk '{print $9}')
+	                                        DCRAB_MPI_CONTROL_PORT_MAIN_NODE=${DCRAB_MPI_CONTROL_PORT_MAIN_NODE##*:}
 	
-		                        DCRAB_MPI_CONTROL_PORT_MAIN_NODE=$(/usr/sbin/lsof -Pan -p $(echo $line | awk '{print $3}') -i | grep "LISTEN" | awk '{print $9}')
-		                        DCRAB_MPI_CONTROL_PORT_MAIN_NODE=${DCRAB_MPI_CONTROL_PORT_MAIN_NODE##*:}
+	                                        [ "$DCRAB_MPI_CONTROL_PORT_MAIN_NODE" == "" ] && eval $DCRAB_LOG_INFO "Wait to control port conections to be active" && sleep 1
+	                                done
+
 		                        echo "tcp://192.168.10.$DCRAB_NODE_NUMBER,10.10.1.$DCRAB_NODE_NUMBER:$DCRAB_MPI_CONTROL_PORT_MAIN_NODE;" > $DCRAB_CONTROL_PORT_FILE
 	
 					DCRAB_MPI_CONTROL_WRITED=1
+					DCRAB_MPI_CONTROL_PORT_MAIN_NODE=""
 					
 					echo "$pid" >> $DCRAB_MPI_PROCESSES_FILE
 				fi
@@ -1100,6 +1115,7 @@ dcrab_collect_data () {
                 ## ADD THE CALL TO THE NEW FUNCTION HERE ##
                 ###########################################
 	fi
+
 
 	# IB data
         dcrab_collect_ib_data
