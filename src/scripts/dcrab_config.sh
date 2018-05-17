@@ -166,8 +166,8 @@ dcrab_start_data_collection () {
 		
 		COMMAND="$DCRAB_PATH/scripts/dcrab_node_monitor.sh $DCRAB_REPORT_DIR/aux/env.txt $i $DCRAB_LOG_DIR/$node.log & echo \$!"
 
-		DCRAB_PIDs[$i]=`ssh -n $node "$COMMAND" | tail -n 1 `
-		eval $DCRAB_LOG "N: $node P: ${DCRAB_PIDs[$i]}"
+		DCRAB_PIDs[$i]=`ssh -n $node "$COMMAND" | tail -n 1`
+		eval $DCRAB_LOG_INFO "Node: $node - PID: ${DCRAB_PIDs[$i]}"
 
 		i=$((i+1))
 	done

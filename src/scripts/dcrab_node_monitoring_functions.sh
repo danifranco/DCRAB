@@ -25,6 +25,9 @@ dcrab_node_monitor_init_variables () {
 	DCRAB_ACTIVE_JOB_IN_MAIN_NODE_COUNTER=0
 	DCRAB_NUMBER_OF_MPI_COMMANDS=0
 	DCRAB_SLEEP_FOR_NEXT_MPI_JOB=0
+	DCRAB_AVOID_COMMANDS="sleep|sed|grep|cat|echo|tail"	
+	DCRAB_PROMOTE_DEMOTE_NEEDED_COUNTER=2
+	DCRAB_PROMOTED_PIDs=""
 	
 	# Host
 	DCRAB_NODE_EXECUTION_NUMBER=$1
@@ -46,8 +49,6 @@ dcrab_node_monitor_init_variables () {
 	# Files and directories 
         DCRAB_USER_PROCESSES_FILE=$DCRAB_REPORT_DIR/data/$DCRAB_NODE_HOSTNAME/user_processes
         DCRAB_JOB_PROCESSES_FILE=$DCRAB_REPORT_DIR/data/$DCRAB_NODE_HOSTNAME/job_processes
-        DCRAB_JOB_CANDIDATE_PROCESSES_FILE=$DCRAB_REPORT_DIR/data/$DCRAB_NODE_HOSTNAME/job_candidate_processes
-	DCRAB_MPI_PROCESSES_FILE=$DCRAB_REPORT_DIR/aux/mpi
 	DCRAB_WAIT_MPI_PROCESSES_FILE=$DCRAB_WAIT_MPI_PROCESSES_DIR/$DCRAB_NODE_HOSTNAME
 	[ "$DCRAB_NODE_EXECUTION_NUMBER" -ne 0 ] && echo "1" > $DCRAB_WAIT_MPI_PROCESSES_FILE
 	DCRAB_ACTIVE_JOB_IN_MAIN_NODE_FILE=$DCRAB_REPORT_DIR/aux/activeJobMainNode
@@ -367,7 +368,11 @@ dcrab_collect_mem_data () {
 
 	# Store the data of all the processes 
 	:> $DCRAB_MEM_FILE
-	for pid in $(cat $DCRAB_JOB_PROCESSES_FILE | awk '{print $1}'); do cat /proc/$pid/status 2> /dev/null 1 >> $DCRAB_MEM_FILE; done
+	for line in $(cat $DCRAB_JOB_PROCESSES_FILE | grep -v "Demoted"); do
+		pid=$(echo $line | awk '{print $1}')
+		[ "$pid" == "#" ] && pid=$(echo $line | awk '{print $2}')
+		cat /proc/$pid/status 2> /dev/null 1 >> $DCRAB_MEM_FILE
+	done
 
 	# Collect memory data of the file
    	DCRAB_MEM_VMSIZE=$(grep VmSize $DCRAB_MEM_FILE | awk '{sum+=$2} END {print sum/1024/1024}') 
@@ -501,9 +506,10 @@ dcrab_collect_processesIO_data () {
 	case $1 in 
 	0)
 		# Store the data of all the processes	 
-		for line in $(cat $DCRAB_JOB_PROCESSES_FILE); do
+		for line in $(cat $DCRAB_JOB_PROCESSES_FILE | grep -v "Demoted"); do
 
 			pid=$(echo "$line" | awk '{print $1}')
+			[ "$pid" == "#" ] && pid=$(echo $line | awk '{print $2}')
 			
 			# Collect processesIO actual data
 			if [ -r /proc/$pid/io ]; then
@@ -529,9 +535,10 @@ dcrab_collect_processesIO_data () {
 		DCRAB_PROCESSESIO_PARTIAL_WRITE=0
 		last_rchar=""
 		last_wchar=""
-		for line in $(cat $DCRAB_JOB_PROCESSES_FILE); do
+		for line in $(cat $DCRAB_JOB_PROCESSES_FILE | grep -v "Demoted"); do
 	
 			pid=$(echo "$line" | awk '{print $1}')	
+			[ "$pid" == "#" ] && pid=$(echo $line | awk '{print $2}')
 			
 			# Collect processesIO last data
 			last_rchar=$(cat $DCRAB_PROCESSES_IO_FILE | grep "^$pid " | awk '{print $2}')
@@ -719,7 +726,7 @@ dcrab_wait_control_port () {
 	
         i=1
         # Wait until the main node creates control port file
-        eval $DCRAB_LOG_INFO "Waiting until control_port$DCRAB_NUMBER_OF_MPI_COMMANDS file has been created"
+        eval $DCRAB_LOG_INFO "Waiting until control_port$DCRAB_NUMBER_OF_MPI_COMMANDS file is created"
         while [ ! -f $DCRAB_CONTROL_PORT_FILE ]; do
         	eval $DCRAB_LOG_INFO "Loop number \($i/$DCRAB_NUMBERS_OF_LOOPS_CONTROL\). No control_port$DCRAB_NUMBER_OF_MPI_COMMANDS file created yet. Waiting a bit more . . . "
                 sleep $DCRAB_SLEEP_TIME_CONTROL
@@ -828,14 +835,14 @@ dcrab_determine_main_process () {
 		dcrab_wait_control_port
 	fi
 
+	cont=0
 	# Initialize data file
 	for line in $(ps axo euid,sess,pid,pcpu,comm,command | awk '{if ($1 == '"$DCRAB_USER_ID"'){print}}' | awk '{if ($2 == '"$DCRAB_MAIN_SESSION"'){print}}' | awk '{if ($2 != '"$DCRAB_DCRAB_SESSION"'){print}}')
 	do
 		pid=$(echo "$line" | awk '{print $3}')
 		cpu=$(echo "$line" | awk '{print $4}')
 		commandName=$(echo "$line" | awk '{print $5}')
-
-		if [ $(echo "$cpu > $DCRAB_CPU_THRESHOLD" | bc) -eq 1 ]; then
+		if [ $(echo "$cpu > $DCRAB_CPU_THRESHOLD" | bc) -eq 1 ] || [ "$cont" -eq 0 ]; then
 
 			# Save in the data file
 			echo "$pid $commandName" >> $DCRAB_JOB_PROCESSES_FILE
@@ -846,6 +853,13 @@ dcrab_determine_main_process () {
 				DCRAB_CPU_DATA="$DCRAB_CPU_DATA $cpu,"
 	
 				DCRAB_CPU_UPDATES=$((DCRAB_CPU_UPDATES + 1))
+			fi
+			cont=$((cont+1))
+		else
+			echo "$commandName" | grep -q -E "$DCRAB_AVOID_COMMANDS"
+			if [ "$?" -ne 0 ]; then
+				# Save in the data file
+	                        echo "# $pid $commandName" >> $DCRAB_JOB_PROCESSES_FILE
 			fi
 		fi
 
@@ -862,9 +876,6 @@ dcrab_determine_main_process () {
 				echo "$DCRAB_MPI_CONTROL_PORT_MAIN_NODE" > $DCRAB_CONTROL_PORT_FILE
 	
 				DCRAB_MPI_CONTROL_WRITED=1
-				
-				echo "$pid" >> $DCRAB_MPI_PROCESSES_FILE	
-				
 			fi
 	
 			# Open MPI
@@ -884,27 +895,9 @@ dcrab_determine_main_process () {
 
 				DCRAB_MPI_CONTROL_WRITED=1
 				DCRAB_MPI_CONTROL_PORT_MAIN_NODE=""
-				
-				echo "$pid" >> $DCRAB_MPI_PROCESSES_FILE
 			fi
 		fi
-		
 	done
-
-	# If the file is empty is because all the processes generated are not still relevant (they are not greater than the threshold value).
-	# So we initialize it with a first value 
-	if [ ! -f $DCRAB_JOB_PROCESSES_FILE ]; then
-		eval $DCRAB_LOG_INFO "Initializing file $DCRAB_JOB_PROCESSES_FILE" 
-		echo "$DCRAB_FIRST_MAIN_PROCESS_PID $DCRAB_FIRST_MAIN_PROCESS_NAME" > $DCRAB_JOB_PROCESSES_FILE
-
-		if [ $DCRAB_INTERNAL_MODE -eq 0 ]; then
-			# CPU data
-			DCRAB_CPU_UPD_PROC_NAME[$DCRAB_CPU_UPDATES]=$commandName
-			DCRAB_CPU_DATA="$DCRAB_CPU_DATA $cpu,"
-	
-			DCRAB_CPU_UPDATES=$((DCRAB_CPU_UPDATES + 1))
-		fi
-	fi	
 
         DCRAB_M1_TIMESTAMP=`date +"%s"`
 	if [ $DCRAB_INTERNAL_MODE -eq 0 ]; then
@@ -992,23 +985,65 @@ dcrab_collect_data () {
 	DCRAB_TOTAL_PROCESSES=$(cat $DCRAB_USER_PROCESSES_FILE | wc -l)		
 
 	lastEmptyValue=0
+	DCRAB_PROMOTED_PIDs=""
 	i=1
 	# Check first old processes
 	for line in $(cat $DCRAB_JOB_PROCESSES_FILE)
 	do
-		pid=$(echo "$line" | awk '{print $1}')
-		commandName=$(echo "$line" | awk '{print $2}')
+	
+		# Decide if the processes is a relevant running process (flag=0), not relevant running process (when cpu < threshold; marked as a comment and with flag=1) 
+		# or a demoted process (flag=2 and marked as demoted in a comment)
+		flag=0
+		if [ "$(echo "$line" | awk '{print $1}')" == "#" ]; then
+			[ "$(echo "$line" | awk '{print $4}')" != "Demoted" ] && flag=1 || flag=2
+
+			pid=$(echo "$line" | awk '{print $2}')
+			commandName=$(echo "$line" | awk '{print $3}')
+		else
+			pid=$(echo "$line" | awk '{print $1}')
+			commandName=$(echo "$line" | awk '{print $2}')
+		fi	
+
+		# If the process is running 
 		auxLine=`cat $DCRAB_USER_PROCESSES_FILE | grep -n "$commandName" | awk '{if ($4 == '"$pid"'){print}}'`
 		if [ "$auxLine" != "" ]; then
                 	lineNumber=$(echo $auxLine | cut -d':' -f1)
-			cpu=$(echo "$auxLine" | awk '{print $5}')
-			sed -i "$lineNumber""d" $DCRAB_USER_PROCESSES_FILE
+			cpu=$(echo "$auxLine" | awk '{print $5}') 
+
+			# Promote to be a monitorized process if its cpu value 
+			if [ $(echo "$cpu > $DCRAB_CPU_THRESHOLD" | bc) -eq 1 ] && [ $flag -eq 1 ]; then
+				promoteDemoteCounter=$(echo $line | awk '{print $4}')
+				[ "$promoteDemoteCounter" == "" ] && promoteDemoteCounter=1 || promoteDemoteCounter=$((promoteDemoteCounter+1))
+				
+				if [ $promoteDemoteCounter -eq $DCRAB_PROMOTE_DEMOTE_NEEDED_COUNTER ]; then
+					DCRAB_PROMOTED_PIDs="$pid $DCRAB_PROMOTED_PIDs"
+					sed -i '/# '"$pid"' /d' $DCRAB_JOB_PROCESSES_FILE
+				else
+					sed -i 's|'"$pid"'.*|'"$pid $commandName $promoteDemoteCounter"'|' $DCRAB_JOB_PROCESSES_FILE
+					sed -i "$lineNumber""d" $DCRAB_USER_PROCESSES_FILE
+				fi
+			else 
+				sed -i "$lineNumber""d" $DCRAB_USER_PROCESSES_FILE
+			fi
 		else
 			lastEmptyValue=$i
 			cpu=" "
+			
+			# Demote to not be a monitorized process 
+			if [ $flag -eq 0 ]; then
+				promoteDemoteCounter=$(echo $line | awk '{print $3}')	
+				[ "$promoteDemoteCounter" == "" ] && promoteDemoteCounter=1 || promoteDemoteCounter=$((promoteDemoteCounter+1))
+				
+				if [ $promoteDemoteCounter -eq $DCRAB_PROMOTE_DEMOTE_NEEDED_COUNTER ]; then
+                                        sed -i 's|.*'"$pid"'.*|'"# $pid $commandName "'Demoted|' $DCRAB_JOB_PROCESSES_FILE
+                                else
+                                        sed -i 's|'"$pid"'.*|'"$pid $commandName $promoteDemoteCounter"'|' $DCRAB_JOB_PROCESSES_FILE
+                                fi
+			fi
+			
 		fi
 		
-		if [ $DCRAB_INTERNAL_MODE -eq 0 ]; then
+		if [ $DCRAB_INTERNAL_MODE -eq 0 ] && [ $flag -ne 1 ]; then
 			# CPU data
 			DCRAB_CPU_DATA="$DCRAB_CPU_DATA $cpu,"
 		fi			
@@ -1023,15 +1058,21 @@ dcrab_collect_data () {
 		pid=$(echo "$line" | awk '{print $3}')
 		cpu=$(echo "$line" | awk '{print $4}')
 		commandName=$(echo "$line" | awk '{print $5}')
-	
 		if [ $(echo "$cpu > $DCRAB_CPU_THRESHOLD" | bc) -eq 1 ]; then
-			sed -i '1s|^|'"$pid $commandName"'\n|' $DCRAB_JOB_PROCESSES_FILE
+			
+			echo $DCRAB_PROMOTED_PIDs | grep -q " $pid "
+			[ $? -eq 0 ] && sed -i '1s|^|'"$pid $commandName"' Promoted\n|' $DCRAB_JOB_PROCESSES_FILE || sed -i '1s|^|'"$pid $commandName"'\n|' $DCRAB_JOB_PROCESSES_FILE
 		
 			if [ $DCRAB_INTERNAL_MODE -eq 0 ]; then
 				# CPU data
 				DCRAB_CPU_UPD_PROC_NAME[$DCRAB_CPU_UPDATES]=$commandName
 				DCRAB_CPU_DATA=`echo $DCRAB_CPU_DATA | sed "s|^$DCRAB_DIFF_TIMESTAMP,|$DCRAB_DIFF_TIMESTAMP, $cpu,|"`
 				DCRAB_CPU_UPDATES=$((DCRAB_CPU_UPDATES + 1))
+			fi
+		else
+			echo "$commandName" | grep -q -E "$DCRAB_AVOID_COMMANDS"
+                        if [ "$?" -ne 0 ]; then
+				sed -i '1s|^|'"# $pid $commandName"'\n|' $DCRAB_JOB_PROCESSES_FILE
 			fi
 		fi
 
@@ -1043,7 +1084,7 @@ dcrab_collect_data () {
 			if [ "$?" -eq 0 ]; then
 			
 				# Check if is a new MPI job
-				cat $DCRAB_MPI_PROCESSES_FILE | grep -q "^${pid}$" 2> /dev/null
+				echo "$DCRAB_PROMOTED_PIDs" | grep -q " $pid "
 				if [ "$?" -ne 0 ]; then
 					DCRAB_NUMBER_OF_MPI_COMMANDS=$((DCRAB_NUMBER_OF_MPI_COMMANDS + 1))
 			                DCRAB_CONTROL_PORT_FILE="${DCRAB_CONTROL_PORT_FILE_PREFIX}${DCRAB_NUMBER_OF_MPI_COMMANDS}"
@@ -1052,8 +1093,6 @@ dcrab_collect_data () {
 					echo "$DCRAB_MPI_CONTROL_PORT_MAIN_NODE" > $DCRAB_CONTROL_PORT_FILE
 	
 					DCRAB_MPI_CONTROL_WRITED=1
-			
-					echo "$pid" >> $DCRAB_MPI_PROCESSES_FILE
 				fi
 			fi
 		
@@ -1062,7 +1101,7 @@ dcrab_collect_data () {
 	                if [ "$?" -eq 0 ]; then
 				
 				# Check if is a new MPI job
-                                cat $DCRAB_MPI_PROCESSES_FILE 2> /dev/null | grep -q "^${pid}$"
+				echo "$DCRAB_PROMOTED_PIDs" | grep -q " $pid "
                                 if [ "$?" -ne 0 ]; then
 					DCRAB_NUMBER_OF_MPI_COMMANDS=$((DCRAB_NUMBER_OF_MPI_COMMANDS + 1))
 		                	DCRAB_CONTROL_PORT_FILE="${DCRAB_CONTROL_PORT_FILE_PREFIX}${DCRAB_NUMBER_OF_MPI_COMMANDS}"
@@ -1078,8 +1117,6 @@ dcrab_collect_data () {
 	
 					DCRAB_MPI_CONTROL_WRITED=1
 					DCRAB_MPI_CONTROL_PORT_MAIN_NODE=""
-					
-					echo "$pid" >> $DCRAB_MPI_PROCESSES_FILE
 				fi
 	                fi
 		fi

@@ -29,7 +29,7 @@ source "$1"
 # To ensure the environment has been set up correctly 
 if [ "$DCRAB_WORKDIR" == "" ]; then
 	echo "$(date "+%Y-%m-%d %H:%M:%S") [JOB: $DCRAB_JOB_ID] ERROR: An error occurred while setting up the environmet sourcing $1 file"	
-	echo "$(date "+%Y-%m-%d %H:%M:%S") [JOB: $DCRAB_JOB_ID] ERROR: DCRAB stop \(3\)"
+	echo "$(date "+%Y-%m-%d %H:%M:%S") [JOB: $DCRAB_JOB_ID] ERROR: DCRAB stop (3)"
 	exit 3
 fi
 
