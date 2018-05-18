@@ -753,8 +753,8 @@ dcrab_wait_control_port () {
                 # Exit DCRAB if no control_port file was created  
                 if [ "$i" -eq "$DCRAB_NUMBERS_OF_LOOPS_CONTROL" ]; then
                 	eval $DCRAB_LOG_INFO "The process does not start"
-			eval $DCRAB_LOG_INFO "DCRAB stop \(3\)"
-                	exit 3
+			eval $DCRAB_LOG_INFO "DCRAB stop"
+                	exit 1
                 fi
 
                 # Wait if it is not the first loop

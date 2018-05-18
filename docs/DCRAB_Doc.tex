@@ -30,7 +30,7 @@
                    fill=green!30},
   level 2/.style = {basic, rounded corners=6pt, thin,align=center, fill=orange!30,
                    text width=10em},
-  level 3/.style = {basic, thin, align=left, fill=pink!60, text width=11em, align=center},
+  level 3/.style = {basic, thin, align=left, fill=pink!60, text width=12em, align=center},
 	level 4/.style = {basic, thin, align=left, fill=pink!60, text width=14.5em, align=center},
 	level 5/.style = {basic, thin, align=left, fill=pink!60, text width=6.5em, align=center}
 }
@@ -193,20 +193,9 @@ In DCRAB version 2.0 is not included yet any configuration file to customize the
 \label{crash}
 Update the reporting file continuosly imposed some troubles but it was one of our first goals. There is no much problem for the tool when the job crashes because the report has been generating until that moment, so it brings you such a great trace of what has been occurred and it may contain relevant information about the crash.
 
-On the other hand, the tool by itself throws errors when some situations occur and has different exit codes for each one:
+The tool exits with code '0' if everything have run normally and exits with code '1' in case of error. To see more information about the crash you can view the logs in /log directory.
 
-\begin{itemize}
-	\item EXIT CODE 0, the tool exited normally and without errors.
-	\item EXIT CODE 1, when \texttt{DCRAB\_PATH} is not defined.
-	\item EXIT CODE 2, when there is an error in the tool invocation (e.g. 'dcrab stat' and no 'dcrab start').
-	\item EXIT CODE 3, when the tool waited too much for the \texttt{control\_port.txt} file to be created.
-	\item EXIT CODE 4, when some of the compute nodes try to write so many times in the reporting file with no success.
-	\item EXIT CODE 5, when the reporting directory has been deleted or moved.
-	\item EXIT CODE 6, when \texttt{DCRAB\_USER\_PROCESSES\_FILE} can not be read.
-\end{itemize}
-
-In this cases, a file called \verb+DCRAB_ERROR_<computeNodeHostname>_<jobid>+ will be generated, per each compute node involved in the calculation, in the same folder as the reporting folder: where the job was submitted. The \verb+computeNodeHostname+ refers to the hostname of the compute node that throws the error and \verb+jobid+ is the job number assigned by the scheduler to the job.
-
+In the cases where the reporting directory has been deleted a file called \verb+DCRAB_ERROR_<computeNodeHostname>_<jobid>+ will be generated, per each compute node involved in the calculation, in the same folder as the reporting folder was (where the job was submitted). The \verb+computeNodeHostname+ refers to the hostname of the compute node that throws the error and \verb+jobid+ is the job number assigned by the scheduler to the job.
 
 \chapter{Design and Implementation}
 
@@ -259,27 +248,29 @@ This are the scripts that compose DCRAB. Here does not appear the internal repor
 
 \node [level 3, below of = c2, xshift=40pt, rounded corners=6pt, fill=orange!30, text width=15em] (c21) {dcrab\_node\_monitoring\_functions.sh};
 \node [level 4, below of = c21, xshift=20pt] (c211) {dcrab\_node\_monitor\_init\_variables};
-\node [level 4, below of = c211] (c212) {dcrab\_determine\_main\_process};
-\node [level 4, below of = c212] (c213) {dcrab\_collect\_data};
-\node [level 4, below of = c213, yshift=-35pt, fill=blue!20] (c214) {dcrab\_collect\_mem\_data \\ dcrab\_collect\_ib\_data \\ dcrab\_format\_time \\ dcrab\_collect\_processesIO\_data \\ dcrab\_collect\_nfs\_data \\ dcrab\_collect\_disk\_data \\ dcrab\_collect\_beegfs\_data };
+\node [level 4, below of = c211] (c212) {dcrab\_wait\_control\_port};
+\node [level 4, below of = c212] (c213) {dcrab\_determine\_main\_process};
+\node [level 4, below of = c213] (c214) {dcrab\_collect\_data};
+\node [level 4, below of = c214, yshift=-35pt, fill=blue!20] (c215) {dcrab\_collect\_mem\_data \\ dcrab\_collect\_ib\_data \\ dcrab\_format\_time \\ dcrab\_collect\_processesIO\_data \\ dcrab\_collect\_nfs\_data \\ dcrab\_collect\_disk\_data \\ dcrab\_collect\_beegfs\_data };
 
-\node [level 3, below of = c214, xshift=-20pt, yshift=-35pt, rounded corners=6pt, fill=orange!30, text width=15em] (c22) {dcrab\_report\_functions.sh};
+\node [level 3, below of = c215, xshift=-20pt, yshift=-35pt, rounded corners=6pt, fill=orange!30, text width=15em] (c22) {dcrab\_report\_functions.sh};
 \node [level 4, below of = c22, xshift=20pt] (c221) {dcrab\_wait\_and\_write};
 \node [level 4, below of = c221] (c222) {dcrab\_update\_report};
 \node [level 4, below of = c222] (c223) {dcrab\_generate\_html};
 
-\node [level 3, below of = c3, xshift=15pt] (c31) {dcrab\_check\_exit};
-\node [level 3, below of = c31] (c32) {dcrab\_finalize};
+\node [level 3, below of = c3, xshift=15pt] (c31) {dcrab\_check\_alive\_main\_node};
+\node [level 3, below of = c31] (c32) {dcrab\_check\_exit};
+\node [level 3, below of = c32] (c33) {dcrab\_finalize};
 
 \foreach \value in {1,...,5}
   \draw[-] (c1.185) |- (c1\value.west);
 \foreach \value in {1,2}
 	\draw[-] (c2.185) |- (c2\value.west);
-\foreach \value in {1,2,3,4}
+\foreach \value in {1,2,3,4,5}
 	\draw[-] (c21.185) |- (c21\value.west);
 \foreach \value in {1,2,3}
 	\draw[-] (c22.185) |- (c22\value.west);
-\foreach \value in {1,2}
+\foreach \value in {1,2,3}
 	\draw[-] (c3.185) |- (c3\value.west);
 \end{tikzpicture}
 \caption{DCRAB's code structure}
@@ -287,44 +278,52 @@ This are the scripts that compose DCRAB. Here does not appear the internal repor
 \end{figure}
 
 \begin{figure}[H]
-\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=8cm,
-                    semithick]
-  \tikzstyle{every state}=[draw=none,text=black]
+\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=0cm,semithick]
+  \tikzstyle{every state}=[draw=none,text=black,node distance=3cm]
 
-  \node[initial,state,draw,line width = 0.3mm] (A)              {$dcrab$};
-	\node[state, node distance=4cm, fill=blue!20] 				 (B) [below of=A] {$Config.$};
-  \node[state, fill=green!30]         (C) [right of=A] {$Monitor$};
-	\node[state, node distance=2cm, xshift=1cm, yshift=-2.5cm, fill=green!30]         (D) [below of=C] {$Monitor$};
-	\node[state, xshift=-4cm, yshift=2cm, fill=green!30]         (E) [below left of=D] {$Monitor$};
-	\node[state, fill=green!30, xshift=2cm]         (F) [below right of=E] {$Monitor$};
-	\node[state, draw, rectangle, minimum size=3.2em, line width = 0.3mm, xshift=-5.5cm, yshift=3.8cm, fill=red!30,  cm={cos(45) ,-sin(45) ,sin(45) ,cos(45) ,(0 cm,0 cm)}]         (G) [above right of=F] {};
-	\node[state, node distance=3cm,  fill=red!30]         (H) [right of=G] {$Finalize$};
+  \node[initial,state,draw,line width = 0.3mm] (A)             {$dcrab$};
+  \node[state, fill=blue!20,node distance=5cm] (B) [right of=A] {$Config.$};
+  \node[state, draw, rectangle, minimum size=3.5em, line width = 0.3mm, fill=red!30, cm={cos(45) ,-sin(45) ,sin(45) ,cos(45) ,(0 cm,0 cm)},xshift=3cm,yshift=0cm]         (Z) [below of=B] {};
 
-  \path (A) edge              node {} (B)
-        (B) edge 							node {} (C)
-				(C) edge 							node {} (D)
-				(D) edge [bend left]	node {} (E)
-				(E) edge 							node {} (F)
-				(F) edge 						  node [right] {dcrab\_check\_exit} (G)
-						edge [loop right] node {dcrab\_wait\_and\_write} (F)
-				(G) edge 							node {No} (D)
-				(G) edge 							node {Yes} (H);
-\node[yshift=-1.85cm, xshift=-1cm] (t1) {Executes};
 
-\filldraw[rounded corners=15pt, fill=blue!20, draw=black, node distance=0.4cm, yshift=-6.35cm, xshift=2cm] (0,0) rectangle (4.5,2.4);
-\node[yshift=-4.4cm, xshift=3.5cm] (t2)   {dcrab\_config.sh :};
-\node[node distance=0.4cm, xshift=0.6cm] (t3) [below of=t2] {dcrab\_init\_variables};
-\node[node distance=0.4cm, xshift=0.3cm] (t4) [below of=t3]  {dcrab\_create\_report\_file};
-\node[node distance=0.4cm, xshift=0.05cm, yshift=0.05cm] (t5) [below of=t4]  {dcrab\_save\_environment};
-\node[node distance=0.4cm, xshift=-0.15cm] (t6) [below of=t5]  {dcrab\_check\_scheduler};
-\draw [<-, rounded corners, thick, black, yshift=-5.3cm, xshift=1cm] (-0.5,0.5) -- (0.2,0) -- (1,0);
+  \node[state, fill=green!30,node distance=5cm]         (C) [left of=Z] {$Monitor$};
+  \node[state, fill=green!30,node distance=3cm,xshift=-2.9cm,yshift=-1cm]         (D) [below of=C] {$Monitor$};
+  \node[state, draw, rectangle,node distance=0cm, minimum size=3.2em, line width = 0.3mm, fill=red!30,  cm={cos(45) ,-sin(45) ,sin(45) ,cos(45) ,(0 cm,0 cm)},xshift=3.5cm,yshift=-1.5cm]         (V) [below of=D] {};
+  \node[state, fill=green!30,node distance=3cm,xshift=0cm,yshift=0cm]         (U) [right of=V] {$Monitor$};
+  \node[state, fill=green!30,node distance=0cm,xshift=1.5cm,yshift=-3cm]         (E) [below of=U] {$Monitor$};
+  \node[state, fill=green!30,node distance=4cm,xshift=2.5cm,yshift=2cm]         (F) [below of=E] {$Monitor$};
+  \node[state, draw, node distance=0cm, rectangle, minimum size=3.2em, line width = 0.3mm, fill=red!30,  cm={cos(45) ,-sin(45) ,sin(45) ,cos(45) ,(0 cm,0 cm)},xshift=2cm,yshift=-3cm]         (G) [below of=F] {};
+  \node[state, draw, rectangle, minimum size=3.2em, line width = 0.3mm, fill=red!30,  cm={cos(45) ,-sin(45) ,sin(45) ,cos(45) ,(0 cm,0 cm)},xshift=-6cm,yshift=-4cm]         (H) [above of=G] {};
+  \node[state, fill=green!0,yshift=0cm,xshift=-2cm]         (W) [below of=H] {$Exit$};
 
-\node[yshift=0cm, xshift=11.5cm] (t9)   {};
-\node[node distance=0.4cm, yshift=-1.4cm] (t10) [below of=t9] {dcrab\_node\_monitor\_init\_variables};
-\node[node distance=0.4cm, xshift=-0.275cm] (t11) [below of=t10]  {dcrab\_determine\_main\_process};
+  \node[state, fill=green!30,node distance=5cm]         (I) [right of=Z] {$Monitor$};
+  \node[state, fill=green!30,xshift=3cm,yshift=-1cm]         (J) [below of=I] {$Monitor$};
+  \node[state, fill=green!30,xshift=-3.3cm,yshift=-0cm]         (K) [below of=J] {$Monitor$};
+  \node[state, fill=green!30]         (L) [below of=K] {$Monitor$};
+  \node[state, draw, rectangle, minimum size=3.2em, line width = 0.3mm, fill=red!30, cm={cos(45) ,-sin(45) ,sin(45) ,cos(45) ,(0 cm,0 cm)},xshift=4.3cm,yshift=1cm]         (M) [below of=L] {};
+	\node[state, node distance=2cm,  fill=red!30]         (N) [below of=M] {$Finalize$};
 
-\filldraw[rounded corners=15pt, fill=green!30, draw=black, yshift=-15.4cm, xshift=-2.0cm] (0,0) rectangle (6,3.4);
-\node[yshift=-12.4cm, xshift=1cm] (t12)   {dcrab\_node\_monitoring\_functions.sh :};
+  \path (A) edge              node {1} (B)
+        (B) edge 							node [left] {dcrab\_start\_data\_collection} (Z)
+				(Z) edge 							node {} (C)
+            edge              node {== 0} (I)
+        (C) edge              node {} (D)
+        (D) edge              node {} (V)
+            edge [loop above] node {}  (D)
+        (E) edge              node {dcrab\_update\_report} (F)
+        (F) edge              node {dcrab\_check\_exit} (G)
+        (G) edge              node {} (H)
+        (H) edge [bend left]  node {} (D)
+        (I) edge              node {} (J)
+        (J) edge              node {} (K)
+        (K) edge              node {dcrab\_update\_report} (L)
+        (L) edge              node {14} (M)
+        (M) edge [bend right] node {No} (J)
+        (V) edge              node {No} (U)
+        (U) edge              node [right]{dcrab\_collect\_data} (E);
+
+\filldraw[rounded corners=15pt, fill=green!30, draw=black, yshift=-10.4cm, xshift=2.4cm] (0,0) rectangle (6,3.4);
+\node[yshift=-7.4cm, xshift=5.4cm] (t12)   {dcrab\_node\_monitoring\_functions.sh :};
 \node[node distance=0.4cm, xshift=-0.7cm] (t13) [below of=t12] {dcrab\_collect\_mem\_data};
 \node[node distance=0.4cm, xshift=-0.2cm] (t14) [below of=t13]  {dcrab\_collect\_ib\_data};
 \node[node distance=0.4cm, xshift=-0.17cm, yshift=0.05cm] (t15) [below of=t14]  {dcrab\_format\_time};
@@ -332,19 +331,42 @@ This are the scripts that compose DCRAB. Here does not appear the internal repor
 \node[node distance=0.4cm, xshift=-0.67cm, yshift=0.1cm] (t17) [below of=t16]  {dcrab\_collect\_nfs\_data};
 \node[node distance=0.4cm, xshift=0.1cm] (t18) [below of=t17]  {dcrab\_collect\_disk\_data};
 \node[node distance=0.4cm, xshift=0.15cm] (t19) [below of=t18]  {dcrab\_collect\_beegfs\_data};
-\draw [<-, rounded corners, thick, black, yshift=-11.9cm, xshift=0.8cm] (-1.3,2.75) -- (0,0);
-\node[node distance=0.4cm, yshift=-0.3cm,  xshift=0.5cm] (t20) [below of=t19]  {MODULES DATA COLLECTION};
+\draw [<-, dashed,rounded corners, thick, black, yshift=-10.3cm, xshift=9.7cm] (0,0) -- (0,1) -- (-1,1);
+\draw[->, dashed, yshift=-11.1cm, xshift=5cm] (0,0) .. controls (2,-3) .. (-1.1, -3.6);
+\node[node distance=0.4cm, yshift=-0.3cm, xshift=0.5cm] (t20) [below of=t19] {MODULES DATA COLLECTION};
 
-\filldraw[rounded corners=15pt, fill=red!20, draw=black, yshift=-8.4cm, xshift=9.7cm] (0,0) rectangle (5.3,1);
-\node[yshift=-7.7cm, xshift=11.3cm] (t21)   {dcrab\_finalize.sh :};
-\node[node distance=0.4cm, xshift=1.2cm] (t22) [below of=t21] {dcrab\_stop\_remote\_processes};
-\draw [->, rounded corners, thick, black, yshift=-8.5cm, xshift=12cm]  (0,0) -- (0.4, -0.6);
+\filldraw[rounded corners=15pt, fill=blue!20, draw=black, node distance=0.4cm, yshift=-2cm, xshift=7.5cm] (0,0) rectangle (4.5,2.4);
+\node[yshift=0cm, xshift=9cm] (t2)   {dcrab\_config.sh :};
+\node[node distance=0.4cm, xshift=0.6cm] (t3) [below of=t2] {dcrab\_init\_variables};
+\node[node distance=0.4cm, xshift=0.3cm] (t4) [below of=t3]  {dcrab\_create\_report\_file};
+\node[node distance=0.4cm, xshift=0.05cm, yshift=0.05cm] (t5) [below of=t4]  {dcrab\_save\_environment};
+\node[node distance=0.4cm, xshift=-0.15cm] (t6) [below of=t5]  {dcrab\_check\_scheduler};
+\draw [<-, dashed,rounded corners, thick, black, yshift=-1cm, xshift=6.3cm] (-0.5,0.5) -- (0.2,0) -- (1,0);
 
-\node[cm={cos(27) ,sin(27) ,-sin(27) ,cos(27) ,(0 cm,0 cm)}, yshift=-3.3cm, xshift=2.5cm] (t80) {dcrab\_start\_data\_collection};
-\node[cm={cos(27) ,sin(27) ,-sin(27) ,cos(27) ,(0 cm,0 cm)}, yshift=-9.7cm, xshift=1.5cm] (t81) {dcrab\_collect\_data (every 10s)};
-\node[cm={cos(37) ,-sin(37) ,sin(37) ,cos(37) ,(0 cm,0 cm)}, yshift=-6.5cm, xshift=9.5cm] (t82) {dcrab\_update\_report};
-\node[yshift=-10cm, xshift=9.5cm] (t83) {Exit};
-\node[yshift=-14.3cm, xshift=11.3cm] (t84) {(waiting until its turn reached)};
+\node[node distance=0.4cm, yshift=-6.2cm,xshift=1.5cm] (t10) {dcrab\_node\_monitor\_init\_variables};
+\node[node distance=0.4cm, xshift=-0.275cm] (t11) [below of=t10] {dcrab\_determine\_main\_process};
+\node[node distance=0.4cm, yshift=-3.95cm,xshift=5.0cm] (t40) {Node};
+\node[node distance=0.4cm] (t41) [below of=t40] {number};
+\node[node distance=0.4cm, yshift=-6cm,xshift=8.5cm] (t42) {dcrab\_node\_monitor\_init\_variables};
+\node[node distance=0.4cm, xshift=-0.275cm,xshift=0.5cm] (t43) [below of=t42] {dcrab\_determine\_main\_process};
+\node[node distance=0.4cm, yshift=-4cm, xshift=2.5cm] (t11) {!=0};
+\node[cm={cos(55) ,sin(55) ,-sin(55) ,cos(55) ,(0 cm,0 cm)},yshift=-1.2cm,xshift=-5cm] (t44)  {dcrab\_wait\_control\_port};
+\node[cm={cos(42) ,sin(42) ,-sin(42) ,cos(42) ,(0 cm,0 cm)},yshift=-15.1cm,xshift=1.9cm] (t46)  {dcrab\_collect\_data};
+\node[node distance=0.4cm, yshift=-14.8cm,xshift=-2.6cm] (t47) {No};
+\node[node distance=0.4cm, yshift=-13.9cm,xshift=-0.5cm] (t48) {which means that};
+\node[node distance=0.4cm] (t49) [below of=t48] {the main node is};
+\node[node distance=0.4cm] (t50) [below of=t49] {still running the};
+\node[node distance=0.4cm] (t51) [below of=t50] {job};
+\node[cm={cos(35) ,-sin(35) ,sin(35) ,cos(35) ,(0 cm,0 cm)},yshift=-13.6cm,xshift=12.65cm] (t51)  {dcrab\_check\_alive\_main\_node};
+\node[cm={cos(35) ,-sin(35) ,sin(35) ,cos(35) ,(0 cm,0 cm)},yshift=-14.2cm,xshift=12.65cm] (t52)  {(90 seconds of check)};
+\node[xshift=-0.275cm,yshift=-11.8cm,xshift=-1.2cm] (t53) {Exit};
+\node[xshift=-0.275cm,yshift=-20.3cm,xshift=5.1cm] (t54) {Exit};
+\node[xshift=-0.275cm,yshift=-16.8cm,xshift=0.15cm] (t55) {Exit};
+\node[xshift=-0.275cm,yshift=-18cm,xshift=10cm] (t56) {Exit3};
+
+\draw [-,xshift=-0.4cm, yshift=-15.3cm] (1,0) arc (-60:60:1cm);
+\draw [-,xshift=-1.5cm, yshift=-13.5cm,cm={cos(180) ,sin(180) ,-sin(180) ,cos(180) ,(0 cm,0 cm)}] (0,0) arc (-60:60:1cm);
+
 \end{tikzpicture}
 \caption{DCRAB's state machine}
 \label{dcrabCodeScheme}

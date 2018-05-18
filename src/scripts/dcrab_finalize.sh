@@ -50,8 +50,8 @@ dcrab_check_alive_main_node() {
 		                        counter=$nextCounter
 				else	
 					eval $DCRAB_LOG_ERROR "The file $DCRAB_ACTIVE_JOB_IN_MAIN_NODE_FILE does not exist"
-					eval $DCRAB_LOG_ERROR "DCRAB stop \(exit=5\)"
-					exit 5 
+					eval $DCRAB_LOG_ERROR "DCRAB stop"
+					exit 1 
 				fi
 		        done
 	
@@ -59,20 +59,20 @@ dcrab_check_alive_main_node() {
 	                # DCRAB will be stopped
 	                if [ $DCRAB_CHECK_NO_ALIVE_ATTEMPS -ge 3 ]; then
 	                        eval $DCRAB_LOG_ERROR "There is no processes in the main node"
-	                        eval $DCRAB_LOG_ERROR "DCRAB stop \(exit=3\)"
-	                        exit 3
+	                        eval $DCRAB_LOG_ERROR "DCRAB stop"
+	                        exit 1
 	                else
 	                        eval $DCRAB_LOG_INFO "The main node is still alive so we will wait more"
 	                fi
 	        else
 	                eval $DCRAB_LOG_ERROR "The file $DCRAB_ACTIVE_JOB_IN_MAIN_NODE_FILE can not be read and no control_port file was created"
-	                eval $DCRAB_LOG_ERROR "DCRAB stop \(exit=3\)"       
-	                exit 3
+	                eval $DCRAB_LOG_ERROR "DCRAB stop"       
+	                exit 1
 	        fi
 	else
 		eval $DCRAB_LOG_ERROR "There is no $DCRAB_WAIT_MPI_PROCESSES_FILE file so directory has been deleted or moved"
-                eval $DCRAB_LOG_ERROR "DCRAB stop \(exit=3\)"      
-                exit 3
+                eval $DCRAB_LOG_ERROR "DCRAB stop"      
+                exit 1
 	fi
 }
 
@@ -90,21 +90,21 @@ dcrab_check_exit () {
 		# To avoid block in the loop when the number of attemps is greater than a certain value 
 		if [ "$j" -ge "$DCRAB_LOOP_BEFORE_CRASH" ]; then
 			eval $DCRAB_LOG_ERROR "ERROR in $DCRAB_NODE_HOSTNAME: too many attemps to write in the main html report" >> $DCRAB_WORKDIR/DCRAB_ERROR_"$DCRAB_NODE_HOSTNAME"_"$DCRAB_JOB_ID"
-			eval $DCRAB_LOG_ERROR "DCRAB stop \(exit=4\)" >> $DCRAB_WORKDIR/DCRAB_ERROR_"$DCRAB_NODE_HOSTNAME"_"$DCRAB_JOB_ID"
-			exit 4 
+			eval $DCRAB_LOG_ERROR "DCRAB stop" >> $DCRAB_WORKDIR/DCRAB_ERROR_"$DCRAB_NODE_HOSTNAME"_"$DCRAB_JOB_ID"
+			exit 1 
 		# Finish if the report directory has been removed or moved
 		elif [ ! -d "$DCRAB_REPORT_DIR" ]; then
 			eval $DCRAB_LOG_ERROR "ERROR in $DCRAB_NODE_HOSTNAME: DCRAB directory has been deleted or moved" >> $DCRAB_WORKDIR/DCRAB_ERROR_"$DCRAB_NODE_HOSTNAME"_"$DCRAB_JOB_ID"
-			eval $DCRAB_LOG_ERROR "DCRAB stop \(exit=5\)" >> $DCRAB_WORKDIR/DCRAB_ERROR_"$DCRAB_NODE_HOSTNAME"_"$DCRAB_JOB_ID"
-			exit 5
+			eval $DCRAB_LOG_ERROR "DCRAB stop" >> $DCRAB_WORKDIR/DCRAB_ERROR_"$DCRAB_NODE_HOSTNAME"_"$DCRAB_JOB_ID"
+			exit 1
 		fi
 	;;
 	1)
 		# Finish if the report directory has been removed or moved
 		if [ ! -d "$DCRAB_REPORT_DIR" ] && [ $DCRAB_INTERNAL_MODE -eq 0 ]; then
 			eval $DCRAB_LOG_ERROR "ERROR in $DCRAB_NODE_HOSTNAME: DCRAB directory has been deleted or moved" >> $DCRAB_WORKDIR/DCRAB_ERROR_"$DCRAB_NODE_HOSTNAME"_"$DCRAB_JOB_ID"
-			eval $DCRAB_LOG_ERROR "DCRAB stop \(exit=5\)" >> $DCRAB_WORKDIR/DCRAB_ERROR_"$DCRAB_NODE_HOSTNAME"_"$DCRAB_JOB_ID"
-			exit 5
+			eval $DCRAB_LOG_ERROR "DCRAB stop" >> $DCRAB_WORKDIR/DCRAB_ERROR_"$DCRAB_NODE_HOSTNAME"_"$DCRAB_JOB_ID"
+			exit 1
 		fi
 
 		# Finish if all the processes in the current node and in the main node have finished
@@ -122,14 +122,14 @@ dcrab_check_exit () {
 					DCRAB_SLEEP_FOR_NEXT_MPI_JOB=1	
 				else	
 					eval $DCRAB_LOG_INFO "DCRAB terminated: all the processes of the job have finished"
-		                        eval $DCRAB_LOG_INFO "DCRAB stop \(exit=0\)"
+		                        eval $DCRAB_LOG_INFO "DCRAB stop"
 					exit 0
 				fi
                 	fi	
 		else
 			eval $DCRAB_LOG_ERROR "DCRAB terminated: the file $DCRAB_USER_PROCESSES_FILE can not be read"
-                        eval $DCRAB_LOG_ERROR "DCRAB stop \(exit=6\)" 
-                        exit 6	
+                        eval $DCRAB_LOG_ERROR "DCRAB stop" 
+                        exit 1	
 		fi
 	;;
 	esac
