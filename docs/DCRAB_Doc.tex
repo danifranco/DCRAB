@@ -278,29 +278,30 @@ This are the scripts that compose DCRAB. Here does not appear the internal repor
 \end{figure}
 
 \begin{figure}[H]
+
 \begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=0cm,semithick]
   \tikzstyle{every state}=[draw=none,text=black,node distance=3cm]
-
+  \hspace{-2cm}
+\vspace{-0.5cm}
   \node[initial,state,draw,line width = 0.3mm] (A)             {$dcrab$};
   \node[state, fill=blue!20,node distance=5cm] (B) [right of=A] {$Config.$};
-  \node[state, draw, rectangle, minimum size=3.5em, line width = 0.3mm, fill=orange!30, cm={cos(45) ,-sin(45) ,sin(45) ,cos(45) ,(0 cm,0 cm)},xshift=2.2cm,yshift=0.8cm]         (Z) [below of=B] {};
+  \node[state, rectangle, minimum size=3.5em, line width = 0.3mm, fill=orange!30, cm={cos(45) ,-sin(45) ,sin(45) ,cos(45) ,(0 cm,0 cm)},xshift=2.2cm,yshift=0.8cm]         (Z) [below of=B] {};
 
   \node[state, fill=green!30,node distance=5cm]         (C) [left of=Z] {$Monitor$};
   \node[state, fill=green!30,node distance=3cm,xshift=-1.5cm,yshift=-1cm]         (D) [below of=C] {$Monitor$};
-  \node[state, fill=green!30,node distance=3cm,xshift=2cm,yshift=-2.5cm]         (U) [below of=D] {$Monitor$};
-    \node[state, draw, rectangle,node distance=0cm, minimum size=3.2em, line width = 0.3mm, fill=orange!30,  cm={cos(45) ,-sin(45) ,sin(45) ,cos(45) ,(0 cm,0 cm)},xshift=4.2cm,yshift=4.2cm]         (V) [right of=D] {};
-
-  \node[state, fill=green!30,node distance=0cm,xshift=1.5cm,yshift=-3cm]         (E) [below of=U] {$Monitor$};
-  \node[state, fill=green!30,node distance=4cm,xshift=2.5cm,yshift=2cm]         (F) [below of=E] {$Monitor$};
-  \node[state, draw, node distance=0cm, rectangle, minimum size=3.2em, line width = 0.3mm, fill=orange!30,  cm={cos(45) ,-sin(45) ,sin(45) ,cos(45) ,(0 cm,0 cm)},xshift=2cm,yshift=-3cm]         (G) [below of=F] {};
-  \node[state, draw, rectangle, minimum size=3.2em, line width = 0.3mm, fill=orange!30,  cm={cos(45) ,-sin(45) ,sin(45) ,cos(45) ,(0 cm,0 cm)},xshift=-6cm,yshift=-4cm]         (H) [above of=G] {};
-  \node[state, fill=red!30,yshift=0cm,xshift=-2cm]         (W) [below of=H] {$Exit$};
+  \node[state, rectangle,node distance=0cm, minimum size=3.2em, line width = 0.3mm, fill=orange!30,  cm={cos(45) ,-sin(45) ,sin(45) ,cos(45) ,(0 cm,0 cm)},xshift=4.2cm,yshift=4.2cm]         (V) [right of=D] {};
+  \node[state, fill=green!30,node distance=3cm,xshift=0.5cm,yshift=-2cm]         (U) [below of=D] {$Monitor$};
+  \node[state, fill=green!30,node distance=0cm,xshift=3cm,yshift=-3.5cm]         (E) [below of=U] {$Monitor$};
+  \node[state, fill=green!30,node distance=4cm,xshift=3.5cm,yshift=2.5cm]         (F) [below of=E] {$Monitor$};
+  \node[state, node distance=0cm, rectangle, minimum size=4.6em, line width = 0.3mm, fill=orange!30,  cm={cos(45) ,-sin(45) ,sin(45) ,cos(45) ,(0 cm,0 cm)},xshift=2cm,yshift=-2cm]         (G) [below of=F] {};
+  \node[state, rectangle, minimum size=3.2em, line width = 0.3mm, fill=orange!30,  cm={cos(45) ,-sin(45) ,sin(45) ,cos(45) ,(0 cm,0 cm)},xshift=-5cm,yshift=-8cm]         (H) [above of=G] {};
+  \node[state, fill=red!30,yshift=1cm,xshift=13cm]         (W) [below of=H] {$Exit$};
   \node[state, fill=red!30,yshift=-10cm,xshift=6cm]         (T) {$Exit$};
   \node[state, fill=green!30,node distance=5cm]         (I) [right of=Z] {$Monitor$};
   \node[state, fill=green!30,xshift=3cm,yshift=-1cm]         (J) [below of=I] {$Monitor$};
   \node[state, fill=green!30,xshift=-6cm,yshift=3cm]         (K) [below of=J] {$Monitor$};
   \node[state, fill=green!30,xshift=4cm]         (L) [below of=K] {$Monitor$};
-  \node[state, draw, rectangle, minimum size=3.2em, line width = 0.3mm, fill=orange!30, cm={cos(45) ,-sin(45) ,sin(45) ,cos(45) ,(0 cm,0 cm)},xshift=4.3cm,yshift=1cm]         (M) [below of=L] {};
+  \node[state, rectangle, minimum size=3.2em, line width = 0.3mm, fill=orange!30, cm={cos(45) ,-sin(45) ,sin(45) ,cos(45) ,(0 cm,0 cm)},xshift=4.3cm,yshift=1cm]         (M) [below of=L] {};
 	\node[state, node distance=2.5cm,  fill=red!30,xshift=-2cm,yshift=0cm]         (N) [below of=M] {$Finalize$};
 
   \path (A) edge              node {Executes} (B)
@@ -313,10 +314,11 @@ This are the scripts that compose DCRAB. Here does not appear the internal repor
             edge              node {} (U)
         (E) edge              node {dcrab\_update\_report} (F)
         (F) edge              node {dcrab\_check\_exit} (G)
-        (G) edge              node {} (H)
-            edge              node [above]{Yes} (W)
+        (G) edge              node [above]{} (H)
+            edge              node [below]{Error} (W)
+            edge [bend left]  node [left]{!= 0} (U)
         (H) edge [bend left]  node [right] {No} (D)
-            edge [bend right] node {Yes} (W)
+            %edge [bend right]  node [below] {Yes} (W)
         (I) edge              node {} (J)
         (J) edge              node {} (K)
         (K) edge              node [right] {dcrab\_update\_report} (L)
@@ -325,19 +327,24 @@ This are the scripts that compose DCRAB. Here does not appear the internal repor
             edge              node {Yes} (N)
         (V) edge [bend left]  node [above] {No} (D)
             edge [bend right] node  {Yes} (T)
-        (U) edge              node [left] {dcrab\_collect\_data} (E);
+        (U) edge              node  {} (E);
+
+% PATH between G and U
+%\path [black,bend left,out=-60,in=-150] (H) edge (W);
+\draw [->, rounded corners, thick, black, yshift=-20.7cm, xshift=-1.6cm] (0,0) -- (6.4,-1.5) -- (12.4,-1.3);
+\node[yshift=-21.8cm,xshift=5cm] (te1) {Yes};
 
 % Modules box
 \filldraw[rounded corners=15pt, fill=green!30, draw=black, yshift=-14.5cm, xshift=3cm] (0,0) rectangle (6,3.4);
 \node[yshift=-11.5cm, xshift=6cm] (t12)   {dcrab\_node\_monitoring\_functions.sh :};
 \node[node distance=0.4cm, xshift=-0.7cm] (t13) [below of=t12] {dcrab\_collect\_mem\_data};
 \node[node distance=0.4cm, xshift=-0.2cm] (t14) [below of=t13]  {dcrab\_collect\_ib\_data};
-\node[node distance=0.4cm, xshift=-0.17cm, yshift=0.05cm] (t15) [below of=t14]  {dcrab\_format\_time};
-\node[node distance=0.4cm, xshift=0.95cm] (t16) [below of=t15]  {dcrab\_collect\_processesIO\_data};
+\node[node distance=0.4cm, xshift=1.15cm, yshift=0.05cm] (t15) [below of=t14]  {dcrab\_format\_time(only main node)};
+\node[node distance=0.4cm, xshift=-0.38cm, yshift=0.05cm] (t16) [below of=t15]  {dcrab\_collect\_processesIO\_data};
 \node[node distance=0.4cm, xshift=-0.67cm, yshift=0.1cm] (t17) [below of=t16]  {dcrab\_collect\_nfs\_data};
 \node[node distance=0.4cm, xshift=0.1cm] (t18) [below of=t17]  {dcrab\_collect\_disk\_data};
 \node[node distance=0.4cm, xshift=0.15cm] (t19) [below of=t18]  {dcrab\_collect\_beegfs\_data};
-\draw [->, dashed,rounded corners, thick, black, yshift=-11.8cm, xshift=9.6cm] (-0.5,0.2) -- (0.75,1.2);
+\draw[->, dashed,rounded corners, thick, black, yshift=-11cm, xshift=8cm] (0,0) -- (0.4,1.2) -- (-0.5,3);
 \draw[<-, dashed, yshift=-14.7cm, xshift=4.5cm]  (-1.6, -0.7) -- (0.1,0.1);
 
 % Config box
@@ -361,19 +368,23 @@ This are the scripts that compose DCRAB. Here does not appear the internal repor
 \node[node distance=0.4cm, xshift=-0.275cm,xshift=0.5cm] (t43) [below of=t42] {dcrab\_determine\_main\_process};
 
 % Second state message (!=0 nodes)
-\node[yshift=-10cm,xshift=1.1cm] (t51)  {MPI process starts};
+\node[yshift=-9.7cm,xshift=0.4cm] (t51)  {MPI process starts};
 
 % Other messages
-\node[yshift=-6.5cm,xshift=1.5cm] (t45)  {Too much wait};
+\node[yshift=-6.5cm,xshift=1.5cm] (t45) {Too much wait};
 \node[node distance=0.4cm] (t451) [below of=t45] {dcrab\_check\_alive\_main\_node};
 \node[cm={cos(55) ,sin(55) ,-sin(55) ,cos(55) ,(0 cm,0 cm)},yshift=-1.2cm,xshift=-5.5cm] (t44)  {dcrab\_wait\_control\_port};
 \node[yshift=-6.9cm,xshift=9.8cm] (t46)  {dcrab\_collect\_data};
-\node[cm={cos(35) ,-sin(35) ,sin(35) ,cos(35) ,(0 cm,0 cm)},yshift=-14.9cm,xshift=12.1cm] (t51)  {dcrab\_check\_alive\_main\_node};
-\node[cm={cos(35) ,-sin(35) ,sin(35) ,cos(35) ,(0 cm,0 cm)},node distance=0.4cm] [below of=t51] (t52)  {(90 seconds of check)};
+\node[cm={cos(50) ,-sin(50) ,sin(50) ,cos(50) ,(0 cm,0 cm)},yshift=-8.3cm,xshift=10.9cm] (t47)  {dcrab\_collect\_data};
+\node[yshift=-20.15cm,xshift=2cm] (t51) {dcrab\_check\_alive\_main\_node};
+\node[node distance=0.4cm] [below of=t51] (t52)  {(90 seconds of check)};
+\node[node distance=0.4cm] [above of=t51] (t53) {== 0};
 
 % All the exit messages
-\node[xshift=-0.275cm,yshift=-17.6cm,xshift=-0.9cm] (t53) {Exit};
-\node[xshift=-0.275cm,yshift=-21.15cm,xshift=4.05cm] (t55) {Exit};
+\node[xshift=-0.275cm,yshift=-20cm,xshift=-1.3cm] (t53) {Exit};
+\node[xshift=-0.275cm,yshift=-19.5cm,xshift=5.8cm] (t55) {Number};
+\node[node distance=0.4cm] [below of=t55] (t551) {of};
+\node[node distance=0.4cm] [below of=t551] (t552) {processes};
 \node[xshift=-0.275cm,yshift=-14.6cm,xshift=12.9cm] (t56) {Exit};
 \node[xshift=-0.275cm,yshift=-7.1cm,xshift=4.7cm] (t57) {Exit};
 
@@ -383,7 +394,22 @@ This are the scripts that compose DCRAB. Here does not appear the internal repor
 \node[node distance=0.4cm, xshift=1.2cm] (t22) [below of=t21] {dcrab\_stop\_remote\_processes};
 \draw [->,dashed, rounded corners, thick, black, yshift=-19.3cm, xshift=10.5cm] (0,0) -- (0.15, 1.35);
 
+% Number of nodes
+\node[yshift=0.6cm,xshift=5cm] (t70)  {0};
+\node[yshift=-2.5cm,xshift=0cm] (t71)  {1};
+\node[yshift=-6.5cm,xshift=-1.5cm] (t72)  {2};
+\node[yshift=-11.5cm,xshift=-1.05cm] (t73)  {3};
+\node[yshift=-15cm,xshift=2cm] (t74)  {4};
+\node[yshift=-16.5cm,xshift=5.5cm] (t75)  {5};
+\node[yshift=-9.6cm,xshift=6.0cm] (t76)  {6};
+\node[yshift=-21.55cm,xshift=11.45cm] (t76)  {6};
+\node[yshift=-2.5cm,xshift=10cm] (t77)  {7};
+\node[yshift=-6.5cm,xshift=13cm] (t78)  {8};
+\node[yshift=-6.5cm,xshift=7cm] (t79)  {9};
+\node[yshift=-9.5cm,xshift=11cm] (t80)  {10};
+\node[yshift=-16.4cm,xshift=10.6cm] (t80)  {11};
 \end{tikzpicture}
+\vspace{-0.9cm}
 \caption{DCRAB's state machine}
 \label{dcrabCodeScheme}
 \end{figure}
@@ -392,14 +418,34 @@ Above, in the figure \ref{dcrabCodeScheme}, is presented a bit modificated state
 
 \begin{itemize}
   \item The first node, which is named as \verb+dcrab+, represents the script executed with \verb+dcrab start+ command.
-  \item The second node \verb+Config.+ represents the configuration made by the tool where different functions are executed (attached box in blue color). It starts in each node the data collection but here the execution differs between the main node one (where the node number is equal 0, represented as '== 0') and the other nodes that are not the main node (where node number is not equal 0, '!= 0' way).
-  \item The next node \verb+Monitor+ is the first of four states that represent the process started in background on the compute nodes. This first node initialize some variables to execute correctly the data collection and creates the minimal environment to work. Among other things it will find the main process of the job which is and will be the parent of all the processes started by the job on that compute node. The tool take advantage of the scheduler used to identify that main process.
-  \item The next \verb+Monitor+ node represents the moment where the update function will be executed to go to the next step. This node is the first node of the main loop made by the tool until the job finishes or crashes.
-  \item This fiveth node starts with the update function and represents the data collection of every module implemented. In its box attached are written the names of the functions in charge of it. It prepares the data that will be written to go to the next step.
-  \item In this last \verb+Monitor+ state, where the data will has been collected and prepared to write, a wait will be done until the write turn of the node reaches. For that purpose a mark have been inserted in the first line of the report to ensure any of the nodes writes until the last node updates have been made correctly. Normally the nodes do not wait more than a second to write into the report.
+  \item The second node, named as \verb+Config.+ and with the number 0, represents the configuration made by the tool where different functions are executed (attached box in blue color). It starts in each node the data collection but here the execution differs between the main node (where the node number is equal 0, represented as "== 0") and the other nodes that are not the main node (where node number is not equal 0, "!= 0" way).
+  \item The sixth nodes were made to represent the stop of DCRAB an will be ommited in below explanations.
+  \item \underline{Left part, no main node execution, when the node number is non-zero (!=0): }
+  \begin{itemize}
+    \item The first of the five states that compose the monitorization, which is marked as 1, is the first vertex to analize. These \verb+Monitor+ nodes represent DCRAB process started in background in each compute nodes. The edge with the next vertex represents the initialization of needed variables to make correctly the data collection and creates the minimal environment to work. Furthermore, it will find the session of the processes created by the job (the tool takes advantage of the scheduler used to identify it).
+    \item This second \verb+Monitor+ node, marked with the number 2, is where the tool is ready to collect the data. This vertex is the first that represents tool's execution because the steps done before were just to intializate data structures.
 
-  On the other hand, in this state it checks the exit of the tools in some scenarios as described in the section \ref{crash}. If the conditions are satisfied it goes to the final state and if not it returns to the second \verb+Monitor+ state where another data collection will be done in the next \verb+DCRAB_COLLECT_TIME+ seconds.
-  \item The last node, called \verb+Finalize+, is reached when some conditions are satisfied as described in \ref{crash} section. Here DCRAB finishes and is going to kill all DCRAB instances inside the compute nodes (those processes launched in background).
+    The first step to explain here is the loop in its left side, which executes the function \texttt{dcrab\_wait\_control\_port()}, and represents the wait that the node must be done until an MPI job is started and the execution passes to the next vertex. On the right part there is drawn a loop with a condition: after a long wait for a MPI job to be started the tool makes a check to determine if the main node is still executing the job or not (made in 90 seconds to ensure its state). If it is not still executing the job the tool will stop the execution and in the other case, where the condition is satisfied, the tool will reset its counters and will wait again for the MPI job. This steps are made because a user could insert other no MPI launcher commands (as huge copies with \verb+cp+) inside the 'start' and 'finish' statements of DCRAB that may last for a long time.
+
+    \item The next \verb+Monitor+ vertex with number 3 represents the state where the tool knows that an MPI process has been started. It has got the session of that MPI processes in the previous step so now it will collect the data related to these processes and move to the next step.
+    \item The fourth state represents the data collection. Here all the modules functions are executed and the data is extracted in the way this functions determine. Once this step is done the report is updated and moves down to the next vertex.
+    \item This last node, the fifth one, represents the state where the tool has collected and has written the data into the report. Here a few checks are made to ensure the correct behaviour of the tool.
+
+    An important comprobation is made to count the number of MPI processes related to the job that are in execution. If an error occurred in that comprobation the tool will stop.
+
+    The edge marked as "!= 0" is satisfied if there are still MPI processes in execution. It goes back to the third state to make the loop again after a certain sleep, which \verb+DCRAB_COLLECT_TIME+ variable control.
+
+    The last case, marked as "== 0", means that all MPI processes have been finished. Here will be done another time the comprobation to check if the main node is still executing the job (normally this takes like 90 seconds) with the \texttt{dcrab\_check\_alive\_main\_node()} function. In that comprobation if the main node has already finished the tool will stop but in the other case, the tool will go back to the second step, and will wait until a new MPI job comes.
+  \end{itemize}
+
+  \item \underline{Right part, main node execution, when the node number is equal zero (==0): }
+  \begin{itemize}
+    \item The first vertex, marked with the number 7, is drawn to represent the same steps as the first vertex but in this case another data structures will be initialized. This is because the main node must make some other operations in the moment of upgrading the report.
+    \item The second node, marked with the 8 number, represents the state where all the initializations have been made. It goes to the next node making the data collection.
+    \item The ninth node is were all the data is collected. As the main node, in this step it makes some extra operations inside the modules' functions in charge of collect this data and also has the resposability of updating the elapsed time inside the report, which is made by the \texttt{dcrab\_format\_time()} function. Finally, it goes towards the next vertex making the report updating.
+    \item The node number 10 is drawn to represent the state where the main node has made all its changes in the report. Here it checks if the tool must be stopped or not. If the conditions are satisfied the tool will go to the last node \verb+Finalize+, if not, another loop will be done going back to the eighth state.
+    \item The last node, called \verb+Finalize+, is reached when some conditions are satisfied as mentioned. Here DCRAB finishes and is going to kill all DCRAB instances inside the compute nodes (those processes launched in background).
+  \end{itemize}
 \end{itemize}
 
 \chapter{Creating New Module}
@@ -580,6 +626,76 @@ mpirun -np 24 pw.x < ausurf.in >& OUT
 dcrab ifinish
 \end{verbatim}
 \end{multicols}
+
+\chapter{Examples}
+
+\begin{verbatim}
+#!/bin/bash
+#PBS -q parallel
+#PBS -l nodes=2:ppn=24
+#PBS -l mem=180gb
+#PBS -l cput=760:00:00
+#PBS -N Heusler_AgMnSn_64pts
+
+export DCRAB_PATH=/scratch/user/DCRAB/src/
+export PATH=$PATH:$DCRAB_PATH
+dcrab start
+
+cd $PBS_O_WORKDIR
+
+module load SIESTA/4.1-b3-foss-2017b
+
+export NPROCS=`wc -l < $PBS_NODEFILE`
+
+mpirun -np $NPROCS --map-by ppr:24:node siesta  AgMnSn.fdf >& OUTPUT
+
+sleep 200
+
+mpirun -np $NPROCS --map-by ppr:24:node siesta  AgMnSn.fdf >& OUTPUT2
+
+sleep 200
+
+mpirun -np $NPROCS --map-by ppr:24:node siesta  AgMnSn.fdf >& OUTPUT3
+
+sleep 200
+
+dcrab finish
+\end{verbatim}
+
+\pagebreak
+
+\begin{verbatim}
+#!/bin/bash
+#PBS -q parallel
+#PBS -l nodes=1:ppn=24:mediumsize
+#PBS -l mem=192gb
+#PBS -l cput=1000:00:00
+#PBS -N JOB_NAME
+
+export DCRAB_PATH=/scratch/user/DCRAB/src/
+export PATH=$PATH:$DCRAB_PATH
+dcrab start
+
+export LSCRATCH_DIR=/lscratch/$USER/jobs/$PBS_JOBID
+
+mkdir -p $LSCRATCH_DIR
+cd $PBS_O_WORKDIR
+cp -r * $LSCRATCH_DIR
+cd $LSCRATCH_DIR
+
+module load program/version
+
+export NPROCS=`wc -l < $PBS_NODEFILE`
+
+mpirun -np $NPROCS program >& OUTPUT_FILE
+
+export RESULTS_DIR=$PBS_O_WORKDIR/RESULTS
+mkdir -p $RESULTS_DIR
+cp -r * $RESULTS_DIR
+rm -rf $LSCRATCH_DIR
+
+dcrab finish
+\end{verbatim}
 
 
 \end{document}
