@@ -143,9 +143,9 @@ This will create a directory called \verb+DCRAB-2.0+ with some subdirectories:
 \begin{itemize}
   \item \verb+/auxFiles+ which is used to store the auxiliary files useful for the internal operation mode of the tool as described in \ref{internalReport} section.
   \item \verb+/config+ folder which only contains a folder to store the current version of the tool.
-  \item \verb+/docs+ which contains this documentation and the \verb+.tex+ used to generate.
+  \item \verb+/docs+ which contains this documentation and the \verb+.tex+ used to generate it.
   \item \verb+/examples+ is used to stored DCRAB's generated report examples of each version since it was created.
-  \item \verb+/src+ folder contains the source files of the tool. Inside you will find \verb+dcrab+ script, which is the script that launches DCRAB and a folder called \verb+/script+ that contains the other scripts used by the tool to work.
+  \item \verb+/src+ folder contains the source files of the tool. Inside you will find \verb+dcrab+ script, which is the script that launches DCRAB and a folder called \verb+/script+ that contains other scripts used by the tool to work.
 \end{itemize}
 
 Also you will find the \verb+readme.md+ file and the GNU GPL 3.0 license file \verb+COPYING+.
@@ -222,9 +222,7 @@ DCRAB collects different statistics and information which may be usefull for the
 
 \section{Code Structure}
 
-This are the scripts that compose DCRAB. Here does not appear the internal report operation scripts, which are dcrab\_internal\_report\_generation.sh and dcrab\_internal\_report\_functions.sh, because will be explained in \ref{internalReportChapter} chapter.
-
-\vspace*{1.5 cm}
+This are the scripts that compose DCRAB. Here does not appear the internal report operation scripts, which are dcrab\_internal\_report\_generation.sh and dcrab\_internal\_report\_functions.sh, because they do nothing in the normal operation mode and will be explained in \ref{internalReportChapter} chapter.
 
 \begin{figure}[H]
 \begin{tikzpicture}[
@@ -418,31 +416,33 @@ Above, in the figure \ref{dcrabCodeScheme}, is presented a bit modificated state
 
 \begin{itemize}
   \item The first node, which is named as \verb+dcrab+, represents the script executed with \verb+dcrab start+ command.
-  \item The second node, named as \verb+Config.+ and with the number 0, represents the configuration made by the tool where different functions are executed (attached box in blue color). It starts in each node the data collection but here the execution differs between the main node (where the node number is equal 0, represented as "== 0") and the other nodes that are not the main node (where node number is not equal 0, "!= 0" way).
+  \item The second node, named as \verb+Config.+ and with the number 0, represents the configuration made by the tool where different functions are executed (attached box in blue color). It starts in each node the data collection but here the execution differs between the main node (where the node number is equal 0, represented as \verb+==0+) and the other nodes that are not the main node (where node number is not equal 0, \verb+!=0+ way).
   \item The sixth nodes were made to represent the stop of DCRAB an will be ommited in below explanations.
-  \item \underline{Left part, no main node execution, when the node number is non-zero (!=0): }
+  \item \underline{Left part, no main node execution, when the node number is non-zero:}
   \begin{itemize}
-    \item The first of the five states that compose the monitorization, which is marked as 1, is the first vertex to analize. These \verb+Monitor+ nodes represent DCRAB process started in background in each compute nodes. The edge with the next vertex represents the initialization of needed variables to make correctly the data collection and creates the minimal environment to work. Furthermore, it will find the session of the processes created by the job (the tool takes advantage of the scheduler used to identify it).
+    \item The first of the five states that compose the monitorization, which is marked as 1, is the first vertex to analize. These \verb+Monitor+ nodes represent DCRAB processes started in background in each compute nodes. The edge with the next vertex represents the initialization of needed variables to make correctly the data collection and creates the minimal environment to work. Furthermore, it will find the session of the processes created by the job (the tool takes advantage of the scheduler used to identify it).
     \item This second \verb+Monitor+ node, marked with the number 2, is where the tool is ready to collect the data. This vertex is the first that represents tool's execution because the steps done before were just to intializate data structures.
 
-    The first step to explain here is the loop in its left side, which executes the function \texttt{dcrab\_wait\_control\_port()}, and represents the wait that the node must be done until an MPI job is started and the execution passes to the next vertex. On the right part there is drawn a loop with a condition: after a long wait for a MPI job to be started the tool makes a check to determine if the main node is still executing the job or not (made in 90 seconds to ensure its state). If it is not still executing the job the tool will stop the execution and in the other case, where the condition is satisfied, the tool will reset its counters and will wait again for the MPI job. This steps are made because a user could insert other no MPI launcher commands (as huge copies with \verb+cp+) inside the 'start' and 'finish' statements of DCRAB that may last for a long time.
+    The first step to explain here is the loop in its left side, which executes the function \texttt{dcrab\_wait\_control\_port()}, and represents the wait that the node must done until a MPI job is started and the execution passes to the next vertex
 
-    \item The next \verb+Monitor+ vertex with number 3 represents the state where the tool knows that an MPI process has been started. It has got the session of that MPI processes in the previous step so now it will collect the data related to these processes and move to the next step.
+   On the right part there is drawn a loop with a condition: after a long wait for a MPI job to be started the tool checks if the main node is still executing the job or not (which takes normally about 90 seconds to ensure its state). If it is not still executing the job the tool will stop the execution but in the other case, where the condition is satisfied, the tool will reset its counters and will wait again for the MPI job. This steps are made because a user could insert other no MPI launcher commands inside the 'start' and 'finish' statements of DCRAB that may last for a long time, as huge copies with \verb+cp+ for example.
+
+    \item The next \verb+Monitor+ vertex with number 3 represents the state where the tool knows that a MPI process has been started. It has obtained the session of that MPI processes in the previous step so now it will collect the data related to these processes and move to the next step.
     \item The fourth state represents the data collection. Here all the modules functions are executed and the data is extracted in the way this functions determine. Once this step is done the report is updated and moves down to the next vertex.
     \item This last node, the fifth one, represents the state where the tool has collected and has written the data into the report. Here a few checks are made to ensure the correct behaviour of the tool.
 
     An important comprobation is made to count the number of MPI processes related to the job that are in execution. If an error occurred in that comprobation the tool will stop.
 
-    The edge marked as "!= 0" is satisfied if there are still MPI processes in execution. It goes back to the third state to make the loop again after a certain sleep, which \verb+DCRAB_COLLECT_TIME+ variable control.
+    The edge marked as \verb+!=0+ is satisfied if there are still MPI processes in execution. It goes back to the third state to make the loop again after a certain sleep (controlled by \verb+DCRAB_COLLECT_TIME+ variable).
 
-    The last case, marked as "== 0", means that all MPI processes have been finished. Here will be done another time the comprobation to check if the main node is still executing the job (normally this takes like 90 seconds) with the \texttt{dcrab\_check\_alive\_main\_node()} function. In that comprobation if the main node has already finished the tool will stop but in the other case, the tool will go back to the second step, and will wait until a new MPI job comes.
+    The last case, marked as \verb+==0+, means that all MPI processes have been finished. Here will be done another time the comprobation to check if the main node is still executing the job (normally this takes like 90 seconds) with \texttt{dcrab\_check\_alive\_main\_node()} function. In that comprobation if the main node has already finished the tool will stop but in the other case, the tool will go back to the second step, and will wait until a new MPI job comes.
   \end{itemize}
 
-  \item \underline{Right part, main node execution, when the node number is equal zero (==0): }
+  \item \underline{Right part, main node execution, when the node number is equal zero:}
   \begin{itemize}
-    \item The first vertex, marked with the number 7, is drawn to represent the same steps as the first vertex but in this case another data structures will be initialized. This is because the main node must make some other operations in the moment of upgrading the report.
+    \item The first vertex, marked with the number 7, is drawn to represent the same steps as the vertex number one, but in this case another data structures will be initialized. This is because the main node must make some other operations in the moment of upgrading the report.
     \item The second node, marked with the 8 number, represents the state where all the initializations have been made. It goes to the next node making the data collection.
-    \item The ninth node is were all the data is collected. As the main node, in this step it makes some extra operations inside the modules' functions in charge of collect this data and also has the resposability of updating the elapsed time inside the report, which is made by the \texttt{dcrab\_format\_time()} function. Finally, it goes towards the next vertex making the report updating.
+    \item The ninth node is were all the data is collected. As the main node, in this step it makes some extra operations inside the modules' functions and also has the resposability of updating the elapsed time inside the report, which is made by the \texttt{dcrab\_format\_time()} function. Finally, it goes towards the next vertex making the report updating.
     \item The node number 10 is drawn to represent the state where the main node has made all its changes in the report. Here it checks if the tool must be stopped or not. If the conditions are satisfied the tool will go to the last node \verb+Finalize+, if not, another loop will be done going back to the eighth state.
     \item The last node, called \verb+Finalize+, is reached when some conditions are satisfied as mentioned. Here DCRAB finishes and is going to kill all DCRAB instances inside the compute nodes (those processes launched in background).
   \end{itemize}
