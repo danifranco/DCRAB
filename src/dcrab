@@ -96,7 +96,7 @@ case "$1" in
 	;;
 	*)
 		echo "DCRAB report help"
-		echo "Developed by DIPC Fundation, CC-staff"
+		echo "Developed by DIPC Foundation, CC-staff"
 		echo ""
 		echo $"Usage: $0 {start|finish|version}"
 		echo ""

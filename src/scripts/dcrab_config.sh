@@ -86,6 +86,11 @@ dcrab_check_scheduler () {
 		DCRAB_REQ_MEM=0
 		DCRAB_REQ_CPUT=0
 		DCRAB_REQ_PPN=0
+
+		# Until no scheduler job support is implemented -> exit
+                echo "$(date "+%Y-%m-%d %H:%M:%S") [JOB: $DCRAB_JOB_ID] INFO: No scheduler detected" 
+                echo "$(date "+%Y-%m-%d %H:%M:%S") [JOB: $DCRAB_JOB_ID] INFO: DCRAB stop"
+                exit 1
 	fi
 }
 
