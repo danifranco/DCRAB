@@ -6,7 +6,7 @@
 #
 # ===============================================================================================================
 #
-# This script contains the necessary functions for the monitorization in the nodes
+# This script contains the necessary functions for the nodes monitoring
 #
 # Do NOT execute manually. DCRAB will use it automatically.
 #
@@ -1010,7 +1010,7 @@ dcrab_collect_data () {
                 	lineNumber=$(echo $auxLine | cut -d':' -f1)
 			cpu=$(echo "$auxLine" | awk '{print $5}') 
 
-			# Promote to be a monitorized process if its cpu value 
+			# Promote to be a monitored process if its cpu value 
 			if [ $(echo "$cpu > $DCRAB_CPU_THRESHOLD" | bc) -eq 1 ] && [ $flag -eq 1 ]; then
 				promoteDemoteCounter=$(echo $line | awk '{print $4}')
 				[ "$promoteDemoteCounter" == "" ] && promoteDemoteCounter=1 || promoteDemoteCounter=$((promoteDemoteCounter+1))
@@ -1029,7 +1029,7 @@ dcrab_collect_data () {
 			lastEmptyValue=$i
 			cpu=" "
 			
-			# Demote to not be a monitorized process 
+			# Demote to not be a monitored process 
 			if [ $flag -eq 0 ]; then
 				promoteDemoteCounter=$(echo $line | awk '{print $3}')	
 				[ "$promoteDemoteCounter" == "" ] && promoteDemoteCounter=1 || promoteDemoteCounter=$((promoteDemoteCounter+1))

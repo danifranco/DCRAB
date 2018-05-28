@@ -6,7 +6,7 @@
 #
 # ===============================================================================================================
 #
-# This script is the core of the monitorization of the nodes
+# This script is the core of the nodes monitoring
 #
 # Arguments:
 #
