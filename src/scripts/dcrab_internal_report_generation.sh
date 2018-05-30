@@ -22,12 +22,12 @@ echo "Calculating the dates for the charts . . ."
 firstDate=$(ls -lt --time-style="+%s" $DCRAB_IREPORT_DATA_DIR | grep -v total | tail -1 | sed 's|\s\s*| |g' | cut -d' ' -f6)
 lastDate=$(ls -lt --time-style="+%s" $DCRAB_IREPORT_DATA_DIR | grep -v total | head -1 | sed 's|\s\s*| |g' | cut -d' ' -f6)
 while read line; do
-	f=$(echo $line | cut -d' ' -f5)
-	if [ $(echo "$f < $firstDate" | bc) -eq 1 ]; then
-		firstDate=$f
-	fi
-	
-	if [ $(echo "$f > $lastDate" | bc) -eq 1 ]; then
+    f=$(echo $line | cut -d' ' -f5)
+    if [ $(echo "$f < $firstDate" | bc) -eq 1 ]; then
+        firstDate=$f
+    fi
+    
+    if [ $(echo "$f > $lastDate" | bc) -eq 1 ]; then
                 lastDate=$f
         fi
 done < <(cat $DCRAB_IREPORT_DATA_BACKUP_DIR/*.txt)
@@ -48,8 +48,8 @@ diskMax=$(echo "scale=3; (($diskMax * 512 )/1024 )/1024" | bc)
 diskMin=$(cat $DCRAB_IREPORT_DATA_DIR/$lastFile | cut -d' ' -f4)
 diskMin=$(echo "scale=3; (($diskMin * 512 )/1024 )/1024" | bc)
 if [ "$firstDate" == "" ] || [ "$firstDateFormated" == "" ] || [ "$firstDateReduced" == "" ] || [ "$lastDate" == "" ] || [ "$lastDateFormated" == "" ] || [ "$lastDateReduced" == "" ] || [ "$days" == "" ] || [ "$lastFile" == "" ] || [ "$nNodes" == "" ] || [ "$time" == "" ] || [ "$ibMax" == "" ] || [ "$ibMin" == "" ] || [ "$diskMax" == "" ] || [ "$diskMin" == "" ]; then
-	echo "Alguno de los ficheros consultados no se ha podido leer. Los ficheros que consulta esta utilidad estan siendo modificados continuamente por los trabajos en ejecucion, por ello a veces puede darse este caso. Hay que volver a ejecutar para intentarlo de nuevo"
-	exit 1
+    echo "Alguno de los ficheros consultados no se ha podido leer. Los ficheros que consulta esta utilidad estan siendo modificados continuamente por los trabajos en ejecucion, por ello a veces puede darse este caso. Hay que volver a ejecutar para intentarlo de nuevo"
+    exit 1
 fi
 declare -a ibData
 declare -a ibCounter
@@ -77,95 +77,94 @@ echo "Recolectando todos los datos para crear los graficos:"
 
 i=0
 while read line; do
-	i=$((i+1))
+    i=$((i+1))
 
-        # File data
-        time=$(echo $line | cut -d' ' -f1)
-        nNodes=$(echo $line | cut -d' ' -f2 )
-        ibValue=$(echo $line | cut -d' ' -f3 )
-        diskValue=$(echo $line | cut -d' ' -f4 )
-	date=$(echo $line | cut -d' ' -f5 )
-        if [ "$time" != "" ] && [ "$nNodes" != "" ] && [ "$ibValue" != "" ] && [ "$diskValue" != "" ]; then
-                # IB
-                ib_aux=$(echo "scale=3; $ibValue / (1024 * 1024 * $time * $nNodes) " | bc)
-                ibData[$i]=$ib_aux
-                [ $(echo "$ibMax < $ib_aux" | bc) -eq 1 ] && ibMax=$ib_aux
-                [ $(echo "$ibMin > $ib_aux" | bc) -eq 1 ] && ibMin=$ib_aux
+    # File data
+    time=$(echo $line | cut -d' ' -f1)
+    nNodes=$(echo $line | cut -d' ' -f2 )
+    ibValue=$(echo $line | cut -d' ' -f3 )
+    diskValue=$(echo $line | cut -d' ' -f4 )
+    date=$(echo $line | cut -d' ' -f5 )
+    if [ "$time" != "" ] && [ "$nNodes" != "" ] && [ "$ibValue" != "" ] && [ "$diskValue" != "" ]; then
+        # IB
+        ib_aux=$(echo "scale=3; $ibValue / (1024 * 1024 * $time * $nNodes) " | bc)
+        ibData[$i]=$ib_aux
+        [ $(echo "$ibMax < $ib_aux" | bc) -eq 1 ] && ibMax=$ib_aux
+        [ $(echo "$ibMin > $ib_aux" | bc) -eq 1 ] && ibMin=$ib_aux
 
-                # Disk
-                disk_aux=$(echo "scale=3; (($diskValue * 512 )/1024 )/1024" | bc)
-                diskData[$i]=$disk_aux
-                [ $(echo "$diskMax < $disk_aux" | bc) -eq 1 ] && diskMax=$disk_aux
-                [ $(echo "$diskMin > $disk_aux" | bc) -eq 1 ] && diskMin=$disk_aux
-		
-                d=$(echo "($date - $firstDate)/(24*3600)" | bc)
-		[ $d -eq $days ] && d=$((days - 1))	
-                # IB per day
-                ibDataPerDay[$d]=$(echo "${ibDataPerDay[$d]} + $ib_aux" | bc)
+        # Disk
+        disk_aux=$(echo "scale=3; (($diskValue * 512 )/1024 )/1024" | bc)
+        diskData[$i]=$disk_aux
+        [ $(echo "$diskMax < $disk_aux" | bc) -eq 1 ] && diskMax=$disk_aux
+        [ $(echo "$diskMin > $disk_aux" | bc) -eq 1 ] && diskMin=$disk_aux
+        
+        d=$(echo "($date - $firstDate)/(24*3600)" | bc)
+        [ $d -eq $days ] && d=$((days - 1))    
+        # IB per day
+        ibDataPerDay[$d]=$(echo "${ibDataPerDay[$d]} + $ib_aux" | bc)
 
-                # Disk per day
-                diskDataPerDay[$d]=$(echo "${diskDataPerDay[$d]} + $disk_aux" | bc)
-        fi
+        # Disk per day
+        diskDataPerDay[$d]=$(echo "${diskDataPerDay[$d]} + $disk_aux" | bc)
+    fi
 
-        countFiles=$((countFiles +1))
-        if [ "$countFiles" -eq "$numberOfFilesPerCharacter" ]; then
-                countFiles=0
-                numberOfChars=$((numberOfChars+1))
-                s=""
-                k=0
-                for j in $(seq 0 $numberOfChars); do s="${s}#"; k=$((k+1)); done
-                while [ $k -le $DCRAB_NUMBER_OF_CHARACTERS ]; do s="${s} "; k=$((k+1)); done
-                echo -ne "$s  ($(echo "scale=3; ($numberOfChars/$DCRAB_NUMBER_OF_CHARACTERS) * 100" | bc )%)\r"
-        fi
+    countFiles=$((countFiles +1))
+    if [ "$countFiles" -eq "$numberOfFilesPerCharacter" ]; then
+        countFiles=0
+        numberOfChars=$((numberOfChars+1))
+        s=""
+        k=0
+        for j in $(seq 0 $numberOfChars); do s="${s}#"; k=$((k+1)); done
+        while [ $k -le $DCRAB_NUMBER_OF_CHARACTERS ]; do s="${s} "; k=$((k+1)); done
+            echo -ne "$s  ($(echo "scale=3; ($numberOfChars/$DCRAB_NUMBER_OF_CHARACTERS) * 100" | bc )%)\r"
+    fi
 done < <(cat $DCRAB_IREPORT_DATA_BACKUP_DIR/*.txt)
 
 # Collect all the data from all the jobs 
-for file in $DCRAB_IREPORT_DATA_DIR/*
-do
-	i=$((i+1))
+for file in $DCRAB_IREPORT_DATA_DIR/*; do
+    i=$((i+1))
 
-	# File date
-	date=$(ls -lt --time-style="+%s" $file 2> /dev/null | grep -v total | head -1 | sed 's|\s\s*| |g' |  cut -d' ' -f6 )
+    # File date
+    date=$(ls -lt --time-style="+%s" $file 2> /dev/null | grep -v total | head -1 | sed 's|\s\s*| |g' |  cut -d' ' -f6 )
 
-	# File data
-	time=$(cat $file 2> /dev/null | cut -d' ' -f1)
-	nNodes=$(cat $file 2> /dev/null | cut -d' ' -f2 )
-	ibValue=$(cat $file 2> /dev/null | cut -d' ' -f3 )
-	diskValue=$(cat $file 2> /dev/null | cut -d' ' -f4 )
+    # File data
+    time=$(cat $file 2> /dev/null | cut -d' ' -f1)
+    nNodes=$(cat $file 2> /dev/null | cut -d' ' -f2 )
+    ibValue=$(cat $file 2> /dev/null | cut -d' ' -f3 )
+    diskValue=$(cat $file 2> /dev/null | cut -d' ' -f4 )
 
-	if [ "$time" != "" ] && [ "$nNodes" != "" ] && [ "$ibValue" != "" ] && [ "$diskValue" != "" ] && [ "$ibValue" -ge 0 ]; then
-		# IB
-		ib_aux=$(echo "scale=3; $ibValue / (1024 * 1024 * $time * $nNodes) " | bc)
-		ibData[$i]=$ib_aux
-		[ $(echo "$ibMax < $ib_aux" | bc) -eq 1 ] && ibMax=$ib_aux
-	        [ $(echo "$ibMin > $ib_aux" | bc) -eq 1 ] && ibMin=$ib_aux
+    if [ "$time" != "" ] && [ "$nNodes" != "" ] && [ "$ibValue" != "" ] && [ "$diskValue" != "" ] && [ "$ibValue" -ge 0 ]; then
+        # IB
+        ib_aux=$(echo "scale=3; $ibValue / (1024 * 1024 * $time * $nNodes) " | bc)
+        ibData[$i]=$ib_aux
+        [ $(echo "$ibMax < $ib_aux" | bc) -eq 1 ] && ibMax=$ib_aux
+        [ $(echo "$ibMin > $ib_aux" | bc) -eq 1 ] && ibMin=$ib_aux
 
-		# Disk
-		disk_aux=$(echo "scale=3; (($diskValue * 512 )/1024 )/1024" | bc)
-		diskData[$i]=$disk_aux
-		[ $(echo "$diskMax < $disk_aux" | bc) -eq 1 ] && diskMax=$disk_aux
-	        [ $(echo "$diskMin > $disk_aux" | bc) -eq 1 ] && diskMin=$disk_aux
-	
-		d=$(echo "($date - $firstDate)/(24*3600)" | bc)
-		[ $d -eq $days ] && d=$((days - 1)) 
+        # Disk
+        disk_aux=$(echo "scale=3; (($diskValue * 512 )/1024 )/1024" | bc)
+        diskData[$i]=$disk_aux
+        [ $(echo "$diskMax < $disk_aux" | bc) -eq 1 ] && diskMax=$disk_aux
+        [ $(echo "$diskMin > $disk_aux" | bc) -eq 1 ] && diskMin=$disk_aux
+    
+        d=$(echo "($date - $firstDate)/(24*3600)" | bc)
+        [ $d -eq $days ] && d=$((days - 1)) 
 
-		# IB per day
-		ibDataPerDay[$d]=$(echo "${ibDataPerDay[$d]} + $ib_aux" | bc) 	
+        # IB per day
+        ibDataPerDay[$d]=$(echo "${ibDataPerDay[$d]} + $ib_aux" | bc)     
 
-		# Disk per day
-		diskDataPerDay[$d]=$(echo "${diskDataPerDay[$d]} + $disk_aux" | bc)
-	fi
-	
-	countFiles=$((countFiles +1))
- 	if [ "$countFiles" -eq "$numberOfFilesPerCharacter" ]; then
- 		countFiles=0
- 		numberOfChars=$((numberOfChars+1))
- 		s=""
- 		k=0
- 		for j in $(seq 0 $numberOfChars); do s="${s}#"; k=$((k+1)); done
- 		while [ $k -le $DCRAB_NUMBER_OF_CHARACTERS ]; do s="${s} "; k=$((k+1)); done
- 		echo -ne "$s  ($(echo "scale=3; ($numberOfChars/$DCRAB_NUMBER_OF_CHARACTERS) * 100" | bc )%)\r"
- 	fi
+        # Disk per day
+        diskDataPerDay[$d]=$(echo "${diskDataPerDay[$d]} + $disk_aux" | bc)
+    fi
+    
+    countFiles=$((countFiles +1))
+     if [ "$countFiles" -eq "$numberOfFilesPerCharacter" ]; then
+         countFiles=0
+         numberOfChars=$((numberOfChars+1))
+         s=""
+         k=0
+         for j in $(seq 0 $numberOfChars); do s="${s}#"; k=$((k+1)); done
+         while [ $k -le $DCRAB_NUMBER_OF_CHARACTERS ]; do s="${s} "; k=$((k+1)); done
+         echo -ne "$s  ($(echo "scale=3; ($numberOfChars/$DCRAB_NUMBER_OF_CHARACTERS) * 100" | bc )%)\r"
+     fi
 done
 echo -ne '\n'
 
@@ -175,146 +174,145 @@ disk_interval=$(echo "scale=3; ($diskMax - $diskMin)/$DCRAB_NUMBER_OF_BARS" | bc
 
 # Counter the number of jobs in each interval
 for j in $(seq 1 $i); do
-	# IB
-	position=$(echo "(${ibData[${j}]} - $ibMin)/$ib_interval" | bc)
-	[ $position -eq $DCRAB_NUMBER_OF_BARS ] && position=$((position -1))
-	ibCounter[$position]=$( echo "${ibCounter[${position}]} + 1" | bc ) 
-	
-	# Disk
-	position=$(echo "(${diskData[${j}]} - $diskMin)/$disk_interval" | bc)
-	[ $position -eq $DCRAB_NUMBER_OF_BARS ] && position=$((position -1))
-	diskCounter[$position]=$( echo "${diskCounter[${position}]} + 1" | bc ) 
+    # IB
+    position=$(echo "(${ibData[${j}]} - $ibMin)/$ib_interval" | bc)
+    [ $position -eq $DCRAB_NUMBER_OF_BARS ] && position=$((position -1))
+    ibCounter[$position]=$( echo "${ibCounter[${position}]} + 1" | bc ) 
+    
+    # Disk
+    position=$(echo "(${diskData[${j}]} - $diskMin)/$disk_interval" | bc)
+    [ $position -eq $DCRAB_NUMBER_OF_BARS ] && position=$((position -1))
+    diskCounter[$position]=$( echo "${diskCounter[${position}]} + 1" | bc ) 
 done
 
 # Construct the rows of the first two charts
 for j in $(seq 0 $((DCRAB_NUMBER_OF_BARS -1)) )
 do
-	if [ $j -eq 0 ]; then
-		aux1=$(scale=0; echo "$ibMin + ($ib_interval * $j)" | bc); aux1Value=B
-		aux2=$(scale=0; echo "$ibMin + ($ib_interval * ($j + 1))" | bc); aux2Value=B
-		# Reduce the values
-		if [ $(echo "$aux1 >= 1073741824"  | bc) -eq 1 ]; then
-			aux1Value=GB
-			aux1=$(scale=1; echo "$aux1 / 1073741824" | bc)
-		elif [ $(echo "$aux1 >= 1048576"  | bc) -eq 1 ]; then
-			aux1Value=MB
-                        aux1=$(scale=1; echo "$aux1 / 1048576" | bc)
-		elif [ $(echo "$aux1 >= 1024"  | bc) -eq 1 ]; then
-			aux1Value=KB
-                        aux1=$(scale=1; echo "$aux1 / 1024" | bc)
-                fi
-		if [ $(echo "$aux2 >= 1073741824"  | bc) -eq 1 ]; then
-                        aux2Value=GB
-                        aux2=$(scale=1; echo "$aux2 / 1073741824" | bc)
-                elif [ $(echo "$aux2 >= 1048576"  | bc) -eq 1 ]; then
-                        aux2Value=MB
-                        aux2=$(scale=1; echo "$aux2 / 1048576" | bc)
-                elif [ $(echo "$aux2 >= 1024"  | bc) -eq 1 ]; then
-                        aux2Value=KB
-                        aux2=$(scale=1; echo "$aux2 / 1024" | bc)
-                fi
+    if [ $j -eq 0 ]; then
+        aux1=$(scale=0; echo "$ibMin + ($ib_interval * $j)" | bc); aux1Value=B
+        aux2=$(scale=0; echo "$ibMin + ($ib_interval * ($j + 1))" | bc); aux2Value=B
+        # Reduce the values
+        if [ $(echo "$aux1 >= 1073741824"  | bc) -eq 1 ]; then
+            aux1Value=GB
+            aux1=$(scale=1; echo "$aux1 / 1073741824" | bc)
+        elif [ $(echo "$aux1 >= 1048576"  | bc) -eq 1 ]; then
+            aux1Value=MB
+            aux1=$(scale=1; echo "$aux1 / 1048576" | bc)
+        elif [ $(echo "$aux1 >= 1024"  | bc) -eq 1 ]; then
+            aux1Value=KB
+            aux1=$(scale=1; echo "$aux1 / 1024" | bc)
+        fi
+        if [ $(echo "$aux2 >= 1073741824"  | bc) -eq 1 ]; then
+            aux2Value=GB
+            aux2=$(scale=1; echo "$aux2 / 1073741824" | bc)
+        elif [ $(echo "$aux2 >= 1048576"  | bc) -eq 1 ]; then
+            aux2Value=MB
+            aux2=$(scale=1; echo "$aux2 / 1048576" | bc)
+        elif [ $(echo "$aux2 >= 1024"  | bc) -eq 1 ]; then
+            aux2Value=KB
+            aux2=$(scale=1; echo "$aux2 / 1024" | bc)
+        fi
 
-		ibString="$ibString [ '[${aux1} ${aux1Value},${aux2} ${aux2Value}]', ${ibCounter[$j]} ],"
-		ibStringTitle="$ibStringTitle<th>[${aux1} ${aux1Value},${aux2} ${aux2Value}]</th>"
-                ibStringRow="$ibStringRow<td>${ibCounter[$j]}</td>"
-		
-		aux1=$(scale=0; echo "$diskMin + ($disk_interval * $j)" | bc); aux1Value=B
-		aux2=$(scale=0; echo "$diskMin + ($disk_interval * ($j + 1))" | bc); aux2Value=B
-		# Reduce the values
-		if [ $(echo "$aux1 >= 1073741824"  | bc) -eq 1 ]; then
-                        aux1Value=GB
-                        aux1=$(scale=1; echo "$aux1 / 1073741824" | bc)
-                elif [ $(echo "$aux1 >= 1048576"  | bc) -eq 1 ]; then
-                        aux1Value=MB
-                        aux1=$(scale=1; echo "$aux1 / 1048576" | bc)
-                elif [ $(echo "$aux1 >= 1024"  | bc) -eq 1 ]; then
-                        aux1Value=KB
-                        aux1=$(scale=1; echo "$aux1 / 1024" | bc)
-                fi
-                if [ $(echo "$aux2 >= 1073741824"  | bc) -eq 1 ]; then
-                        aux2Value=GB
-                        aux2=$(scale=1; echo "$aux2 / 1073741824" | bc)
-                elif [ $(echo "$aux2 >= 1048576"  | bc) -eq 1 ]; then
-                        aux2Value=MB
-                        aux2=$(scale=1; echo "$aux2 / 1048576" | bc)
-                elif [ $(echo "$aux2 >= 1024"  | bc) -eq 1 ]; then
-                        aux2Value=KB
-                        aux2=$(scale=1; echo "$aux2 / 1024" | bc)
-                fi
-		diskString="$diskString [ '[${aux1} ${aux1Value},${aux2} ${aux2Value}]', ${diskCounter[$j]} ],"
-		diskStringTitle="$diskStringTitle<th>[${aux1} ${aux1Value},${aux2} ${aux2Value}]</th>"
-		diskStringRow="$diskStringRow<td>${diskCounter[$j]}</td>"
-	else
-		aux1=$(scale=0; echo "$ibMin + ($ib_interval * $j)" | bc)
-		aux1Value=B
-                aux2=$(scale=0; echo "$ibMin + ($ib_interval * ($j + 1))" | bc)
-		aux2Value=B
-		# Reduce the values
-		if [ $(echo "$aux1 >= 1073741824"  | bc) -eq 1 ]; then
-                        aux1Value=GB
-                        aux1=$(scale=1; echo "$aux1 / 1073741824" | bc)
-                elif [ $(echo "$aux1 >= 1048576"  | bc) -eq 1 ]; then
-                        aux1Value=MB
-                        aux1=$(scale=1; echo "$aux1 / 1048576" | bc)
-                elif [ $(echo "$aux1 >= 1024"  | bc) -eq 1 ]; then
-                        aux1Value=KB
-                        aux1=$(scale=1; echo "$aux1 / 1024" | bc)
-                fi
-                if [ $(echo "$aux2 >= 1073741824"  | bc) -eq 1 ]; then
-                        aux2Value=GB
-                        aux2=$(scale=1; echo "$aux2 / 1073741824" | bc)
-                elif [ $(echo "$aux2 >= 1048576"  | bc) -eq 1 ]; then
-                        aux2Value=MB
-                        aux2=$(scale=1; echo "$aux2 / 1048576" | bc)
-                elif [ $(echo "$aux2 >= 1024"  | bc) -eq 1 ]; then
-                        aux2Value=KB
-                        aux2=$(scale=1; echo "$aux2 / 1024" | bc)
-                fi
+        ibString="$ibString [ '[${aux1} ${aux1Value},${aux2} ${aux2Value}]', ${ibCounter[$j]} ],"
+        ibStringTitle="$ibStringTitle<th>[${aux1} ${aux1Value},${aux2} ${aux2Value}]</th>"
+        ibStringRow="$ibStringRow<td>${ibCounter[$j]}</td>"
+        
+        aux1=$(scale=0; echo "$diskMin + ($disk_interval * $j)" | bc); aux1Value=B
+        aux2=$(scale=0; echo "$diskMin + ($disk_interval * ($j + 1))" | bc); aux2Value=B
+        # Reduce the values
+        if [ $(echo "$aux1 >= 1073741824"  | bc) -eq 1 ]; then
+            aux1Value=GB
+            aux1=$(scale=1; echo "$aux1 / 1073741824" | bc)
+        elif [ $(echo "$aux1 >= 1048576"  | bc) -eq 1 ]; then
+            aux1Value=MB
+            aux1=$(scale=1; echo "$aux1 / 1048576" | bc)
+        elif [ $(echo "$aux1 >= 1024"  | bc) -eq 1 ]; then
+            aux1Value=KB
+            aux1=$(scale=1; echo "$aux1 / 1024" | bc)
+        fi
+        if [ $(echo "$aux2 >= 1073741824"  | bc) -eq 1 ]; then
+            aux2Value=GB
+            aux2=$(scale=1; echo "$aux2 / 1073741824" | bc)
+        elif [ $(echo "$aux2 >= 1048576"  | bc) -eq 1 ]; then
+            aux2Value=MB
+            aux2=$(scale=1; echo "$aux2 / 1048576" | bc)
+        elif [ $(echo "$aux2 >= 1024"  | bc) -eq 1 ]; then
+            aux2Value=KB
+            aux2=$(scale=1; echo "$aux2 / 1024" | bc)
+        fi
+        diskString="$diskString [ '[${aux1} ${aux1Value},${aux2} ${aux2Value}]', ${diskCounter[$j]} ],"
+        diskStringTitle="$diskStringTitle<th>[${aux1} ${aux1Value},${aux2} ${aux2Value}]</th>"
+        diskStringRow="$diskStringRow<td>${diskCounter[$j]}</td>"
+    else
+        aux1=$(scale=0; echo "$ibMin + ($ib_interval * $j)" | bc)
+        aux1Value=B
+        aux2=$(scale=0; echo "$ibMin + ($ib_interval * ($j + 1))" | bc)
+        aux2Value=B
+        # Reduce the values
+        if [ $(echo "$aux1 >= 1073741824"  | bc) -eq 1 ]; then
+            aux1Value=GB
+            aux1=$(scale=1; echo "$aux1 / 1073741824" | bc)
+        elif [ $(echo "$aux1 >= 1048576"  | bc) -eq 1 ]; then
+            aux1Value=MB
+            aux1=$(scale=1; echo "$aux1 / 1048576" | bc)
+        elif [ $(echo "$aux1 >= 1024"  | bc) -eq 1 ]; then
+            aux1Value=KB
+            aux1=$(scale=1; echo "$aux1 / 1024" | bc)
+        fi
+        if [ $(echo "$aux2 >= 1073741824"  | bc) -eq 1 ]; then
+            aux2Value=GB
+            aux2=$(scale=1; echo "$aux2 / 1073741824" | bc)
+        elif [ $(echo "$aux2 >= 1048576"  | bc) -eq 1 ]; then
+            aux2Value=MB
+            aux2=$(scale=1; echo "$aux2 / 1048576" | bc)
+        elif [ $(echo "$aux2 >= 1024"  | bc) -eq 1 ]; then
+            aux2Value=KB
+            aux2=$(scale=1; echo "$aux2 / 1024" | bc)
+        fi
 
-		ibString="$ibString [ '(${aux1} ${aux1Value},${aux2} ${aux2Value}]', ${ibCounter[$j]} ],"
-		ibStringTitle="$ibStringTitle<th>[${aux1} ${aux1Value},${aux2} ${aux2Value}]</th>"
-                ibStringRow="$ibStringRow<td>${ibCounter[$j]}</td>"
+        ibString="$ibString [ '(${aux1} ${aux1Value},${aux2} ${aux2Value}]', ${ibCounter[$j]} ],"
+        ibStringTitle="$ibStringTitle<th>[${aux1} ${aux1Value},${aux2} ${aux2Value}]</th>"
+        ibStringRow="$ibStringRow<td>${ibCounter[$j]}</td>"
 
-		aux1=$(scale=0; echo "$diskMin + ($disk_interval * $j)" | bc)
-		aux1Value=B
-                aux2=$(scale=0; echo "$diskMin + ($disk_interval * ($j + 1))" | bc)
-		aux2Value=B
-		# Reduce the values
-		if [ $(echo "$aux1 >= 1073741824"  | bc) -eq 1 ]; then
-                        aux1Value=GB
-                        aux1=$(scale=1; echo "$aux1 / 1073741824" | bc)
-                elif [ $(echo "$aux1 >= 1048576"  | bc) -eq 1 ]; then
-                        aux1Value=MB
-                        aux1=$(scale=1; echo "$aux1 / 1048576" | bc)
-                elif [ $(echo "$aux1 >= 1024"  | bc) -eq 1 ]; then
-                        aux1Value=KB
-                        aux1=$(scale=1; echo "$aux1 / 1024" | bc)
-                fi
-                if [ $(echo "$aux2 >= 1073741824"  | bc) -eq 1 ]; then
-                        aux2Value=GB
-                        aux2=$(scale=1; echo "$aux2 / 1073741824" | bc)
-                elif [ $(echo "$aux2 >= 1048576"  | bc) -eq 1 ]; then
-                        aux2Value=MB
-                        aux2=$(scale=1; echo "$aux2 / 1048576" | bc)
-                elif [ $(echo "$aux2 >= 1024"  | bc) -eq 1 ]; then
-                        aux2Value=KB
-                        aux2=$(scale=1; echo "$aux2 / 1024" | bc)
-                fi
-		diskString="$diskString ['(${aux1} ${aux1Value},${aux2} ${aux2Value}]', ${diskCounter[$j]} ],"
-		diskStringTitle="$diskStringTitle<th>(${aux1} ${aux1Value},${aux2} ${aux2Value}]</th>"
-		diskStringRow="$diskStringRow<td>${diskCounter[$j]}</td>"
-	fi
+        aux1=$(scale=0; echo "$diskMin + ($disk_interval * $j)" | bc)
+        aux1Value=B
+        aux2=$(scale=0; echo "$diskMin + ($disk_interval * ($j + 1))" | bc)
+        aux2Value=B
+        # Reduce the values
+        if [ $(echo "$aux1 >= 1073741824"  | bc) -eq 1 ]; then
+            aux1Value=GB
+            aux1=$(scale=1; echo "$aux1 / 1073741824" | bc)
+        elif [ $(echo "$aux1 >= 1048576"  | bc) -eq 1 ]; then
+            aux1Value=MB
+            aux1=$(scale=1; echo "$aux1 / 1048576" | bc)
+        elif [ $(echo "$aux1 >= 1024"  | bc) -eq 1 ]; then
+            aux1Value=KB
+            aux1=$(scale=1; echo "$aux1 / 1024" | bc)
+        fi
+        if [ $(echo "$aux2 >= 1073741824"  | bc) -eq 1 ]; then
+            aux2Value=GB
+            aux2=$(scale=1; echo "$aux2 / 1073741824" | bc)
+        elif [ $(echo "$aux2 >= 1048576"  | bc) -eq 1 ]; then
+            aux2Value=MB
+            aux2=$(scale=1; echo "$aux2 / 1048576" | bc)
+        elif [ $(echo "$aux2 >= 1024"  | bc) -eq 1 ]; then
+            aux2Value=KB
+            aux2=$(scale=1; echo "$aux2 / 1024" | bc)
+        fi
+        diskString="$diskString ['(${aux1} ${aux1Value},${aux2} ${aux2Value}]', ${diskCounter[$j]} ],"
+        diskStringTitle="$diskStringTitle<th>(${aux1} ${aux1Value},${aux2} ${aux2Value}]</th>"
+        diskStringRow="$diskStringRow<td>${diskCounter[$j]}</td>"
+    fi
 done
 
 # Construct the rows of the rest charts
-for j in $(seq 0 $((days-1)) )
-do
-	# Calculate the day
-	d=$(echo "$firstDateReduced + ($j * 3600*24)" | bc)
-	d=$(date -d@$d +%d/%m/%y)
+for j in $(seq 0 $((days-1)) ); do
+    # Calculate the day
+    d=$(echo "$firstDateReduced + ($j * 3600*24)" | bc)
+    d=$(date -d@$d +%d/%m/%y)
 
-	ibStringPerDay="$ibStringPerDay ['$d', ${ibDataPerDay[$j]}],"	
-	diskStringPerDay="$diskStringPerDay ['$d', ${diskDataPerDay[$j]}],"	
+    ibStringPerDay="$ibStringPerDay ['$d', ${ibDataPerDay[$j]}],"    
+    diskStringPerDay="$diskStringPerDay ['$d', ${diskDataPerDay[$j]}],"    
 done
 
 # Generate the report
