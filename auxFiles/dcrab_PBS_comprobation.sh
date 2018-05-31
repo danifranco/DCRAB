@@ -1,7 +1,7 @@
 #!/bin/bash
 # DCRAB SOFTWARE
 # Version: 2.0
-# Autor: CC-staff
+# Author: CC-staff
 # Donostia International Physics Center
 #
 # ===============================================================================================================

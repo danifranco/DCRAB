@@ -79,8 +79,8 @@
 \vspace*{4.5 cm}
 	\begin{minipage}{0.4\textwidth}
 		\begin{flushleft} \large
-			Document Revision 1.0\\
-			8 May 2018\\
+			Document Revision 1.0.1\\
+			29 May 2018\\
 			\end{flushleft}
 			\end{minipage}
 			\begin{minipage}{0.4 \textwidth}
@@ -159,8 +159,8 @@ DCRAB has two operation modes: normal report operation, which may be the mode us
 The tool is straightforward to use, you have to add the following lines into your submission script:
 
 \begin{verbatim}
-    export DCRAB_PATH=/PATH_TO_DCRAB/src/
-    export PATH=$PATH:$DCRAB_PATH
+    export DCRAB_PATH=/PATH_TO_DCRAB/
+    export PATH=$PATH:$DCRAB_PATH/src
     dcrab start
 
     ##################################
@@ -170,7 +170,7 @@ The tool is straightforward to use, you have to add the following lines into you
     dcrab finish
 \end{verbatim}
 
-Note that the variable \verb+DCRAB_PATH+ must be declared to run DCRAB and always must point to \verb+/src+ folder of the tool. You can also make a module with lmod to load the paths in just one line like "module load DCRAB".
+Note that the variable \verb+DCRAB_PATH+ must be declared to run DCRAB. You can also make a module with lmod to load the paths in just one line like "module load DCRAB".
 
 DCRAB will start a process in each compute node where the script runs, and will monitor the processes started by it. The script will run as normal, and meanwhile DCRAB will generate a directory report called \verb+dcrab_report_<jobid>+ where \verb+jobid+ is the job number assigned by the scheduler. This reporting directory is generated in the same folder where the job was submitted.
 
@@ -209,6 +209,35 @@ At this version the tool have a few limitations or requirements for its use:
     \item The option \verb+#PBS -l nodes=x:ppn=y+ must be written explicitly in the submission script to calculate elapsed and remaining times.
   \end{itemize}
 \end{itemize}
+
+\section{Chart examples}
+
+Below you can find some examples of the charts the tool will generate for the report:
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.9\textwidth]{img/cpu.png}
+\caption{CPU usage}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.9\textwidth]{img/mem.png}
+\caption{Memory usage}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.9\textwidth]{img/ib.png}
+\caption{Infiniband network usage by the node}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.9\textwidth]{img/io.png}
+\caption{I/O against the filesystems}
+\end{figure}
+
 
 \chapter{Design and Implementation}
 \label{designAndImplementation}
@@ -260,7 +289,7 @@ This are the scripts that compose DCRAB. Here does not appear the internal repor
 \node [level 3, below of = c2, xshift=40pt, rounded corners=6pt, fill=orange!30, text width=15em] (c21) {dcrab\_node\_monitoring\_functions.sh};
 \node [level 4, below of = c21, xshift=20pt] (c211) {dcrab\_node\_monitor\_init\_variables};
 \node [level 4, below of = c211] (c212) {dcrab\_wait\_control\_port};
-\node [level 4, below of = c212] (c213) {dcrab\_determine\_main\_process};
+\node [level 4, below of = c212] (c213) {dcrab\_determine\_main\_session};
 \node [level 4, below of = c213] (c214) {dcrab\_collect\_data};
 \node [level 4, below of = c214, yshift=-35pt, fill=blue!20] (c215) {dcrab\_collect\_mem\_data \\ dcrab\_collect\_ib\_data \\ dcrab\_format\_time \\ dcrab\_collect\_processesIO\_data \\ dcrab\_collect\_nfs\_data \\ dcrab\_collect\_disk\_data \\ dcrab\_collect\_beegfs\_data };
 
@@ -374,9 +403,9 @@ This are the scripts that compose DCRAB. Here does not appear the internal repor
 
 % Monitor first states to second ones
 \node[node distance=0.4cm, yshift=-5cm,xshift=2.1cm] (t10) {dcrab\_node\_monitor\_init\_variables};
-\node[node distance=0.4cm, xshift=-0.26cm] (t11) [below of=t10] {dcrab\_determine\_main\_process};
+\node[node distance=0.4cm, xshift=-0.26cm] (t11) [below of=t10] {dcrab\_determine\_main\_session};
 \node[node distance=0.4cm, yshift=-5cm,xshift=8.7cm] (t42) {dcrab\_node\_monitor\_init\_variables};
-\node[node distance=0.4cm, xshift=-0.275cm,xshift=0.5cm] (t43) [below of=t42] {dcrab\_determine\_main\_process};
+\node[node distance=0.4cm, xshift=-0.275cm,xshift=0.5cm] (t43) [below of=t42] {dcrab\_determine\_main\_session};
 
 % Second state message (!=0 nodes)
 \node[yshift=-9.7cm,xshift=0.4cm] (t51)  {MPI process starts};
@@ -478,7 +507,7 @@ The changes that must be made in \texttt{dcrab\_node\_monitoring\_functions.sh} 
 \begin{itemize}
   \item In the function \texttt{dcrab\_node\_monitor\_init\_variables()}: the variables needed for your module must be added where the \verb+## NEW MODULE CODE ##+ line is, that is, at the end of other variable declarations. You should use the naming we have used in all the variables of the tool which starts with \verb+DCRAB_+. A variable \verb+DCRAB_NEWMODULENAME_DATA+ should be created, which will be used to insert the data of the new module into the report file.
   \item Create a function, which should name as \texttt{dcrab\_collect\_newModuleName\_data()}, after the last module function defined, where the line \verb+## ADD NEW MODULE'S FUNCTION HERE ##+ is. Collect the data and fill up the variable \verb+DCRAB_NEWMODULENAME_DATA+ must be the purpose of this function. As we have pointed out, remember to generate properly the data on \verb+DCRAB_NEWMODULENAME_DATA+ variable. For example, in most of the cases we fill up the variable with a new point of the charts, which is translated to generate a string with the information of that point using the data collected (you could understand better looking how the data is inserted at the examples in \verb+/examples/normalReport/+ or in the \href{https://developers.google.com/chart/interactive/docs/reference}{Google Visualization API Documentation}).
-  \item In the function \texttt{dcrab\_determine\_main\_process()} you have to add at the beginning, where the string \verb+## ADD INITIALIZATION OF NEW MODULE VARIABLE HERE ##+ is, the initialization of the \verb+DCRAB_NEWMODULENAME_DATA+ variable if needed. After that, at the bottom of the same function, add where the string \verb+## ADD THE CALL TO THE NEW FUNCTION HERE ##+ is, the call to the function \texttt{dcrab\_collect\_newModuleName\_data()} created.
+  \item In the function \texttt{dcrab\_determine\_main\_session()} you have to add at the beginning, where the string \verb+## ADD INITIALIZATION OF NEW MODULE VARIABLE HERE ##+ is, the initialization of the \verb+DCRAB_NEWMODULENAME_DATA+ variable if needed. After that, at the bottom of the same function, add where the string \verb+## ADD THE CALL TO THE NEW FUNCTION HERE ##+ is, the call to the function \texttt{dcrab\_collect\_newModuleName\_data()} created.
   \item Finally, you must repeat the previous step inside the \texttt{dcrab\_collect\_data()} function in the same way.
 \end{itemize}
 
@@ -539,8 +568,8 @@ The way to activate this operation mode is similar to the normal one:
 \ \
 
 \begin{verbatim}
-    export DCRAB_PATH=/PATH_TO_DCRAB/src/
-    export PATH=$PATH:$DCRAB_PATH
+    export DCRAB_PATH=/PATH_TO_DCRAB/
+    export PATH=$PATH:$DCRAB_PATH/src
     dcrab istart
 
     ##################################
@@ -627,8 +656,8 @@ AFTER
 #PBS -l mem=150gb
 #PBS -l cput=1000:00:00
 #PBS -N daniTestJob
-export DCRAB_PATH=/home/user/dcrab/software/src/
-export PATH=$PATH:$DCRAB_PATH
+export DCRAB_PATH=/home/user/dcrab/software
+export PATH=$PATH:$DCRAB_PATH/src
 dcrab istart
 
 module load QuantumESPRESSO
@@ -640,7 +669,7 @@ dcrab ifinish
 \end{verbatim}
 \end{multicols}
 
-\chapter{Examples}
+\chapter{Script examples}
 
 \begin{verbatim}
 #!/bin/bash
@@ -650,8 +679,8 @@ dcrab ifinish
 #PBS -l cput=760:00:00
 #PBS -N Heusler_AgMnSn_64pts
 
-export DCRAB_PATH=/scratch/user/DCRAB/src/
-export PATH=$PATH:$DCRAB_PATH
+export DCRAB_PATH=/scratch/user/DCRAB
+export PATH=$PATH:$DCRAB_PATH/src
 dcrab start
 
 cd $PBS_O_WORKDIR
@@ -685,8 +714,8 @@ dcrab finish
 #PBS -l cput=1000:00:00
 #PBS -N JOB_NAME
 
-export DCRAB_PATH=/scratch/user/DCRAB/src/
-export PATH=$PATH:$DCRAB_PATH
+export DCRAB_PATH=/scratch/user/DCRAB
+export PATH=$PATH:$DCRAB_PATH/src
 dcrab start
 
 export LSCRATCH_DIR=/lscratch/$USER/jobs/$PBS_JOBID
@@ -709,6 +738,5 @@ rm -rf $LSCRATCH_DIR
 
 dcrab finish
 \end{verbatim}
-
 
 \end{document}

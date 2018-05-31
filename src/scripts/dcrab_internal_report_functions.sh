@@ -1,7 +1,7 @@
 #!/bin/bash
 # DCRAB SOFTWARE
 # Version: 2.0
-# Autor: CC-staff
+# Author: CC-staff
 # Donostia International Physics Center
 #
 # ===============================================================================================================
@@ -15,7 +15,7 @@
 
 
 #
-# Initializes needed variables dor the internal report 
+# Initialize needed variables for the internal report 
 #
 dcrab_internal_report_init_variables () {
     
@@ -31,7 +31,7 @@ dcrab_internal_report_init_variables () {
 
 
 #
-# Writes the data for the internal report
+# Write the data for the internal report
 #
 dcrab_write_internal_data () {
 

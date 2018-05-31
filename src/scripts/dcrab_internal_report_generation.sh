@@ -1,7 +1,7 @@
 #!/bin/bash -e
 # DCRAB SOFTWARE
 # Version: 2.0
-# Autor: CC-staff
+# Author: CC-staff
 # Donostia International Physics Center
 #
 # ===============================================================================================================
@@ -48,7 +48,7 @@ diskMax=$(echo "scale=3; (($diskMax * 512 )/1024 )/1024" | bc)
 diskMin=$(cat $DCRAB_IREPORT_DATA_DIR/$lastFile | cut -d' ' -f4)
 diskMin=$(echo "scale=3; (($diskMin * 512 )/1024 )/1024" | bc)
 if [ "$firstDate" == "" ] || [ "$firstDateFormated" == "" ] || [ "$firstDateReduced" == "" ] || [ "$lastDate" == "" ] || [ "$lastDateFormated" == "" ] || [ "$lastDateReduced" == "" ] || [ "$days" == "" ] || [ "$lastFile" == "" ] || [ "$nNodes" == "" ] || [ "$time" == "" ] || [ "$ibMax" == "" ] || [ "$ibMin" == "" ] || [ "$diskMax" == "" ] || [ "$diskMin" == "" ]; then
-    echo "Alguno de los ficheros consultados no se ha podido leer. Los ficheros que consulta esta utilidad estan siendo modificados continuamente por los trabajos en ejecucion, por ello a veces puede darse este caso. Hay que volver a ejecutar para intentarlo de nuevo"
+    echo "One of the files was not readed well. The files this script trys to read are in continuous change so this case could be possible. Try to execute it again."
     exit 1
 fi
 declare -a ibData
@@ -73,7 +73,7 @@ diskStringRow=""
 ibStringPerDay=""
 diskStringPerDay=""
 
-echo "Recolectando todos los datos para crear los graficos:"
+echo "Recolecting all the data to create the charts"
 
 i=0
 while read line; do

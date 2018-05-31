@@ -1,22 +1,21 @@
 #!/bin/bash
 # DCRAB SOFTWARE
 # Version: 2.0
-# Autor: CC-staff
+# Author: CC-staff
 # Donostia International Physics Center
 #
 # ===============================================================================================================
 #
-# This script contains the necessary functions for the nodes monitoring
+# This script contains the necessary functions for node monitoring
 #
 # Do NOT execute manually. DCRAB will use it automatically.
 #
 # ===============================================================================================================
 
-
 #
 # Initializes necessary variables 
 # Arguments:
-#    1- Int --> The number of the node (0 is the main node, the rest of the numbers are considered as 'slave' nodes)
+#    1- Int --> Node ID (0 is the main node, the rest of the IDs are considered 'slave' nodes)
 #
 dcrab_node_monitor_init_variables () {
     
@@ -34,7 +33,7 @@ dcrab_node_monitor_init_variables () {
     DCRAB_DCRAB_SESSION=$(ps axo sess,pid,comm | grep "dcrab" | awk '{if ($2 == '"$$"'){print}}' | awk '{print $1}')
     DCRAB_NODE_HOSTNAME=$(hostname)
     DCRAB_NODE_NUMBER=${DCRAB_NODE_HOSTNAME#*-}
-    # To ommit the zeros in the name
+    # To avoid zeros in the name
     DCRAB_NODE_NUMBER=$(echo "$DCRAB_NODE_NUMBER +1 -1" | bc) 
     DCRAB_NODE_HOSTNAME_MOD=$(echo $DCRAB_NODE_HOSTNAME | sed 's|-||g')
     DCRAB_NODE_TOTAL_MEM=$(free -g | grep "Mem" | awk ' {printf $2}')
@@ -365,19 +364,17 @@ dcrab_node_monitor_init_variables () {
         done
     fi
 
-    # Initializes variables for the internal report 
     dcrab_internal_report_init_variables
 }
 
-
 #
-# Collects memory data 
+# Collect memory data 
 #
 dcrab_collect_mem_data () {
 
     # Store the data of all the processes 
     :> $DCRAB_MEM_FILE
-    for line in $(cat $DCRAB_JOB_PROCESSES_FILE | grep -v "Demoted"); do
+    for line in $(grep -v "Demoted" $DCRAB_JOB_PROCESSES_FILE); do
         pid=$(echo $line | awk '{print $1}')
         [ "$pid" == "#" ] && pid=$(echo $line | awk '{print $2}')
         cat /proc/$pid/status 2> /dev/null 1 >> $DCRAB_MEM_FILE
@@ -395,7 +392,7 @@ dcrab_collect_mem_data () {
         DCRAB_MEM_MAX_VMSIZE=$DCRAB_MEM_VMSIZE
     fi
 
-    # Check if exceeds memory requested. The job may be killed by the scheduler.
+    # Check if the job exceeds memory requested. The job may be killed by the scheduler.
     if [ $(echo "$DCRAB_MEM_MAX_VMRSS < $DCRAB_REQ_MEM" | bc) -eq 1 ]; then
         DCRAB_MEM2_USED=$(echo "scale=3; ($DCRAB_MEM_MAX_VMRSS * 100)/$DCRAB_REQ_MEM" | bc )
         DCRAB_MEM2_UNUSED=$(echo "scale=3; 100 - $DCRAB_MEM2_USED" | bc )
@@ -416,8 +413,6 @@ dcrab_collect_mem_data () {
                 DCRAB_MEM_TOTAL_VMRSS=$(echo "$DCRAB_MEM_TOTAL_VMRSS + $(cat $file | awk '{print $1}')" | bc)
                 DCRAB_MEM_TOTAL_VMSIZE=$(echo "$DCRAB_MEM_TOTAL_VMSIZE + $(cat $file | awk '{print $2}')" | bc)
             done
-            # DCRAB_MEM_TOTAL_VMRSS=$(cat $DCRAB_TOTAL_MEM_FILE | awk '{print $1}')
-            # DCRAB_MEM_TOTAL_VMSIZE=$(cat $DCRAB_TOTAL_MEM_FILE | awk '{print $2}')
         
             if [ $(echo "$DCRAB_MEM_TOTAL_VMSIZE > $DCRAB_MEM_TOTAL_MAX_VMSIZE" | bc) -eq 1 ]; then
                 DCRAB_MEM_TOTAL_MAX_VMSIZE=$DCRAB_MEM_TOTAL_VMSIZE
@@ -444,9 +439,8 @@ dcrab_collect_mem_data () {
     DCRAB_MEM_DATA="$DCRAB_MEM_DATA""$DCRAB_NODE_TOTAL_MEM, $DCRAB_REQ_MEM, $DCRAB_MEM_MAX_VMRSS, $DCRAB_MEM_VMSIZE, $DCRAB_MEM_VMRSS ],"
 }
 
-
 #
-# Collects Infiniband statistics of the node 
+# Collect Infiniband statistics of the node 
 #
 dcrab_collect_ib_data () {
 
@@ -475,9 +469,8 @@ dcrab_collect_ib_data () {
     sed -i 1's|.*|'"$aux3"'|' $DCRAB_TOTAL_IB_FILE
 }
 
-
 #
-# Collects the time elapsed of the job and formats it 
+# Collect the time elapsed and formats it 
 #
 dcrab_format_time () {
     
@@ -503,9 +496,8 @@ dcrab_format_time () {
     fi
 }
 
-
 #
-# Collects the IO made by the processes involved in the execution
+# Collect the I/O made by the processes involved in the execution
 #
 dcrab_collect_processesIO_data () {
 
@@ -515,15 +507,15 @@ dcrab_collect_processesIO_data () {
     case $1 in 
     0)
         # Store the data of all the processes     
-        for line in $(cat $DCRAB_JOB_PROCESSES_FILE | grep -v "Demoted"); do
+        for line in $(grep -v "Demoted" $DCRAB_JOB_PROCESSES_FILE); do
 
             pid=$(echo "$line" | awk '{print $1}')
             [ "$pid" == "#" ] && pid=$(echo $line | awk '{print $2}')
             
-            # Collect processesIO actual data
+            # Collect processesIO's actual data
             if [ -r /proc/$pid/io ]; then
-                new_rchar=$(cat /proc/$pid/io | grep rchar | awk '{print $2}')
-                new_wchar=$(cat /proc/$pid/io | grep wchar | awk '{print $2}')
+                new_rchar=$(grep "rchar" /proc/$pid/io | awk '{print $2}')
+                new_wchar=$(grep "wchar" /proc/$pid/io | awk '{print $2}')
                 [[ "$new_rchar" == "" ]] && new_rchar=0
                 [[ "$new_wchar" == "" ]] && new_wchar=0    
     
@@ -544,19 +536,19 @@ dcrab_collect_processesIO_data () {
         DCRAB_PROCESSESIO_PARTIAL_WRITE=0
         last_rchar=""
         last_wchar=""
-        for line in $(cat $DCRAB_JOB_PROCESSES_FILE | grep -v "Demoted"); do
+        for line in $(grep -v "Demoted" $DCRAB_JOB_PROCESSES_FILE); do
     
             pid=$(echo "$line" | awk '{print $1}')    
             [ "$pid" == "#" ] && pid=$(echo $line | awk '{print $2}')
             
-            # Collect processesIO last data
-            last_rchar=$(cat $DCRAB_PROCESSES_IO_FILE | grep "^$pid " | awk '{print $2}')
-            last_wchar=$(cat $DCRAB_PROCESSES_IO_FILE | grep "^$pid " | awk '{print $3}')
+            # Collect processesIO's last data
+            last_rchar=$(grep "^$pid " $DCRAB_PROCESSES_IO_FILE | awk '{print $2}')
+            last_wchar=$(grep "^$pid " $DCRAB_PROCESSES_IO_FILE | awk '{print $3}')
 
-            # Collect processesIO actual data
+            # Collect processesIO's actual data
             if [ -r /proc/$pid/io ]; then
-                new_rchar=$(cat /proc/$pid/io | grep rchar | awk '{print $2}')
-                new_wchar=$(cat /proc/$pid/io | grep wchar | awk '{print $2}')
+                new_rchar=$(grep "rchar" /proc/$pid/io | awk '{print $2}')
+                new_wchar=$(grep "wchar" /proc/$pid/io | awk '{print $2}')
                 [[ "$new_rchar" == "" ]] && new_rchar=0
                 [[ "$new_wchar" == "" ]] && new_wchar=0
 
@@ -569,7 +561,7 @@ dcrab_collect_processesIO_data () {
                     DCRAB_PROCESSESIO_TOTAL_WRITE=$(echo "$DCRAB_PROCESSESIO_TOTAL_WRITE + $new_wchar" | bc )
                     DCRAB_PROCESSESIO_PARTIAL_WRITE=$(echo "$DCRAB_PROCESSESIO_PARTIAL_WRITE + $new_wchar" | bc )                
                 else
-                    lineNumber=$(cat $DCRAB_PROCESSES_IO_FILE | grep -n "^$pid " | awk '{print $1}' | cut -d':' -f1)
+                    lineNumber=$(grep -n "^$pid " $DCRAB_PROCESSES_IO_FILE | awk '{print $1}' | cut -d':' -f1)
                     sed -i "$lineNumber"'s/'"$pid $last_rchar $last_wchar"'/'"$pid $new_rchar $new_wchar"'/' $DCRAB_PROCESSES_IO_FILE
     
                     DCRAB_PROCESSESIO_TOTAL_READ=$(echo "$DCRAB_PROCESSESIO_TOTAL_READ + $new_rchar - $last_rchar"  | bc)
@@ -587,7 +579,7 @@ dcrab_collect_processesIO_data () {
         # Construct data for the plot
         DCRAB_PROCESSESIO_DATA="$DCRAB_PROCESSESIO_DATA"" $aux1, $aux2 ],"
     
-        # Construct data for the read text value
+        # Construct data for the text value thas was read
         DCRAB_PROCESSESIO_TOTAL_LAST_READ_STRING=$DCRAB_PROCESSESIO_TOTAL_READ_STRING
         case $DCRAB_PROCESSESIO_TOTAL_READ_STRING in 
         "MB")
@@ -602,7 +594,7 @@ dcrab_collect_processesIO_data () {
             DCRAB_PROCESSESIO_TOTAL_READ_REDUCED=$(echo "scale=4; (($DCRAB_PROCESSESIO_TOTAL_READ /1024) /1024 ) /1024" | bc)
             ;;
         esac
-        # Construct data for the write text value
+        # Construct data for the text value that was written
         DCRAB_PROCESSESIO_TOTAL_LAST_WRITE_STRING=$DCRAB_PROCESSESIO_TOTAL_WRITE_STRING
         case $DCRAB_PROCESSESIO_TOTAL_WRITE_STRING in
         "MB")
@@ -621,9 +613,8 @@ dcrab_collect_processesIO_data () {
     esac
 }
 
-
 #
-# Collects the NFS IO made by the node 
+# Collect the NFS IO made by the node 
 #
 dcrab_collect_nfs_data () {
 
@@ -672,9 +663,8 @@ dcrab_collect_nfs_data () {
     DCRAB_NFS_WRITE=$DCRAB_NFS_NEW_WRITE
 }
 
-
 #
-# Collects IO made in the node disks
+# Collect IO made in the node disks
 #
 dcrab_collect_disk_data () {
 
@@ -710,24 +700,22 @@ dcrab_collect_disk_data () {
 
 
 #
-# Collects Beegfs statistics (no created yet)
+# Collect Beegfs statistics (no created yet)
 #
 dcrab_collect_beegfs_data () {
     echo " "
 }
 
-
 ####################################
 ## ADD NEW MODULE'S FUNCTION HERE ##
 ####################################
 
-
 #
-# This function will maintain the processes waiting until the control_port file is generated
+# Wait until the control_port file is generated
 #
 dcrab_wait_control_port () {
 
-    source $DCRAB_PATH/scripts/dcrab_finalize.sh
+    source $DCRAB_PATH/src/scripts/dcrab_finalize.sh
 
     DCRAB_NUMBER_OF_MPI_COMMANDS=$((DCRAB_NUMBER_OF_MPI_COMMANDS + 1))
     DCRAB_CONTROL_PORT_FILE="${DCRAB_CONTROL_PORT_FILE_PREFIX}${DCRAB_NUMBER_OF_MPI_COMMANDS}"
@@ -743,7 +731,7 @@ dcrab_wait_control_port () {
             if [ "$i" -eq "$DCRAB_NUMBERS_OF_LOOPS_CONTROL" ]; then
                 dcrab_check_alive_main_node            
             
-                # If the previous function didn't stop DCRAB we reset the counters to wait more for the next MPI process
+                # If the previous function has not stopped DCRAB we reset the counters to wait more for the next MPI process
                 i=0 
             fi
             i=$((i + 1))
@@ -798,12 +786,11 @@ dcrab_wait_control_port () {
         echo "0" > $DCRAB_WAIT_MPI_PROCESSES_FILE
 }
 
-
 #
-# Determines the main processes of the job which will be used to find the rest of the processes involved in the execution (because they will be main processes childs).
+# Determine the main session of the job which will be used to find the processes involved in the execution.
 # Also initializes the first time the html report.
 #
-dcrab_determine_main_process () {
+dcrab_determine_main_session () {
 
     if [ $DCRAB_INTERNAL_MODE -eq 0 ]; then
         # CPU
@@ -822,7 +809,7 @@ dcrab_determine_main_process () {
         ####################################################
     fi
 
-    # MAIN NODE
+    # Main node
     if [ "$DCRAB_NODE_EXECUTION_NUMBER" -eq 0 ]; then
         IFS=$'\n'
         ps axo euid,sess,pid,comm,command | awk '{if ($1 == '"$DCRAB_USER_ID"'){print}}' | awk '{if ($2 != '"$DCRAB_DCRAB_SESSION"'){print}}' > $DCRAB_USER_PROCESSES_FILE
@@ -837,7 +824,7 @@ dcrab_determine_main_process () {
             fi
         done
 
-    # REST OF NODES
+    # Rest of nodes
     else
         dcrab_wait_control_port
     fi
@@ -911,16 +898,9 @@ dcrab_determine_main_process () {
         DCRAB_CPU_DATA=${DCRAB_CPU_DATA%,*}
         DCRAB_CPU_DATA="[$DCRAB_CPU_DATA ],"
     
-        # MEM data
         dcrab_collect_mem_data
-    
-        # IB data
         dcrab_collect_ib_data
-        
-        # PROCESSES_IO data
         dcrab_collect_processesIO_data 0
-    
-        # DISK data
         dcrab_collect_disk_data
     
         ###########################################
@@ -931,10 +911,7 @@ dcrab_determine_main_process () {
         dcrab_update_report
     fi
 
-    # IB data
     dcrab_collect_ib_data
-        
-    # DISK data
     dcrab_collect_disk_data
     
 
@@ -944,7 +921,6 @@ dcrab_determine_main_process () {
         echo "$DCRAB_ACTIVE_JOB_IN_MAIN_NODE_COUNTER" > $DCRAB_ACTIVE_JOB_IN_MAIN_NODE_FILE
     fi
 }
-
 
 #
 # The main funtion to collect data every loop. Collect different information per process and sometimes of the entire node.
@@ -1006,7 +982,7 @@ dcrab_collect_data () {
         fi    
 
         # If the process is running 
-        auxLine=$(cat $DCRAB_USER_PROCESSES_FILE | grep -n "$commandName" | awk '{if ($4 == '"$pid"'){print}}')
+        auxLine=$(grep -n "$commandName" $DCRAB_USER_PROCESSES_FILE | awk '{if ($4 == '"$pid"'){print}}')
         if [ "$auxLine" != "" ]; then
                     lineNumber=$(echo $auxLine | cut -d':' -f1)
             cpu=$(echo "$auxLine" | awk '{print $5}') 
@@ -1134,18 +1110,13 @@ dcrab_collect_data () {
         DCRAB_CPU_DATA=${DCRAB_CPU_DATA%,*}
         DCRAB_CPU_DATA="[$DCRAB_CPU_DATA],"
         
-        # MEM data
         dcrab_collect_mem_data
         
-        # TIME data (only the main node)
         if [ "$DCRAB_NODE_EXECUTION_NUMBER" -eq 0 ]; then
             dcrab_format_time
         fi
         
-        # PROCESSES_IO data
         dcrab_collect_processesIO_data 1
-        
-        # NFS data
         dcrab_collect_nfs_data
 
         ###########################################
@@ -1153,10 +1124,7 @@ dcrab_collect_data () {
         ###########################################
     fi
 
-    # IB data
     dcrab_collect_ib_data
-
-    # DISK data
     dcrab_collect_disk_data
 
     # To notice other nodes that the main node is still executing processes
@@ -1165,4 +1133,3 @@ dcrab_collect_data () {
         echo "$DCRAB_ACTIVE_JOB_IN_MAIN_NODE_COUNTER" > $DCRAB_ACTIVE_JOB_IN_MAIN_NODE_FILE
     fi
 }
-

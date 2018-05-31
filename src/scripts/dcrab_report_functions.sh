@@ -1,7 +1,7 @@
 #!/bin/bash
 # DCRAB SOFTWARE
 # Version: 2.0
-# Autor: CC-staff
+# Author: CC-staff
 # Donostia International Physics Center
 #
 # ===============================================================================================================
@@ -12,10 +12,9 @@
 #
 # ===============================================================================================================
 
-
 #
-# This function makes the necessary wait time to allow a node to write in the report. Each node waits the previous one
-# and the master node (DCRAB_NODE_EXECUTION_NUMBER=0) waits for the last node. It ensures the write will be secuential and atomic,
+# Wait until is the turn of the node to write in the report. Each node waits the previous one and the master
+# node (DCRAB_NODE_EXECUTION_NUMBER=0) waits for the last node. It ensures the write will be secuential and atomic,
 # resolving any problem related to the updating delay present in parallel filesystems like Beegfs, Lustre etc. 
 #
 dcrab_wait_and_write () {
@@ -24,7 +23,6 @@ dcrab_wait_and_write () {
     
     j=0
     while [ 1 ]; do
-        # Take the first line of the report 
         local n=$(head -1 $DCRAB_HTML | cut -d'-' -f3)
 
         if [ "$DCRAB_NODE_EXECUTION_NUMBER" -eq 0 ] && [ "$DCRAB_MPI_CONTROL_WRITED" -eq 0 ]; then
@@ -51,26 +49,23 @@ dcrab_wait_and_write () {
             j=$((j+1))
             eval $DCRAB_LOG_INFO "Node $DCRAB_NODE_EXECUTION_NUMBER : not my turn to write \(turn of 'Node $n'\). Making a sort sleep... \($j times asleep\)"
             
-            # Check exit
             dcrab_check_exit 0
             
             sleep 1
         fi
     done
     
-    eval $DCRAB_LOG_INFO "My turn has reached!"
+    eval $DCRAB_LOG_INFO "It's my turn!"
 
     # Execute all the commands
     $DCRAB_COMMAND_FILE
 }
 
-
 #
-# Writes collected data in the html reporting file. This function is made in each loop after collect all the data.
+# Write collected data in the html reporting file. This function is made in each loop after all the data is collected.
 #
 dcrab_update_report () {
 
-    # Empty command file
     :> $DCRAB_COMMAND_FILE
 
     case "$DCRAB_NODE_EXECUTION_NUMBER" in
@@ -82,7 +77,6 @@ dcrab_update_report () {
         printf "%s \n" "sed -i \"$DCRAB_TIME_L1\"'s|\([0-9]*[.]*[0-9]*\)\]|'\"$DCRAB_ELAPSED_TIME_VALUE\"'\]|' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
         printf "%s \n" "sed -i \"$DCRAB_TIME_L2\"'s|\([0-9]*[.]*[0-9]*\)\]|'\"$DCRAB_REMAINING_TIME_VALUE\"'\]|' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
     
-        # More than one node
         if [ "$DCRAB_NNODES" -gt 1 ]; then
             # MEM TOTAL
             printf "%s \n" "sed -i \"$DCRAB_MEM_TOTAL_L2\"'s|\([0-9]*[.]*[0-9]*\)\]|'\"$DCRAB_MEM_TOTAL_UNUSED\"'\]|' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
@@ -182,13 +176,11 @@ dcrab_update_report () {
     # Mark the report to inform the next node that is waiting that all changes has been made
     printf "%s \n" "sed -i 1's|<!--$DCRAB_PREVIOUS_NODE-->|<!--$DCRAB_NODE_EXECUTION_NUMBER-->|' $DCRAB_HTML" >> $DCRAB_COMMAND_FILE
 
-    # Execute commands
     dcrab_wait_and_write
 }
 
-
 #
-# Creates the html file
+# Create the html report file
 #
 dcrab_generate_html () {
 
@@ -203,7 +195,6 @@ dcrab_generate_html () {
     printf "%s \n" "<script type=\"text/javascript\" src=\"https://www.gstatic.com/charts/loader.js\"></script> " >> $DCRAB_HTML
     printf "%s \n" "<script type=\"text/javascript\"> " >> $DCRAB_HTML
 
-    # Load packages and callbacks for plot functions
     printf "%s \n" "google.charts.load('current', {'packages':['corechart', 'bar']}); " >> $DCRAB_HTML
     printf "%s \n" "google.charts.setOnLoadCallback(plot_all); " >> $DCRAB_HTML
 

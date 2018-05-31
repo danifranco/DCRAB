@@ -1,7 +1,7 @@
 #!/bin/bash
 # DCRAB SOFTWARE
 # Version: 2.0
-# Autor: CC-staff
+# Author: CC-staff
 # Donostia International Physics Center
 #
 # ===============================================================================================================
@@ -37,7 +37,6 @@ dcrab_save_environment () {
     esac
 }
 
-
 #
 # Check the scheduler used and initialize some variables 
 #
@@ -50,7 +49,6 @@ dcrab_check_scheduler () {
         DCRAB_WORKDIR=$SLURM_SUBMIT_DIR
         DCRAB_JOBNAME=$SLURM_JOB_NAME
         DCRAB_NODES=$(scontrol show hostname $SLURM_NODELIST)
-        # Remove '-' character of the names to create javascript variables
         DCRAB_NODES_MOD=$(echo $DCRAB_NODES | sed 's|-||g')
         DCRAB_NNODES=$(scontrol show hostname $SLURM_NODELIST | wc -l)
         DCRAB_JOBFILE=$(ps $PPID | awk '{printf $6}')
@@ -67,13 +65,12 @@ dcrab_check_scheduler () {
         for n in $(cat $PBS_NODEFILE | sort -r | uniq); do
             DCRAB_NODES="$DCRAB_NODES"" $n"
         done
-        # Remove '-' character of the names to create javascript variables
         DCRAB_NODES_MOD=$(echo $DCRAB_NODES | sed 's|-||g')
         DCRAB_NNODES=$(cat $PBS_NODEFILE | sort | uniq | wc -l)
         DCRAB_JOBFILE=$(ps $PPID | awk '{printf $6}')
-        DCRAB_REQ_MEM=$(cat $DCRAB_JOBFILE | grep "\-l mem=" | cut -d'=' -f2 | sed 's/[^0-9]*//g')
-        DCRAB_REQ_CPUT=$(cat $DCRAB_JOBFILE | grep "\-l cput" | cut -d'=' -f2)
-        DCRAB_REQ_PPN=$(cat $DCRAB_JOBFILE | grep ":ppn" | grep "^#P" | cut -d'=' -f3)
+        DCRAB_REQ_MEM=$(grep "\-l mem=" $DCRAB_JOBFILE | cut -d'=' -f2 | sed 's/[^0-9]*//g')
+        DCRAB_REQ_CPUT=$(grep "\-l cput" $DCRAB_JOBFILE | cut -d'=' -f2)
+        DCRAB_REQ_PPN=$(grep ":ppn" $DCRAB_JOBFILE | grep "^#P" | cut -d'=' -f3)
         DCRAB_REQ_PPN=$(echo ${DCRAB_REQ_PPN#*ppn})
         DCRAB_REQ_PPN=$(echo ${DCRAB_REQ_PPN%%:*} | cut -d'=' -f2)
     else
@@ -95,9 +92,8 @@ dcrab_check_scheduler () {
     fi
 }
 
-
 #
-# Initialize first necessary variables 
+# Initialize necessary variables first to be able to start the report 
 #
 # Arguments:
 #       1- Int --> Flag that is activated when the internal report is enabled (1 = Only internal mode, 0 = Normal monitoring)
@@ -125,11 +121,10 @@ dcrab_init_variables () {
     # Delay to collect the data
     DCRAB_COLLECT_TIME=10
         
-    # Used to calculate the numbers of loops a node must be done until found 
-    # the control port process, which is the first step to start collecting data
+    # Used to calculate the number of loops a node has done until the control port 
+    # process is found. This is the first step to start collecting data
     DCRAB_SLEEP_TIME_CONTROL=10
 }
-
 
 #
 # Create reporting directory structure 
@@ -151,7 +146,6 @@ dcrab_create_report_files () {
     chmod -R 755 $DCRAB_REPORT_DIR
 }
 
-
 #
 # Start the reporting script in the nodes involved in the execution 
 #
@@ -160,17 +154,17 @@ dcrab_start_data_collection () {
     # Save environment
     dcrab_save_environment
 
-    # Start a DCRAB instance of each node involved in the job
+    # Start a DCRAB instance in each of the nodes involved by the job
     declare -a DCRAB_PIDs
     i=0
     for node in $DCRAB_NODES
     do
         mkdir -p $DCRAB_REPORT_DIR/data/$node
         
-        COMMAND="$DCRAB_PATH/scripts/dcrab_node_monitor.sh $DCRAB_REPORT_DIR/aux/env.txt $i $DCRAB_LOG_DIR/$node.log & echo \$!"
+        COMMAND="$DCRAB_PATH/src/scripts/dcrab_node_monitor.sh $DCRAB_REPORT_DIR/aux/env.txt $i $DCRAB_LOG_DIR/$node.log & echo \$!"
 
         DCRAB_PIDs[$i]=$(ssh -n $node "$COMMAND" | tail -n 1)
-        eval $DCRAB_LOG_INFO "Node: $node - PID: ${DCRAB_PIDs[$i]}"
+        eval $DCRAB_LOG_INFO "Node: $node - PID: ${DCRAB_PIDs[$i]} - Number: $i"
 
         i=$((i+1))
     done

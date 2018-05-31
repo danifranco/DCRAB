@@ -1,7 +1,7 @@
 #!/bin/bash
 # DCRAB SOFTWARE
 # Version: 2.0
-# Autor: CC-staff
+# Author: CC-staff
 # Donostia International Physics Center
 #
 # ===============================================================================================================
@@ -12,10 +12,9 @@
 #
 # ===============================================================================================================
 
-
 #
-# Check if the main node is still executing the job. For this check a few 
-# attemps to ensure main node's state before doing something
+# Check if the main node is still executing the job. For this check, a few attemps are made 
+# to ensure main node's state before doing something
 #
 dcrab_check_alive_main_node() {
 
@@ -24,8 +23,8 @@ dcrab_check_alive_main_node() {
         # Indicate the main node that this node will wait for the next MPI job
         echo "1" > $DCRAB_WAIT_MPI_PROCESSES_FILE
     
-        # If the main node's DCRAB instance is still alive, which means that the job is still alive also, do not stop the process
-        # and wait until a new MPI job reaches, otherwise DCRAB will be stopped. 
+        # If the DCRAB instance in the main node is still alive, which also means that the job is still alive, do not stop the process
+        # and wait until a new MPI job starts, otherwise DCRAB will be stopped. 
         if [ -f $DCRAB_ACTIVE_JOB_IN_MAIN_NODE_FILE ]; then
 
             counter=$(cat $DCRAB_ACTIVE_JOB_IN_MAIN_NODE_FILE)
@@ -34,7 +33,7 @@ dcrab_check_alive_main_node() {
             DCRAB_CHECK_NO_ALIVE_ATTEMPS=0
 
             while [ 1 ]; do
-                eval $DCRAB_LOG_INFO "Checking alive on the main node \(30 seconds sleep\)"
+                eval $DCRAB_LOG_INFO "Checking if alive on the main node \(30 seconds sleep\)"
                 sleep 30        
     
                 if [ -f $DCRAB_ACTIVE_JOB_IN_MAIN_NODE_FILE ]; then
@@ -58,7 +57,7 @@ dcrab_check_alive_main_node() {
                 fi
             done
      
-            # If the main node didn't modify the DCRAB_ACTIVE_JOB_IN_MAIN_NODE_FILE will advice that the processes there have been stopped so 
+            # If the main node does not modify the 'DCRAB_ACTIVE_JOB_IN_MAIN_NODE_FILE' file it means that the processes of the main node have been stopped so 
             # DCRAB will be stopped
             if [ $DCRAB_CHECK_NO_ALIVE_ATTEMPS -ge 3 ]; then
                 eval $DCRAB_LOG_ERROR "There is no processes in the main node"
@@ -75,16 +74,14 @@ dcrab_check_alive_main_node() {
         fi
 
     else
-        eval $DCRAB_LOG_ERROR "There is no $DCRAB_WAIT_MPI_PROCESSES_FILE file so directory has been deleted or moved"
+        eval $DCRAB_LOG_ERROR "There is no $DCRAB_WAIT_MPI_PROCESSES_FILE file so the reporting directory was deleted or moved"
         eval $DCRAB_LOG_ERROR "DCRAB stop"      
         exit 1
     fi
 }
 
-
 #
-# Checks exit status in different situations
-#
+# Check exit status in different situations
 # Arguments:
 #    1- Int -->  When '0' checks exit conditions while the script tries to take the lock 
 #                When '1' checks exit conditions in the main loop of the monitoring script in the nodes  
@@ -93,7 +90,7 @@ dcrab_check_exit () {
 
     case $1 in
     0)
-        # To avoid block in the loop when the number of attemps is greater than a certain value 
+        # To avoid a block in the loop when the number of attemps is greater than a certain value 
         if [ "$j" -ge "$DCRAB_LOOP_BEFORE_CRASH" ]; then
             eval $DCRAB_LOG_ERROR "ERROR in $DCRAB_NODE_HOSTNAME: too many attemps to write in the main html report" >> $DCRAB_WORKDIR/DCRAB_ERROR_"$DCRAB_NODE_HOSTNAME"_"$DCRAB_JOB_ID"
             eval $DCRAB_LOG_ERROR "DCRAB stop" >> $DCRAB_WORKDIR/DCRAB_ERROR_"$DCRAB_NODE_HOSTNAME"_"$DCRAB_JOB_ID"
@@ -126,7 +123,7 @@ dcrab_check_exit () {
                     # so it will wait until another MPI job reaches
                     DCRAB_SLEEP_FOR_NEXT_MPI_JOB=1    
                 else    
-                    eval $DCRAB_LOG_INFO "DCRAB terminated: all the processes of the job have finished"
+                    eval $DCRAB_LOG_INFO "DCRAB terminated: all processes of the job have finished"
                     eval $DCRAB_LOG_INFO "DCRAB stop"
                     exit 0
                 fi
@@ -140,9 +137,8 @@ dcrab_check_exit () {
     esac
 }
 
-
 #
-# Stops DCRAB's processes 
+# Stop DCRAB instances
 #
 dcrab_finalize () {
 
@@ -155,7 +151,7 @@ dcrab_finalize () {
 	
         # Kill remote processes running in background 
         for node in $DCRAB_NODES; do
-            eval $DCRAB_LOG_INFO "Killing the DCRAB's process with PID ${DCRAB_PIDs[$i]} in the node $node"
+            eval $DCRAB_LOG_INFO "Killing DCRAB process with PID ${DCRAB_PIDs[$i]} in the node $node"
             ssh -f $node "kill ${DCRAB_PIDs[$i]}"
             i=$((i+1))
         done    
