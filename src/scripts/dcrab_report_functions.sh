@@ -55,7 +55,7 @@ dcrab_wait_and_write () {
         fi
     done
     
-    eval $DCRAB_LOG_INFO "It's my turn!"
+    eval $DCRAB_LOG_INFO "It is my turn!"
 
     # Execute all the commands
     $DCRAB_COMMAND_FILE

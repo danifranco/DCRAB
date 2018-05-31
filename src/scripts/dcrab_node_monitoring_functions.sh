@@ -109,6 +109,7 @@ dcrab_node_monitor_init_variables () {
         DCRAB_MPI_CONTROL_PORT_MAIN_NODE=""
         DCRAB_MPI_CONTROL_PORT_OTHER_NODE=""
         DCRAB_MPI_CONTROL_WRITED=0
+        DCRAB_MPI_CONTROL_PORT_MAIN_NODE_TRYS=0
         
         # CPU
         DCRAB_CPU_DATA=""
@@ -872,17 +873,26 @@ dcrab_determine_main_session () {
             # Open MPI
             r=$(echo $line | awk '{if ($5 == "mpirun"){print}}')
             if [ "$r" != "" ]; then
-                DCRAB_NUMBER_OF_MPI_COMMANDS=$((DCRAB_NUMBER_OF_MPI_COMMANDS + 1))
-                DCRAB_CONTROL_PORT_FILE="${DCRAB_CONTROL_PORT_FILE_PREFIX}${DCRAB_NUMBER_OF_MPI_COMMANDS}"
-
                 while [ "$DCRAB_MPI_CONTROL_PORT_MAIN_NODE" == "" ]; do
                     DCRAB_MPI_CONTROL_PORT_MAIN_NODE=$(/usr/sbin/lsof -Pan -p $(echo $line | awk '{print $3}') -i | grep "LISTEN" | awk '{print $9}')
                     DCRAB_MPI_CONTROL_PORT_MAIN_NODE=${DCRAB_MPI_CONTROL_PORT_MAIN_NODE##*:}
-
-                    [ "$DCRAB_MPI_CONTROL_PORT_MAIN_NODE" == "" ] && eval $DCRAB_LOG_INFO "Wait to control port conections to be active" && sleep 1
+    
+                    if [ "$DCRAB_MPI_CONTROL_PORT_MAIN_NODE" == "" ] && [ $DCRAB_MPI_CONTROL_PORT_MAIN_NODE_TRYS -le 2 ]; then
+                        eval $DCRAB_LOG_INFO "Wait to control port connections to be active"
+                        DCRAB_MPI_CONTROL_PORT_MAIN_NODE_TRYS=$((DCRAB_MPI_CONTROL_PORT_MAIN_NODE_TRYS+1))
+                        sleep 1
+                    else
+                        DCRAB_MPI_CONTROL_PORT_MAIN_NODE_TRYS=0
+                        eval $DCRAB_LOG_INFO "The mpirun command seems to not be of an Open MPI implementation"
+                        break
+                    fi
                 done
                 
-                echo "tcp://192.168.10.$DCRAB_NODE_NUMBER,10.10.1.$DCRAB_NODE_NUMBER:$DCRAB_MPI_CONTROL_PORT_MAIN_NODE;" > $DCRAB_CONTROL_PORT_FILE 
+                if [ "$DCRAB_MPI_CONTROL_PORT_MAIN_NODE" != "" ]; then
+                    DCRAB_NUMBER_OF_MPI_COMMANDS=$((DCRAB_NUMBER_OF_MPI_COMMANDS + 1))
+                    DCRAB_CONTROL_PORT_FILE="${DCRAB_CONTROL_PORT_FILE_PREFIX}${DCRAB_NUMBER_OF_MPI_COMMANDS}"
+                    echo "tcp://192.168.10.$DCRAB_NODE_NUMBER,10.10.1.$DCRAB_NODE_NUMBER:$DCRAB_MPI_CONTROL_PORT_MAIN_NODE;" > $DCRAB_CONTROL_PORT_FILE 
+                fi
 
                 DCRAB_MPI_CONTROL_WRITED=1
                 DCRAB_MPI_CONTROL_PORT_MAIN_NODE=""
@@ -1079,18 +1089,26 @@ dcrab_collect_data () {
                 # Check if is a new MPI job
                 echo "$DCRAB_PROMOTED_PIDs" | grep -q " $pid "
                 if [ "$?" -ne 0 ]; then
-                    DCRAB_NUMBER_OF_MPI_COMMANDS=$((DCRAB_NUMBER_OF_MPI_COMMANDS + 1))
-                    DCRAB_CONTROL_PORT_FILE="${DCRAB_CONTROL_PORT_FILE_PREFIX}${DCRAB_NUMBER_OF_MPI_COMMANDS}"
-                
                     while [ "$DCRAB_MPI_CONTROL_PORT_MAIN_NODE" == "" ]; do
                         DCRAB_MPI_CONTROL_PORT_MAIN_NODE=$(/usr/sbin/lsof -Pan -p $(echo $line | awk '{print $3}') -i | grep "LISTEN" | awk '{print $9}')
                         DCRAB_MPI_CONTROL_PORT_MAIN_NODE=${DCRAB_MPI_CONTROL_PORT_MAIN_NODE##*:}
-    
-                        [ "$DCRAB_MPI_CONTROL_PORT_MAIN_NODE" == "" ] && eval $DCRAB_LOG_INFO "Wait to control port conections to be active" && sleep 1
+                        
+                        if [ "$DCRAB_MPI_CONTROL_PORT_MAIN_NODE" == "" ] && [ $DCRAB_MPI_CONTROL_PORT_MAIN_NODE_TRYS -le 2 ]; then
+                            eval $DCRAB_LOG_INFO "Wait to control port connections to be active"
+                            DCRAB_MPI_CONTROL_PORT_MAIN_NODE_TRYS=$((DCRAB_MPI_CONTROL_PORT_MAIN_NODE_TRYS+1))
+                            sleep 1
+                        else
+                            DCRAB_MPI_CONTROL_PORT_MAIN_NODE_TRYS=0
+                            eval $DCRAB_LOG_INFO "The mpirun command seems to not be of an Open MPI implementation"
+                            break
+                        fi
                     done
 
-                    echo "tcp://192.168.10.$DCRAB_NODE_NUMBER,10.10.1.$DCRAB_NODE_NUMBER:$DCRAB_MPI_CONTROL_PORT_MAIN_NODE;" > $DCRAB_CONTROL_PORT_FILE
-    
+                    if [ "$DCRAB_MPI_CONTROL_PORT_MAIN_NODE" != "" ]; then
+                        DCRAB_NUMBER_OF_MPI_COMMANDS=$((DCRAB_NUMBER_OF_MPI_COMMANDS + 1))
+                        DCRAB_CONTROL_PORT_FILE="${DCRAB_CONTROL_PORT_FILE_PREFIX}${DCRAB_NUMBER_OF_MPI_COMMANDS}"
+                        echo "tcp://192.168.10.$DCRAB_NODE_NUMBER,10.10.1.$DCRAB_NODE_NUMBER:$DCRAB_MPI_CONTROL_PORT_MAIN_NODE;" > $DCRAB_CONTROL_PORT_FILE
+                    fi
                     DCRAB_MPI_CONTROL_WRITED=1
                     DCRAB_MPI_CONTROL_PORT_MAIN_NODE=""
                 fi
