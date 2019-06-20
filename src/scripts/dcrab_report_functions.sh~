@@ -286,7 +286,6 @@ dcrab_generate_html () {
     printf "%s \n" "hAxis: {title: 'Execution Time (s)'}," >> $DCRAB_HTML
     printf "%s \n" "vAxis: {title: 'CPU used (%)'}," >> $DCRAB_HTML
     printf "%s \n" "chartArea: {  width: \"70%\", height: \"80%\" }," >> $DCRAB_HTML
-    printf "%s \n" "explorer: { axis: 'horizontal', keepInBounds: true, maxZoomIn: 6.0 }," >> $DCRAB_HTML
     printf "%s \n" "};" >> $DCRAB_HTML
 
     # MEM
@@ -332,8 +331,7 @@ dcrab_generate_html () {
     printf "%s \n" "height: '$plot_height'," >> $DCRAB_HTML
     printf "%s \n" "hAxis: {title: 'Execution Time (s)'}," >> $DCRAB_HTML
     printf "%s \n" "vAxis: {title: 'Values', format: 'short'}," >> $DCRAB_HTML
-    printf "%s \n" "chartArea: {left: 50, right: 210}," >> $DCRAB_HTML
-    printf "%s \n" "explorer: { axis: 'horizontal', keepInBounds: true, maxZoomIn: 6.0 }," >> $DCRAB_HTML
+    printf "%s \n" "chartArea: {left: 50, right: 260}," >> $DCRAB_HTML
     printf "%s \n" "};" >> $DCRAB_HTML
 
     # PROCESSES-IO
@@ -354,7 +352,6 @@ dcrab_generate_html () {
     printf "%s \n" "0: {side: 'top'}  " >> $DCRAB_HTML
     printf "%s \n" "}  " >> $DCRAB_HTML
     printf "%s \n" "},  " >> $DCRAB_HTML
-    printf "%s \n" "explorer: { axis: 'horizontal', keepInBounds: true, maxZoomIn: 6.0 }," >> $DCRAB_HTML
     printf "%s \n" "};  " >> $DCRAB_HTML
 
     # NFS
@@ -375,7 +372,6 @@ dcrab_generate_html () {
     printf "%s \n" "0: {side: 'top'}  " >> $DCRAB_HTML
     printf "%s \n" "}  " >> $DCRAB_HTML
     printf "%s \n" "},  " >> $DCRAB_HTML
-    printf "%s \n" "explorer: { axis: 'horizontal', keepInBounds: true, maxZoomIn: 6.0 }," >> $DCRAB_HTML
     printf "%s \n" "};  " >> $DCRAB_HTML
 
     # DISK
@@ -397,7 +393,6 @@ dcrab_generate_html () {
     printf "%s \n" "0: {side: 'bottom'}  " >> $DCRAB_HTML
     printf "%s \n" "}  " >> $DCRAB_HTML
     printf "%s \n" "},  " >> $DCRAB_HTML
-    printf "%s \n" "explorer: { axis: 'horizontal', keepInBounds: true, maxZoomIn: 6.0 }," >> $DCRAB_HTML
     printf "%s \n" "};  " >> $DCRAB_HTML
 
     #######################
@@ -416,11 +411,6 @@ dcrab_generate_html () {
     
     i=1
     for node in $DCRAB_NODES_MOD; do
-
-        if [ $i -ne 1 ]; then       
-            previous_node=$(echo "$DCRAB_NODES_MOD" | cut -d' ' -f$((i-1)))
-        fi
- 
         # TIME
         printf "%s \n" "var time_chart = new google.visualization.PieChart(document.getElementById('plot_time'));"  >> $DCRAB_HTML
         printf "%s \n" "time_chart.draw(time_data, time_options);  " >> $DCRAB_HTML
@@ -431,25 +421,14 @@ dcrab_generate_html () {
 
         # MEM
         printf "%s \n" "var mem1_chart_$node = new google.visualization.AreaChart(document.getElementById('plot1_mem_$node'));"  >> $DCRAB_HTML
-        if [ $i -eq 1 ]; then
+        if [ "$DCRAB_NNODES" -eq 1 ] && [ $i -eq 1 ]; then
             printf "%s \n" "google.visualization.events.addListener(mem1_chart_$node, 'ready', function () {" >> $DCRAB_HTML
             printf "%s \n" "document.getElementById(\"memChart\").style.display = \"none\";" >> $DCRAB_HTML
             printf "%s \n" "});" >> $DCRAB_HTML
         fi
         printf "%s \n" "var mem2_chart_$node = new google.visualization.PieChart(document.getElementById('plot2_mem_$node'));"  >> $DCRAB_HTML
-        if [ $i -eq 1 ]; then
-            printf "%s \n" "google.visualization.events.addListener(mem2_chart_$node, 'ready', function () {" >> $DCRAB_HTML
-            printf "%s \n" "mem1_chart_$node.draw(mem1_$node, mem1_options);  " >> $DCRAB_HTML
-            printf "%s \n" "});" >> $DCRAB_HTML 
-        else
-            printf "%s \n" "google.visualization.events.addListener(mem2_chart_$node, 'ready', function () {" >> $DCRAB_HTML
-            printf "%s \n" "mem1_chart_$node.draw(mem1_$node, mem1_options);  " >> $DCRAB_HTML
-            printf "%s \n" "mem2_chart_${previous_node}.draw(mem2_${previous_node}, mem2_options);  " >> $DCRAB_HTML
-            printf "%s \n" "});" >> $DCRAB_HTML
-        fi
-        if [ $DCRAB_NNODES -eq $i ]; then 
-            printf "%s \n" "mem2_chart_$node.draw(mem2_$node, mem2_options);  " >> $DCRAB_HTML
-        fi
+        printf "%s \n" "mem1_chart_$node.draw(mem1_$node, mem1_options);  " >> $DCRAB_HTML
+        printf "%s \n" "mem2_chart_$node.draw(mem2_$node, mem2_options);  " >> $DCRAB_HTML
 
         # IB
         printf "%s \n" "var ib_chart_$node = new google.visualization.LineChart(document.getElementById('plot_ib_$node'));"  >> $DCRAB_HTML
@@ -458,28 +437,18 @@ dcrab_generate_html () {
             printf "%s \n" "document.getElementById(\"ibChart\").style.display = \"none\";" >> $DCRAB_HTML
             printf "%s \n" "});" >> $DCRAB_HTML
         else
-            printf "%s \n" "google.visualization.events.addListener(ib_chart_$node, 'ready', function () {" >> $DCRAB_HTML
-            printf "%s \n" "ib_chart_${previous_node}.draw(ib_data_${previous_node}, ib_options);  " >> $DCRAB_HTML
-            printf "%s \n" "});" >> $DCRAB_HTML 
+
         fi
-        if [ $DCRAB_NNODES -eq $i ]; then
-            printf "%s \n" "ib_chart_$node.draw(ib_data_$node, ib_options);  " >> $DCRAB_HTML
-        fi
-        
+        printf "%s \n" "ib_chart_$node.draw(ib_data_$node, ib_options);  " >> $DCRAB_HTML
+
         # PROCESSESIO
         printf "%s \n" "var processesIO_chart_$node = new google.visualization.AreaChart(document.getElementById('plot_processesIO_$node'));"  >> $DCRAB_HTML
         if [ $i -eq 1 ]; then
             printf "%s \n" "google.visualization.events.addListener(processesIO_chart_$node, 'ready', function () {" >> $DCRAB_HTML
             printf "%s \n" "document.getElementById(\"processesIOChart\").style.display = \"none\";" >> $DCRAB_HTML
             printf "%s \n" "});" >> $DCRAB_HTML    
-        else
-            printf "%s \n" "google.visualization.events.addListener(processesIO_chart_$node, 'ready', function () {" >> $DCRAB_HTML
-            printf "%s \n" "processesIO_chart_${previous_node}.draw(processesIO_data_${previous_node}, processesIO_options);  " >> $DCRAB_HTML
-            printf "%s \n" "});" >> $DCRAB_HTML
         fi
-        if [ $DCRAB_NNODES -eq $i ]; then
-            printf "%s \n" "processesIO_chart_$node.draw(processesIO_data_$node, processesIO_options);  " >> $DCRAB_HTML
-        fi
+        printf "%s \n" "processesIO_chart_$node.draw(processesIO_data_$node, processesIO_options);  " >> $DCRAB_HTML
 
         # NFS
         printf "%s \n" "var nfs_chart_$node = new google.visualization.AreaChart(document.getElementById('plot_nfs_$node'));"  >> $DCRAB_HTML
@@ -487,14 +456,8 @@ dcrab_generate_html () {
             printf "%s \n" "google.visualization.events.addListener(nfs_chart_$node, 'ready', function () {" >> $DCRAB_HTML
             printf "%s \n" "document.getElementById(\"nfsChart\").style.display = \"none\";" >> $DCRAB_HTML
             printf "%s \n" "});" >> $DCRAB_HTML
-        else
-            printf "%s \n" "google.visualization.events.addListener(nfs_chart_$node, 'ready', function () {" >> $DCRAB_HTML
-            printf "%s \n" "nfs_chart_${previous_node}.draw(nfs_data_${previous_node}, nfs_options);  " >> $DCRAB_HTML
-            printf "%s \n" "});" >> $DCRAB_HTML
         fi
-        if [ $DCRAB_NNODES -eq $i ]; then
-            printf "%s \n" "nfs_chart_$node.draw(nfs_data_$node, nfs_options);  " >> $DCRAB_HTML
-        fi
+        printf "%s \n" "nfs_chart_$node.draw(nfs_data_$node, nfs_options);  " >> $DCRAB_HTML
 
         # DISK
         printf "%s \n" "var disk_chart_$node = new google.visualization.ColumnChart(document.getElementById('plot_disk_$node'));"  >> $DCRAB_HTML
@@ -502,20 +465,13 @@ dcrab_generate_html () {
             printf "%s \n" "google.visualization.events.addListener(disk_chart_$node, 'ready', function () {" >> $DCRAB_HTML
             printf "%s \n" "document.getElementById(\"diskChart\").style.display = \"none\";" >> $DCRAB_HTML
             printf "%s \n" "});" >> $DCRAB_HTML
-        else
-            printf "%s \n" "google.visualization.events.addListener(disk_chart_$node, 'ready', function () {" >> $DCRAB_HTML
-            printf "%s \n" "disk_chart_${previous_node}.draw(disk_data_${previous_node}, disk_options);  " >> $DCRAB_HTML
-            printf "%s \n" "});" >> $DCRAB_HTML
         fi
-        if [ $DCRAB_NNODES -eq $i ]; then
-            printf "%s \n" "disk_chart_$node.draw(disk_data_$node, disk_options);  " >> $DCRAB_HTML
-        fi
-
+        printf "%s \n" "disk_chart_$node.draw(disk_data_$node, disk_options);  " >> $DCRAB_HTML
+    
         #######################
         ## NEW MODULE CODE 3 ##
         #######################
-
-        i=$((i+1))
+	i=$((i+1))
     done
 
     if [ "$DCRAB_NNODES" -gt 1 ]; then
